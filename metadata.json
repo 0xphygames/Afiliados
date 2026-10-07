@@ -1,0 +1,6 @@
+{
+  "name": "Achadinhos & Looks - Tamires Santos",
+  "description": "Curadoria exclusiva de achadinhos e looks da Shopee, Shein, Mercado Livre e Amazon por Tamires Santos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

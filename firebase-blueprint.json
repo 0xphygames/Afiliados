@@ -1,0 +1,283 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Achadinho ou Look cadastrado para afiliação",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Título descritivo do produto",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "platform": {
+          "type": "string",
+          "description": "Plataforma afiliada (shopee, shein, mercadolivre, amazon)",
+          "enum": ["shopee", "shein", "mercadolivre", "amazon"]
+        },
+        "category": {
+          "type": "string",
+          "description": "Setor do produto (Vestuário, Suplementos, Musculação, Natal, etc)",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL ou imagem do produto",
+          "minLength": 1,
+          "maxLength": 500000
+        },
+        "affiliateUrl": {
+          "type": "string",
+          "description": "Link de afiliado com código de comissão",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "price": {
+          "type": "number",
+          "description": "Preço atual com desconto"
+        },
+        "originalPrice": {
+          "type": "number",
+          "description": "Preço original sem desconto"
+        },
+        "rating": {
+          "type": "number",
+          "description": "Nota de avaliação de 1 a 5"
+        },
+        "reviewCount": {
+          "type": "number",
+          "description": "Quantidade de avaliações"
+        },
+        "badge": {
+          "type": "string",
+          "description": "Selo de destaque promocional",
+          "maxLength": 100
+        },
+        "tamiresTip": {
+          "type": "string",
+          "description": "Recomendação pessoal da Tamires Santos",
+          "maxLength": 1000
+        },
+        "isFeatured": {
+          "type": "boolean",
+          "description": "Se o produto fica em destaque especial"
+        },
+        "authorEmail": {
+          "type": "string",
+          "description": "Email do administrador que cadastrou",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Data de criação em formato ISO",
+          "maxLength": 50
+        }
+      },
+      "required": ["title", "platform", "category", "imageUrl", "affiliateUrl", "price"]
+    },
+    "Article": {
+      "title": "Article",
+      "description": "Artigo, guia de compra ou postagem de blog de Tamires Santos",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Título da postagem ou artigo",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "category": {
+          "type": "string",
+          "description": "Categoria do artigo (Guia de Compras, Dicas de Looks, Suplementos, etc)",
+          "maxLength": 100
+        },
+        "summary": {
+          "type": "string",
+          "description": "Resumo rápido para exibição nos cards",
+          "maxLength": 500
+        },
+        "content": {
+          "type": "string",
+          "description": "Conteúdo textual completo do post",
+          "maxLength": 50000
+        },
+        "coverImageUrl": {
+          "type": "string",
+          "description": "Imagem de capa do post",
+          "maxLength": 500000
+        },
+        "featured": {
+          "type": "boolean",
+          "description": "Se o artigo está em destaque"
+        },
+        "author": {
+          "type": "string",
+          "description": "Nome da autora",
+          "maxLength": 100
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Data de publicação",
+          "maxLength": 50
+        }
+      },
+      "required": ["title", "content", "summary"]
+    },
+    "SiteSettings": {
+      "title": "SiteSettings",
+      "description": "Configurações e textos editáveis das páginas do site",
+      "type": "object",
+      "properties": {
+        "heroHeadline": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "heroSubheading": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "topBannerNotice": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "whatsappUrl": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "updatedAt": {
+          "type": "string",
+          "maxLength": 50
+        }
+      }
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Administrador do site com permissão de gerenciamento",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Email do administrador",
+          "maxLength": 200
+        },
+        "role": {
+          "type": "string",
+          "description": "Função no sistema (admin)",
+          "enum": ["admin"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Data de criação em formato ISO",
+          "maxLength": 50
+        }
+      },
+      "required": ["email", "role"]
+    },
+    "LandingPage": {
+      "title": "LandingPage",
+      "description": "Página personalizada ou landing page promocional criada pela Tamires",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "slug": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "headline": {
+          "type": "string",
+          "maxLength": 250
+        },
+        "subheading": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "platform": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "badge": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "bannerImageUrl": {
+          "type": "string",
+          "maxLength": 500000
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "maxLength": 50
+        }
+      },
+      "required": ["title", "slug"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Categoria ou setor de produtos gerenciado no sistema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "platform": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "icon": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "color": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "createdAt": {
+          "type": "string",
+          "maxLength": 50
+        }
+      },
+      "required": ["name"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Coleção pública de achadinhos e looks de afiliados"
+    },
+    "/articles/{articleId}": {
+      "schema": "Article",
+      "description": "Coleção de artigos, dicas e postagens do blog de afiliados"
+    },
+    "/pages/{pageId}": {
+      "schema": "LandingPage",
+      "description": "Coleção de landing pages e páginas promocionais personalizadas"
+    },
+    "/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Coleção de setores e classificações de produtos"
+    },
+    "/settings/{settingId}": {
+      "schema": "SiteSettings",
+      "description": "Configurações personalizadas das páginas do site"
+    },
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Documentos de administradores autorizados do sistema"
+    }
+  }
+}
