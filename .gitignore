@@ -5,3 +5,10 @@ coverage/
 *.log
 .env*
 !.env.example
+
+mingit/
+mingit.zip
+git_temp/
+apply_changes.py
+git.zip
+bun-windows-x64/
