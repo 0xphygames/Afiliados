@@ -1,0 +1,15 @@
+# connector.yaml
+# Configuration for the Data Connect connector and SDK generation
+
+connectorId: default
+
+generate:
+  javascriptSdk:
+    outputDir: "../web-app/src/lib/dataconnect"
+    package: "@achadinhos/dataconnect"
+  kotlinSdk:
+    outputDir: "../android-app/app/src/main/kotlin/com/example/dataconnect"
+    package: "com.example.dataconnect"
+  swiftSdk:
+    outputDir: "../ios-app/DataConnect"
+    package: "DataConnectGenerated"

@@ -1,76 +1,16 @@
+// Firestore security rules for achadinhos
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Default deny catch-all
-    match /{document=**} {
-      allow read, write: if false;
+    // Admin UID placeholder – replace with actual UID
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == "ADMIN_UID_PLACEHOLDER";
     }
-
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function incoming() {
-      return request.resource.data;
-    }
-
-    function isValidId(id) {
-      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
-    }
-
-    function isValidProduct(data) {
-      return data.title is string && data.title.size() > 0 && data.title.size() <= 300 &&
-             data.platform is string && data.platform in ['shopee', 'shein', 'mercadolivre', 'amazon'] &&
-             data.category is string && data.category.size() > 0 && data.category.size() <= 100 &&
-             data.imageUrl is string && data.imageUrl.size() > 0 && data.imageUrl.size() <= 500000 &&
-             data.affiliateUrl is string && data.affiliateUrl.size() > 0 && data.affiliateUrl.size() <= 2048 &&
-             data.price is number && data.price >= 0;
-    }
-
-    // Products collection: Public read for visitors, authenticated admin write
-    match /products/{productId} {
+    // Public read for products collection, admin write
+    match /produtos/{docId} {
       allow read: if true;
-      allow create: if isValidId(productId) && isSignedIn() && isValidProduct(incoming());
-      allow update: if isValidId(productId) && isSignedIn() && isValidProduct(incoming());
-      allow delete: if isValidId(productId) && isSignedIn();
+      allow write: if isAdmin();
     }
-
-    // Articles / Blog posts collection: Public read, authenticated admin write
-    match /articles/{articleId} {
-      allow read: if true;
-      allow create, update: if isValidId(articleId) && isSignedIn() &&
-                            incoming().title is string && incoming().title.size() > 0 &&
-                            incoming().content is string && incoming().content.size() > 0;
-      allow delete: if isValidId(articleId) && isSignedIn();
-    }
-
-    // Landing pages & custom campaign pages: Public read, authenticated admin write
-    match /pages/{pageId} {
-      allow read: if true;
-      allow create, update: if isValidId(pageId) && isSignedIn() &&
-                            incoming().title is string && incoming().title.size() > 0;
-      allow delete: if isValidId(pageId) && isSignedIn();
-    }
-
-    // Product categories / sectors: Public read, authenticated admin write
-    match /categories/{categoryId} {
-      allow read: if true;
-      allow create, update: if isValidId(categoryId) && isSignedIn() &&
-                            incoming().name is string && incoming().name.size() > 0;
-      allow delete: if isValidId(categoryId) && isSignedIn();
-    }
-
-    // Site page settings: Public read, authenticated admin write
-    match /settings/{settingId} {
-      allow read: if true;
-      allow write: if isValidId(settingId) && isSignedIn();
-    }
-
-    // Admins collection: Authenticated access
-    match /admins/{adminId} {
-      allow read, write: if isSignedIn();
-    }
+    // Add other collections as needed
   }
 }

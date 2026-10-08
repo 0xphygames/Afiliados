@@ -1,0 +1,11 @@
+# dataconnect.yaml
+# Configuration for Firebase SQL Connect (Data Connect)
+# Replace the placeholder connectionString with your Cloud SQL instance connection string.
+# Example: "postgresql://<PROJECT_ID>:<REGION>:<INSTANCE_NAME>"
+
+version: 0.1
+service: dataconnect
+connectors:
+  - connectorId: default
+    location: us-central1
+    connectionString: "postgresql://YOUR_PROJECT_ID:us-central1:YOUR_INSTANCE_NAME"

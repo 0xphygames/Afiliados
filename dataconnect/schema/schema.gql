@@ -1,0 +1,18 @@
+// dataconnect/schema/schema.gql
+# Define Product table for Data Connect
+
+type Product @table {
+  id: ID! @primaryKey
+  title: String!
+  platform: String!
+  category: String!
+  imageUrl: String
+  affiliateUrl: String
+  price: Float!
+  originalPrice: Float
+  badge: String
+  tamiresTip: String
+  rating: Float
+  reviewCount: Int
+  createdAt: Timestamp! @default(now())
+}
