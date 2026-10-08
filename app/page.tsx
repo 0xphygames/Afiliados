@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { PlatformId, Product, Article, SiteSettings, SortOption, CustomLandingPage, CustomCategory } from '@/lib/types';
@@ -20,7 +20,7 @@ import { testConnection } from '@/lib/firebase';
 import { User } from 'firebase/auth';
 import { Navbar } from '@/components/Navbar';
 import { HeroBanner } from '@/components/HeroBanner';
-import { CategoryBar } from '@/components/CategoryBar';
+import { CategorySidebar } from '@/components/CategorySidebar';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { ArticlesSection } from '@/components/ArticlesSection';
@@ -227,14 +227,11 @@ export default function HomePage() {
                     {activeCategory}
                   </span>
                 )}
-                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                  <Database className="w-3 h-3 text-emerald-600" />
-                  <span>Nuvem em Tempo Real</span>
-                </span>
+                
               </div>
               <p className="text-xs text-stone-500 mt-1">
                 {currentPlatformInfo?.tagline ||
-                  'Produtos testados, preços imperdíveis e links diretos para compras seguras.'}
+                  'Produtos testados, preÃ§os imperdÃ­veis e links diretos para compras seguras.'}
               </p>
             </div>
 
@@ -248,8 +245,8 @@ export default function HomePage() {
                   className="bg-transparent text-stone-900 text-xs font-semibold focus:outline-none cursor-pointer"
                 >
                   <option value="recent">Mais Recentes</option>
-                  <option value="price-asc">Menor Preço</option>
-                  <option value="price-desc">Maior Preço</option>
+                  <option value="price-asc">Menor PreÃ§o</option>
+                  <option value="price-desc">Maior PreÃ§o</option>
                   <option value="discount">Maior Desconto (%)</option>
                   <option value="rating">Melhor Avaliados</option>
                 </select>
@@ -279,8 +276,8 @@ export default function HomePage() {
               </h3>
               <p className="text-xs text-stone-500 max-w-sm mx-auto mb-6">
                 {searchQuery
-                  ? `Não encontramos resultados para "${searchQuery}". Tente outro termo.`
-                  : `Ainda não temos produtos cadastrados no setor "${activeCategory}".`}
+                  ? `NÃ£o encontramos resultados para "${searchQuery}". Tente outro termo.`
+                  : `Ainda nÃ£o temos produtos cadastrados no setor "${activeCategory}".`}
               </p>
               <div className="flex items-center justify-center gap-3">
                 {activeCategory !== 'Todos os Setores' && (
@@ -335,3 +332,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+

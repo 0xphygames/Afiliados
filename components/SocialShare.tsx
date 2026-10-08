@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import {
@@ -88,6 +88,23 @@ export function SocialShare({
         >
           <Send className="w-3.5 h-3.5" />
         </button>
+        {/* Facebook */}
+        <button
+          onClick={(e) => handleShareWindow(e, `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`)}
+          className="w-7 h-7 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-200 flex items-center justify-center transition-colors shadow-2xs"
+          title="Compartilhar no Facebook"
+        >
+          <Share2 className="w-3.5 h-3.5" />
+        </button>
+
+        {/* X / Twitter */}
+        <button
+          onClick={(e) => handleShareWindow(e, `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`)}
+          className="w-7 h-7 rounded-full bg-stone-100 text-stone-800 hover:bg-stone-900 hover:text-white border border-stone-300 flex items-center justify-center transition-colors shadow-2xs"
+          title="Compartilhar no X (Twitter)"
+        >
+          <Share2 className="w-3.5 h-3.5" />
+        </button>
 
         {/* Copy */}
         <button
@@ -138,6 +155,23 @@ export function SocialShare({
           <Send className="w-4 h-4" />
           <span>Telegram</span>
         </button>
+        {/* Facebook */}
+        <button
+          onClick={(e) => handleShareWindow(e, `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`)}
+          className="w-7 h-7 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-200 flex items-center justify-center transition-colors shadow-2xs"
+          title="Compartilhar no Facebook"
+        >
+          <Share2 className="w-3.5 h-3.5" />
+        </button>
+
+        {/* X / Twitter */}
+        <button
+          onClick={(e) => handleShareWindow(e, `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`)}
+          className="w-7 h-7 rounded-full bg-stone-100 text-stone-800 hover:bg-stone-900 hover:text-white border border-stone-300 flex items-center justify-center transition-colors shadow-2xs"
+          title="Compartilhar no X (Twitter)"
+        >
+          <Share2 className="w-3.5 h-3.5" />
+        </button>
 
         {/* Facebook */}
         <button
@@ -164,3 +198,4 @@ export function SocialShare({
     </div>
   );
 }
+
