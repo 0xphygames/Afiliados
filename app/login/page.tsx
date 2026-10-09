@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { loginWithGoogle, subscribeAuth, isUserAdmin, ADMIN_EMAIL } from '@/lib/firestore-products';
+import { loginWithGoogle, subscribeAuth, isUserAdmin, logoutUser, PRIMARY_ADMIN_EMAIL, ADMIN_EMAIL } from '@/lib/firestore-products';
 import {
   Lock,
   LogIn,
@@ -13,6 +13,7 @@ import {
   AlertCircle,
   ArrowLeft,
   Sparkles,
+  ShieldAlert,
 } from 'lucide-react';
 import { User } from 'firebase/auth';
 
@@ -24,12 +25,18 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsub = subscribeAuth((user) => {
+    const unsub = subscribeAuth(async (user) => {
       setCurrentUser(user);
       setCheckingAuth(false);
       if (user) {
-        // Automatically redirect to /painel if already authenticated
-        router.push('/painel');
+        if (isUserAdmin(user)) {
+          router.push('/painel');
+        } else {
+          setErrorMsg(
+            `Acesso negado: O e-mail "${user.email}" não é autorizado como administrador. O único acesso permitido é o da proprietária (${PRIMARY_ADMIN_EMAIL}).`
+          );
+          await logoutUser();
+        }
       }
     });
     return () => unsub();
@@ -41,7 +48,14 @@ export default function LoginPage() {
     try {
       const user = await loginWithGoogle();
       if (user) {
-        router.push('/painel');
+        if (isUserAdmin(user)) {
+          router.push('/painel');
+        } else {
+          setErrorMsg(
+            `Acesso negado: O e-mail "${user.email}" não é autorizado como administrador. O único acesso permitido é o da proprietária (${PRIMARY_ADMIN_EMAIL}).`
+          );
+          await logoutUser();
+        }
       }
     } catch (err: any) {
       if (err?.code !== 'auth/popup-closed-by-user') {

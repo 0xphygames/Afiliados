@@ -13,7 +13,11 @@ import {
   ShieldCheck,
   Truck,
   Share2,
+  ChevronLeft,
+  ChevronRight,
+  Camera,
 } from 'lucide-react';
+import { SocialShare } from './SocialShare';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -23,10 +27,19 @@ interface ProductDetailModalProps {
 
 export function ProductDetailModal({ product, onClose, onEdit }: ProductDetailModalProps) {
   const [copied, setCopied] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   if (!product) return null;
 
   const platform = PLATFORMS[product.platform] || PLATFORMS.shopee;
+
+  const allImages =
+    Array.isArray(product.images) && product.images.length > 0
+      ? product.images.filter(Boolean)
+      : [product.imageUrl].filter(Boolean);
+
+  const currentDisplayImage =
+    allImages[activeImageIndex] || product.imageUrl || '/images/hero_achadinhos_looks_1791404026649.jpg';
 
   const handleCopy = () => {
     if (navigator?.clipboard) {
@@ -69,38 +82,104 @@ export function ProductDetailModal({ product, onClose, onEdit }: ProductDetailMo
           <X className="w-4 h-4" />
         </button>
 
-        {/* Media Column */}
-        <div className="relative w-full md:w-1/2 aspect-square md:aspect-auto bg-stone-100">
-          {product.imageUrl ? (
-            <Image
-              src={product.imageUrl}
-              alt={product.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 50vw"
-              referrerPolicy="no-referrer"
-              unoptimized={isUnoptimizedImage}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-stone-400">
-              Sem foto
-            </div>
-          )}
+        {/* Media Column with Gallery */}
+        <div className="relative w-full md:w-1/2 flex flex-col bg-stone-100">
+          <div className="relative flex-1 min-h-[280px] sm:min-h-[340px] aspect-square md:aspect-auto">
+            {currentDisplayImage ? (
+              <Image
+                src={currentDisplayImage}
+                alt={product.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                referrerPolicy="no-referrer"
+                unoptimized
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-stone-400">
+                Sem foto
+              </div>
+            )}
 
-          <div className="absolute top-4 left-4">
-            <span
-              style={{ backgroundColor: platform.color }}
-              className="px-3 py-1 text-xs font-bold text-white rounded-md uppercase tracking-wider shadow-xs"
-            >
-              {platform.name}
-            </span>
+            {/* Store Badge */}
+            <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5">
+              <span
+                style={{ backgroundColor: platform.color }}
+                className="px-3 py-1 text-xs font-bold text-white rounded-md uppercase tracking-wider shadow-xs"
+              >
+                {platform.name}
+              </span>
+              {allImages.length > 1 && (
+                <span className="px-2 py-1 text-[11px] font-bold bg-black/70 backdrop-blur-xs text-white rounded-md shadow-xs">
+                  {activeImageIndex + 1} de {allImages.length} fotos
+                </span>
+              )}
+            </div>
+
+            {/* Discount Badge */}
+            {discountPercent && (
+              <div className="absolute bottom-4 left-4 z-10">
+                <span className="px-3 py-1 text-xs font-black bg-rose-600 text-white rounded-md shadow-xs">
+                  -{discountPercent}% OFF
+                </span>
+              </div>
+            )}
+
+            {/* Navigation Arrows */}
+            {allImages.length > 1 && (
+              <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2.5 z-10 pointer-events-none">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveImageIndex((prev) =>
+                      prev > 0 ? prev - 1 : allImages.length - 1
+                    )
+                  }
+                  className="p-1.5 rounded-full bg-white/90 hover:bg-white text-stone-900 shadow-md transition-all pointer-events-auto"
+                  aria-label="Foto anterior"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveImageIndex((prev) =>
+                      prev < allImages.length - 1 ? prev + 1 : 0
+                    )
+                  }
+                  className="p-1.5 rounded-full bg-white/90 hover:bg-white text-stone-900 shadow-md transition-all pointer-events-auto"
+                  aria-label="Próxima foto"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
 
-          {discountPercent && (
-            <div className="absolute bottom-4 left-4">
-              <span className="px-3 py-1 text-xs font-black bg-rose-600 text-white rounded-md shadow-xs">
-                -{discountPercent}% OFF
-              </span>
+          {/* Thumbnail Strip */}
+          {allImages.length > 1 && (
+            <div className="p-2.5 bg-stone-900/90 backdrop-blur-xs border-t border-stone-800 flex items-center gap-2 overflow-x-auto no-scrollbar">
+              {allImages.map((thumbUrl, idx) => (
+                <button
+                  key={`${thumbUrl}-${idx}`}
+                  type="button"
+                  onClick={() => setActiveImageIndex(idx)}
+                  className={`relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${
+                    idx === activeImageIndex
+                      ? 'border-amber-400 scale-105 shadow-xs ring-2 ring-amber-400/30'
+                      : 'border-white/20 hover:border-white/60 opacity-60 hover:opacity-100'
+                  }`}
+                >
+                  <Image
+                    src={thumbUrl}
+                    alt={`Miniatura ${idx + 1}`}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                    referrerPolicy="no-referrer"
+                  />
+                </button>
+              ))}
             </div>
           )}
         </div>

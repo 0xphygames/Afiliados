@@ -125,70 +125,83 @@ export function CategorySidebar({
     const count = storeProducts.filter(
       (p) => p.category.trim().toLowerCase() === catName.toLowerCase()
     ).length;
-    // Oculta completamente se count === 0!
-    if (count > 0) {
-      activeSectorsWithCount.push({ name: catName, count });
-    }
+    // Inclui todos os setores padrão da loja ou com contagem > 0
+    activeSectorsWithCount.push({ name: catName, count });
   });
 
-  // Sort sectors by product count descending
-  activeSectorsWithCount.sort((a, b) => b.count - a.count);
+  // Sort sectors: ones with count > 0 first, then alphabetically
+  activeSectorsWithCount.sort((a, b) => {
+    if (b.count !== a.count) return b.count - a.count;
+    return a.name.localeCompare(b.name);
+  });
 
   const platformName =
     activePlatform === 'all' ? 'Todas as Lojas' : PLATFORMS[activePlatform]?.name || 'Loja';
+  const platformColor =
+    activePlatform !== 'all' && PLATFORMS[activePlatform]
+      ? PLATFORMS[activePlatform].color
+      : '#1c1917';
 
   return (
-    <aside className={`w-full lg:w-60 xl:w-64 shrink-0 ${className}`}>
+    <aside className={`w-full md:w-60 lg:w-68 shrink-0 ${className}`}>
       {/* ======================================================== */}
-      {/* 1. VISÃO DESKTOP (PC): Barra lateral suave, discreta e fixa */}
+      {/* 1. VISÃO DESKTOP & TABLET (MD+): Barra lateral vertical e visual */}
       {/* ======================================================== */}
-      <div className="hidden lg:block sticky top-24 bg-stone-50/80 backdrop-blur-xs rounded-2xl border border-stone-200/90 p-4 shadow-2xs">
+      <div className="hidden md:block sticky top-24 bg-white rounded-3xl border border-stone-200 p-4 shadow-sm space-y-3">
         {/* Header da Barra Lateral */}
-        <div className="flex items-center justify-between pb-3 mb-3 border-b border-stone-200">
-          <div className="flex items-center gap-1.5">
-            <Filter className="w-3.5 h-3.5 text-stone-500" />
-            <h3 className="text-xs font-bold uppercase tracking-wider text-stone-800">
-              Setores Ativos
-            </h3>
+        <div className="pb-3 border-b border-stone-200">
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <div className="flex items-center gap-1.5">
+              <Filter className="w-3.5 h-3.5 text-stone-500" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-stone-900">
+                Setores & Abas
+              </h3>
+            </div>
+            <span
+              style={{ backgroundColor: platformColor }}
+              className="text-[10px] font-bold px-2 py-0.5 rounded-md text-white shadow-xs uppercase tracking-wider"
+            >
+              {platformName}
+            </span>
           </div>
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-stone-200/80 text-stone-700">
-            {platformName}
-          </span>
+          <p className="text-[11px] text-stone-500">
+            Filtre os achadinhos por departamento:
+          </p>
         </div>
 
-        {/* Lista Vertical de Setores (Apenas os que possuem achadinhos > 0) */}
+        {/* Lista Vertical de Setores */}
         <div className="space-y-1">
           {/* Opção padrão: Todos os Setores */}
           <button
             onClick={() => onSelectCategory('Todos os Setores')}
-            className={`w-full px-3 py-2 text-xs font-medium rounded-xl transition-all duration-150 flex items-center justify-between text-left ${
+            className={`w-full px-3 py-2.5 text-xs font-semibold rounded-xl transition-all flex items-center justify-between text-left cursor-pointer ${
               activeCategory === 'Todos os Setores'
-                ? 'bg-stone-900 text-white font-semibold shadow-2xs'
-                : 'text-stone-700 hover:bg-stone-200/60 hover:text-stone-900'
+                ? 'bg-stone-900 text-white shadow-sm'
+                : 'text-stone-700 hover:bg-stone-100 hover:text-stone-950'
             }`}
           >
-            <div className="flex items-center gap-2 truncate">
+            <div className="flex items-center gap-2.5 truncate">
               <span
                 className={
                   activeCategory === 'Todos os Setores' ? 'text-amber-300' : 'text-stone-500'
                 }
               >
-                <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
+                <LayoutGrid className="w-4 h-4 shrink-0" />
               </span>
-              <span className="truncate">Todos os Setores</span>
+              <span className="truncate">Todos os Departamentos</span>
             </div>
             <span
-              className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold tabular-nums ml-2 shrink-0 ${
+              className={`text-[10px] px-2 py-0.5 rounded-full font-bold tabular-nums ml-2 shrink-0 ${
                 activeCategory === 'Todos os Setores'
                   ? 'bg-white/20 text-white'
-                  : 'bg-stone-200 text-stone-700'
+                  : 'bg-stone-100 text-stone-700 border border-stone-200'
               }`}
             >
               {storeProducts.length}
             </span>
           </button>
 
-          {/* Setores filtrados com mais de 0 produtos */}
+          {/* Setores Verticais */}
           {activeSectorsWithCount.map((sector) => {
             const isSelected = activeCategory.toLowerCase() === sector.name.toLowerCase();
 
@@ -196,23 +209,31 @@ export function CategorySidebar({
               <button
                 key={sector.name}
                 onClick={() => onSelectCategory(sector.name)}
-                className={`w-full px-3 py-2 text-xs font-medium rounded-xl transition-all duration-150 flex items-center justify-between text-left ${
+                className={`w-full px-3 py-2.5 text-xs font-semibold rounded-xl transition-all flex items-center justify-between text-left cursor-pointer group ${
                   isSelected
-                    ? 'bg-stone-900 text-white font-semibold shadow-2xs'
-                    : 'text-stone-700 hover:bg-stone-200/60 hover:text-stone-900'
+                    ? 'bg-stone-900 text-white shadow-sm'
+                    : 'text-stone-700 hover:bg-stone-100 hover:text-stone-950'
                 }`}
               >
-                <div className="flex items-center gap-2 truncate">
-                  <span className={isSelected ? 'text-amber-300' : 'text-stone-500'}>
+                <div className="flex items-center gap-2.5 truncate">
+                  <span
+                    className={
+                      isSelected
+                        ? 'text-amber-300'
+                        : 'text-stone-500 group-hover:text-stone-900 group-hover:scale-110 transition-transform'
+                    }
+                  >
                     {getCategoryIcon(sector.name)}
                   </span>
                   <span className="truncate">{sector.name}</span>
                 </div>
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold tabular-nums ml-2 shrink-0 ${
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold tabular-nums ml-2 shrink-0 ${
                     isSelected
                       ? 'bg-white/20 text-white'
-                      : 'bg-stone-200 text-stone-700'
+                      : sector.count > 0
+                      ? 'bg-amber-100 text-amber-900 border border-amber-200'
+                      : 'bg-stone-100 text-stone-400'
                   }`}
                 >
                   {sector.count}
@@ -223,10 +244,10 @@ export function CategorySidebar({
         </div>
 
         {activeCategory !== 'Todos os Setores' && (
-          <div className="pt-3 mt-3 border-t border-stone-200">
+          <div className="pt-2 border-t border-stone-100">
             <button
               onClick={() => onSelectCategory('Todos os Setores')}
-              className="w-full text-center py-1.5 text-[11px] text-stone-600 hover:text-stone-900 font-semibold underline transition-colors"
+              className="w-full text-center py-2 text-xs text-stone-600 hover:text-stone-900 font-semibold underline transition-colors cursor-pointer"
             >
               Limpar filtro de setor
             </button>
@@ -235,56 +256,52 @@ export function CategorySidebar({
       </div>
 
       {/* ======================================================== */}
-      {/* 2. VISÃO MOBILE: Discreta, suave e redimensionável sem estourar */}
+      {/* 2. VISÃO MOBILE (< MD): Seletor vertical visual de setores */}
       {/* ======================================================== */}
-      <div className="lg:hidden bg-stone-50/90 rounded-xl border border-stone-200 p-2.5 mb-4 shadow-2xs">
+      <div className="md:hidden bg-white rounded-2xl border border-stone-200 p-3 mb-4 shadow-sm space-y-2">
         <button
           onClick={() => setMobileExpanded(!mobileExpanded)}
-          className="w-full flex items-center justify-between text-xs font-semibold text-stone-800 py-1 px-1 focus:outline-none"
+          className="w-full flex items-center justify-between text-xs font-bold text-stone-900 py-1 focus:outline-none cursor-pointer"
         >
           <div className="flex items-center gap-2 truncate">
-            <Filter className="w-3.5 h-3.5 text-stone-600 shrink-0" />
+            <Filter className="w-4 h-4 text-stone-600 shrink-0" />
             <span className="truncate">
               Setor:{' '}
-              <strong className="text-stone-950 font-bold">
+              <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 font-extrabold">
                 {activeCategory}
-              </strong>
-            </span>
-            <span className="text-[10px] bg-stone-200 text-stone-700 px-1.5 py-0.2 rounded-full font-bold">
-              {activeCategory === 'Todos os Setores'
-                ? storeProducts.length
-                : storeProducts.filter(
-                    (p) => p.category.toLowerCase() === activeCategory.toLowerCase()
-                  ).length}
+              </span>
             </span>
           </div>
 
-          <div className="flex items-center gap-1 text-[11px] text-stone-500 shrink-0">
-            <span>{mobileExpanded ? 'Fechar' : 'Trocar Setor'}</span>
+          <div className="flex items-center gap-1.5 text-xs text-stone-500 shrink-0">
+            <span>{mobileExpanded ? 'Fechar abas' : 'Ver todos os setores'}</span>
             {mobileExpanded ? (
-              <ChevronUp className="w-3.5 h-3.5" />
+              <ChevronUp className="w-4 h-4 text-stone-700" />
             ) : (
-              <ChevronDown className="w-3.5 h-3.5" />
+              <ChevronDown className="w-4 h-4 text-stone-700" />
             )}
           </div>
         </button>
 
-        {/* Conteúdo Expansível no Mobile */}
+        {/* Visual vertical selector on mobile */}
         {mobileExpanded && (
-          <div className="pt-2.5 mt-2 border-t border-stone-200 space-y-1 max-h-60 overflow-y-auto no-scrollbar animate-fade-in">
+          <div className="pt-2 border-t border-stone-100 space-y-1.5 max-h-72 overflow-y-auto no-scrollbar animate-fade-in">
             <button
               onClick={() => {
                 onSelectCategory('Todos os Setores');
                 setMobileExpanded(false);
               }}
-              className={`w-full px-2.5 py-1.5 text-xs rounded-lg flex items-center justify-between text-left ${
+              className={`w-full px-3 py-2 text-xs rounded-xl flex items-center justify-between text-left font-semibold ${
                 activeCategory === 'Todos os Setores'
-                  ? 'bg-stone-900 text-white font-semibold'
-                  : 'text-stone-700 hover:bg-stone-200'
+                  ? 'bg-stone-900 text-white shadow-xs'
+                  : 'text-stone-700 hover:bg-stone-100'
               }`}
             >
-              <span className="truncate">Todos os Setores</span>
-              <span className="text-[10px] opacity-80">{storeProducts.length}</span>
+              <div className="flex items-center gap-2">
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span>Todos os Setores</span>
+              </div>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 bg-white/20 rounded-full">{storeProducts.length}</span>
             </button>
 
             {activeSectorsWithCount.map((sector) => {
@@ -296,14 +313,17 @@ export function CategorySidebar({
                     onSelectCategory(sector.name);
                     setMobileExpanded(false);
                   }}
-                  className={`w-full px-2.5 py-1.5 text-xs rounded-lg flex items-center justify-between text-left ${
+                  className={`w-full px-3 py-2 text-xs rounded-xl flex items-center justify-between text-left font-semibold ${
                     isSelected
-                      ? 'bg-stone-900 text-white font-semibold'
-                      : 'text-stone-700 hover:bg-stone-200'
+                      ? 'bg-stone-900 text-white shadow-xs'
+                      : 'text-stone-700 hover:bg-stone-100'
                   }`}
                 >
-                  <span className="truncate">{sector.name}</span>
-                  <span className="text-[10px] opacity-80">{sector.count}</span>
+                  <div className="flex items-center gap-2">
+                    {getCategoryIcon(sector.name)}
+                    <span className="truncate">{sector.name}</span>
+                  </div>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 bg-stone-100 text-stone-700 rounded-full">{sector.count}</span>
                 </button>
               );
             })}

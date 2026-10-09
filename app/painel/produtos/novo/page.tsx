@@ -17,6 +17,12 @@ import {
   AlertCircle,
   Save,
   Image as ImageIcon,
+  Plus,
+  Trash2,
+  Upload,
+  ChevronLeft,
+  ChevronRight,
+  Layers,
 } from 'lucide-react';
 
 const PRESET_IMAGES = [
@@ -41,11 +47,64 @@ export default function NovoAchadinhoPage() {
   const [price, setPrice] = useState('');
   const [originalPrice, setOriginalPrice] = useState('');
   const [affiliateUrl, setAffiliateUrl] = useState('');
-  const [imageUrl, setImageUrl] = useState('/images/product_vestuario_conjunto_1791404036584.jpg');
+  
+  // Multiple images state
+  const [images, setImages] = useState<string[]>([
+    '/images/product_vestuario_conjunto_1791404036584.jpg',
+  ]);
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [activePreviewIndex, setActivePreviewIndex] = useState(0);
+
   const [badge, setBadge] = useState('');
   const [tamiresTip, setTamiresTip] = useState('');
   const [rating, setRating] = useState('5.0');
   const [reviewCount, setReviewCount] = useState('240');
+
+  const handleAddImage = (urlToAdd?: string) => {
+    const url = (urlToAdd || newImageUrl).trim();
+    if (!url) return;
+    if (!images.includes(url)) {
+      setImages((prev) => [...prev, url]);
+    }
+    setNewImageUrl('');
+  };
+
+  const handleRemoveImage = (indexToRemove: number) => {
+    if (images.length <= 1) {
+      alert('O produto precisa ter pelo menos 1 imagem.');
+      return;
+    }
+    setImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+    if (activePreviewIndex >= images.length - 1) {
+      setActivePreviewIndex(0);
+    }
+  };
+
+  const handleSetPrimaryImage = (indexToPrimary: number) => {
+    if (indexToPrimary === 0) return;
+    setImages((prev) => {
+      const selected = prev[indexToPrimary];
+      const rest = prev.filter((_, idx) => idx !== indexToPrimary);
+      return [selected, ...rest];
+    });
+    setActivePreviewIndex(0);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        if (result) {
+          setImages((prev) => [...prev, result]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
 
   const numPrice = parseFloat(price.replace(',', '.')) || 0;
   const numOrigPrice = parseFloat(originalPrice.replace(',', '.')) || 0;
@@ -74,6 +133,9 @@ export default function NovoAchadinhoPage() {
     setSaving(true);
     setErrorMsg(null);
 
+    const validImages = images.filter((img) => img.trim().length > 0);
+    const primaryImg = validImages[0] || '/images/hero_achadinhos_looks_1791404026649.jpg';
+
     const newProduct: Product = {
       id: `prod-${Date.now()}`,
       title: title.trim(),
@@ -82,7 +144,8 @@ export default function NovoAchadinhoPage() {
       price: numPrice,
       originalPrice: numOrigPrice > numPrice ? numOrigPrice : undefined,
       affiliateUrl: affiliateUrl.trim(),
-      imageUrl: imageUrl.trim() || '/images/hero_achadinhos_looks_1791404026649.jpg',
+      imageUrl: primaryImg,
+      images: validImages.length > 0 ? validImages : [primaryImg],
       badge: badge.trim() || undefined,
       tamiresTip: tamiresTip.trim() || undefined,
       rating: parseFloat(rating) || 5.0,
@@ -244,36 +307,119 @@ export default function NovoAchadinhoPage() {
             />
           </div>
 
-          {/* Image URL & Preset Selection */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-stone-900">
-              URL da Foto do Produto
-            </label>
-            <input
-              type="text"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://... ou escolha um dos presets abaixo"
-              className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900"
-            />
+          {/* Multiple Images Gallery Manager */}
+          <div className="space-y-3 p-4 bg-stone-50/80 rounded-2xl border border-stone-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
+                  <ImageIcon className="w-4 h-4 text-stone-700" />
+                  <span>Galeria de Fotos do Produto ({images.length} adicionada{images.length !== 1 ? 's' : ''})</span>
+                </label>
+                <p className="text-[11px] text-stone-500">
+                  Adicione uma ou mais fotos. A primeira foto será a capa principal da vitrine.
+                </p>
+              </div>
 
-            <div className="pt-1">
+              <label className="cursor-pointer py-1.5 px-3 bg-white hover:bg-stone-100 border border-stone-300 rounded-xl text-xs font-semibold text-stone-700 transition-colors flex items-center gap-1.5 shadow-2xs">
+                <Upload className="w-3.5 h-3.5 text-stone-600" />
+                <span>Subir do Dispositivo</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            {/* Added Images Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+              {images.map((img, idx) => (
+                <div
+                  key={`${img}-${idx}`}
+                  className={`relative aspect-square rounded-xl overflow-hidden border-2 bg-stone-100 group shadow-2xs ${
+                    idx === 0 ? 'border-amber-400 ring-2 ring-amber-400/20' : 'border-stone-200'
+                  }`}
+                >
+                  <Image
+                    src={img}
+                    alt={`Foto ${idx + 1}`}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                    referrerPolicy="no-referrer"
+                  />
+
+                  {idx === 0 && (
+                    <span className="absolute top-1.5 left-1.5 bg-amber-400 text-stone-900 text-[9px] font-black uppercase px-1.5 py-0.5 rounded shadow-xs">
+                      Principal
+                    </span>
+                  )}
+
+                  <div className="absolute inset-0 bg-stone-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-2">
+                    {idx !== 0 && (
+                      <button
+                        type="button"
+                        onClick={() => handleSetPrimaryImage(idx)}
+                        className="w-full py-1 px-1.5 bg-amber-400 hover:bg-amber-300 text-stone-900 font-bold text-[10px] rounded shadow-xs transition-colors"
+                      >
+                        Tornar Capa
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(idx)}
+                      className="py-1 px-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-[10px] rounded shadow-xs transition-colors flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Remover</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Input to add another image URL */}
+            <div className="flex gap-2 pt-1">
+              <input
+                type="text"
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddImage();
+                  }
+                }}
+                placeholder="Cole a URL de mais uma foto (ex: https://...)"
+                className="flex-1 px-3.5 py-2 text-xs bg-white border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 text-stone-900"
+              />
+              <button
+                type="button"
+                onClick={() => handleAddImage()}
+                className="py-2 px-3.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5 text-amber-300" />
+                <span>Adicionar Foto</span>
+              </button>
+            </div>
+
+            {/* Preset quick buttons */}
+            <div className="pt-1 border-t border-stone-200/60">
               <span className="text-[11px] text-stone-500 font-semibold block mb-1.5">
-                Fotos rápidas de demonstração:
+                Fotos pré-selecionadas de demonstração (clique para acrescentar):
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {PRESET_IMAGES.map((p) => (
                   <button
                     key={p.url}
                     type="button"
-                    onClick={() => setImageUrl(p.url)}
-                    className={`px-2.5 py-1 text-[11px] rounded-lg border transition-colors ${
-                      imageUrl === p.url
-                        ? 'bg-stone-900 text-white border-stone-900 font-bold'
-                        : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
-                    }`}
+                    onClick={() => handleAddImage(p.url)}
+                    className="px-2.5 py-1 text-[11px] rounded-lg border bg-white hover:bg-stone-100 text-stone-700 border-stone-200 transition-colors flex items-center gap-1"
                   >
-                    {p.label}
+                    <Plus className="w-3 h-3 text-stone-400" />
+                    <span>{p.label}</span>
                   </button>
                 ))}
               </div>
@@ -367,9 +513,9 @@ export default function NovoAchadinhoPage() {
           <div className="bg-white rounded-3xl border border-stone-200 shadow-md overflow-hidden max-w-sm mx-auto">
             {/* Card Media Container */}
             <div className="relative aspect-4/3 w-full bg-stone-100 overflow-hidden border-b border-stone-100">
-              {imageUrl ? (
+              {images.length > 0 && images[activePreviewIndex] ? (
                 <Image
-                  src={imageUrl}
+                  src={images[activePreviewIndex]}
                   alt={title || 'Prévia do Produto'}
                   fill
                   className="object-cover"
@@ -381,6 +527,36 @@ export default function NovoAchadinhoPage() {
                   <ShoppingBag className="w-10 h-10 mb-2" />
                   <span className="text-xs">Foto do Produto</span>
                 </div>
+              )}
+
+              {/* Photo navigation if multiple */}
+              {images.length > 1 && (
+                <>
+                  <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2 pointer-events-none">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setActivePreviewIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1))
+                      }
+                      className="p-1 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors pointer-events-auto"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setActivePreviewIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0))
+                      }
+                      className="p-1 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors pointer-events-auto"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="absolute bottom-2.5 right-2.5 bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    {activePreviewIndex + 1}/{images.length} fotos
+                  </div>
+                </>
               )}
 
               {/* Badges */}

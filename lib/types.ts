@@ -19,6 +19,7 @@ export interface Product {
   platform: PlatformId;
   category: string;
   imageUrl: string;
+  images?: string[];
   affiliateUrl: string;
   price: number;
   originalPrice?: number;
@@ -73,6 +74,20 @@ export interface CustomCategory {
   icon?: string;
   color?: string;
   createdAt?: string;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  title: string;
+  discount: string;
+  platform: PlatformId;
+  description: string;
+  minSpend?: string;
+  expirationDate?: string;
+  affiliateUrl: string;
+  isVerified: boolean;
+  category: string;
 }
 
 export type SortOption = 'recent' | 'price-asc' | 'price-desc' | 'discount' | 'rating';

@@ -16,9 +16,15 @@ import { db, auth, googleProvider, handleFirestoreError, OperationType } from '.
 import { Product, Article, SiteSettings, CustomLandingPage, CustomCategory } from './types';
 import { INITIAL_PRODUCTS } from './constants';
 
-export { INITIAL_PRODUCTS } from './constants';
+export { INITIAL_PRODUCTS, INITIAL_COUPONS } from './constants';
 
-export const ADMIN_EMAIL = 'taper.sant@gmail.com';
+export const PRIMARY_ADMIN_EMAIL = 'taper.sant@gmail.com';
+export const ALLOWED_ADMIN_EMAILS = [
+  'taper.sant@gmail.com',
+  'tappersantcomtemodo@gmail.com',
+];
+
+export const ADMIN_EMAIL = PRIMARY_ADMIN_EMAIL;
 
 export const INITIAL_LANDING_PAGES: CustomLandingPage[] = [
   {
@@ -132,11 +138,11 @@ export const INITIAL_SETTINGS: SiteSettings = {
   updatedAt: new Date().toISOString(),
 };
 
-// Check if user is authenticated admin
+// Check if user is authenticated admin - exclusively authorized emails
 export function isUserAdmin(user: User | null): boolean {
-  if (!user) return false;
-  // Any logged-in user with Google account or Tamires' email
-  return true;
+  if (!user || !user.email) return false;
+  const userEmail = user.email.trim().toLowerCase();
+  return ALLOWED_ADMIN_EMAILS.some((adm) => adm.toLowerCase() === userEmail);
 }
 
 // Subscribe to real-time products collection in Firestore
@@ -158,12 +164,18 @@ export function subscribeFirestoreProducts(
       const list: Product[] = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
+        const primaryImg = data.imageUrl || '';
+        const imagesList = Array.isArray(data.images) && data.images.length > 0
+          ? data.images.filter(Boolean)
+          : (primaryImg ? [primaryImg] : []);
+
         list.push({
           id: docSnap.id,
           title: data.title || '',
           platform: data.platform || 'shopee',
           category: data.category || 'Geral',
-          imageUrl: data.imageUrl || '',
+          imageUrl: primaryImg || (imagesList[0] || ''),
+          images: imagesList,
           affiliateUrl: data.affiliateUrl || '',
           price: Number(data.price) || 0,
           originalPrice: data.originalPrice ? Number(data.originalPrice) : undefined,
@@ -312,6 +324,10 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
   const path = `products/${product.id}`;
   try {
     const docRef = doc(db, 'products', product.id);
+    const imagesList = Array.isArray(product.images) && product.images.length > 0
+      ? product.images.filter(Boolean)
+      : (product.imageUrl ? [product.imageUrl] : []);
+
     await setDoc(
       docRef,
       {
@@ -319,7 +335,8 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
         title: product.title,
         platform: product.platform,
         category: product.category,
-        imageUrl: product.imageUrl,
+        imageUrl: product.imageUrl || (imagesList[0] || ''),
+        images: imagesList,
         affiliateUrl: product.affiliateUrl,
         price: Number(product.price),
         originalPrice: product.originalPrice ? Number(product.originalPrice) : null,

@@ -13,7 +13,33 @@ import {
   ExternalLink,
   Save,
   Sparkles,
+  Upload,
+  Image as ImageIcon,
+  Check,
 } from 'lucide-react';
+
+const PRESET_ARTICLE_COVERS = [
+  {
+    label: 'Looks & Tendências',
+    url: '/images/hero_achadinhos_looks_1791404026649.jpg',
+  },
+  {
+    label: 'Vestuário & Moda',
+    url: '/images/product_vestuario_conjunto_1791404036584.jpg',
+  },
+  {
+    label: 'Suplementos & Fitness',
+    url: '/images/product_suplemento_whey_1791404045349.jpg',
+  },
+  {
+    label: 'Natal & Decoração',
+    url: '/images/product_natal_decoracao_1791404054900.jpg',
+  },
+  {
+    label: 'Doces & Gourmet',
+    url: '/images/product_guloseimas_doces_1791404064852.jpg',
+  },
+];
 
 export default function PainelArtigosPage() {
   const { articles, handleSaveArticle, handleDeleteArticle } = useAdmin();
@@ -26,6 +52,20 @@ export default function PainelArtigosPage() {
   const [content, setContent] = useState('');
   const [coverImageUrl, setCoverImageUrl] = useState('/images/hero_achadinhos_looks_1791404026649.jpg');
   const [saving, setSaving] = useState(false);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) {
+        setCoverImageUrl(result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const startCreate = () => {
     setEditingId(null);
@@ -155,14 +195,113 @@ export default function PainelArtigosPage() {
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-stone-900">URL da Imagem de Capa</label>
-            <input
-              type="text"
-              value={coverImageUrl}
-              onChange={(e) => setCoverImageUrl(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900"
-            />
+          {/* Rich Cover Image Section */}
+          <div className="space-y-3 p-4 bg-stone-50/80 rounded-2xl border border-stone-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
+                  <ImageIcon className="w-4 h-4 text-stone-700" />
+                  <span>Foto de Capa do Post</span>
+                </label>
+                <p className="text-[11px] text-stone-500">
+                  A imagem que aparece em destaque no topo do artigo e nos cards do blog.
+                </p>
+              </div>
+
+              <label className="cursor-pointer py-1.5 px-3 bg-white hover:bg-stone-100 border border-stone-300 rounded-xl text-xs font-semibold text-stone-700 transition-colors flex items-center gap-1.5 shadow-2xs">
+                <Upload className="w-3.5 h-3.5 text-stone-600" />
+                <span>Subir do Dispositivo</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            {/* Live Preview of Cover Image */}
+            {coverImageUrl ? (
+              <div className="relative aspect-16/7 w-full rounded-2xl overflow-hidden border-2 border-amber-300 bg-stone-100 shadow-xs">
+                <Image
+                  src={coverImageUrl}
+                  alt="Prévia da Capa"
+                  fill
+                  className="object-cover"
+                  unoptimized
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-transparent to-transparent flex items-end p-4">
+                  <span className="text-white text-xs font-semibold drop-shadow-md">
+                    {title || 'Título do seu artigo aparecerá aqui...'}
+                  </span>
+                </div>
+                <span className="absolute top-2.5 right-2.5 bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  Foto de Capa Ativa
+                </span>
+              </div>
+            ) : (
+              <div className="p-8 border-2 border-dashed border-stone-300 rounded-2xl text-center text-stone-400 text-xs">
+                Nenhuma foto de capa selecionada. Escolha uma das opções abaixo:
+              </div>
+            )}
+
+            {/* Custom URL Input */}
+            <div className="space-y-1">
+              <label className="text-[11px] font-bold text-stone-700">
+                Ou cole a URL direta de uma imagem:
+              </label>
+              <input
+                type="text"
+                value={coverImageUrl}
+                onChange={(e) => setCoverImageUrl(e.target.value)}
+                placeholder="https://exemplo.com/foto-de-capa.jpg"
+                className="w-full px-3.5 py-2 text-xs bg-white border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 text-stone-900"
+              />
+            </div>
+
+            {/* Presets Cards */}
+            <div className="pt-1 border-t border-stone-200/60">
+              <span className="text-[11px] text-stone-500 font-semibold block mb-2">
+                Fotos de capa prontas (1 clique para aplicar):
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {PRESET_ARTICLE_COVERS.map((preset) => {
+                  const isSelected = coverImageUrl === preset.url;
+                  return (
+                    <button
+                      key={preset.url}
+                      type="button"
+                      onClick={() => setCoverImageUrl(preset.url)}
+                      className={`relative aspect-4/3 rounded-xl overflow-hidden border-2 text-left transition-all group ${
+                        isSelected
+                          ? 'border-amber-400 ring-2 ring-amber-400/30'
+                          : 'border-stone-200 hover:border-stone-400'
+                      }`}
+                    >
+                      <Image
+                        src={preset.url}
+                        alt={preset.label}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform"
+                        unoptimized
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute inset-0 bg-stone-950/40 flex items-end p-1.5">
+                        <span className="text-[10px] font-bold text-white leading-tight drop-shadow-xs">
+                          {preset.label}
+                        </span>
+                      </div>
+                      {isSelected && (
+                        <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-amber-400 text-stone-950 flex items-center justify-center shadow-xs">
+                          <Check className="w-2.5 h-2.5" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           <div className="space-y-1.5">

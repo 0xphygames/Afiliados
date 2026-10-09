@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { AdminProvider, useAdmin } from '@/lib/AdminContext';
+import { PRIMARY_ADMIN_EMAIL } from '@/lib/firestore-products';
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -18,6 +19,7 @@ import {
   Menu,
   X,
   ShieldCheck,
+  ShieldAlert,
   Lock,
   LogIn,
   ChevronRight,
@@ -114,6 +116,37 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             <Link
               href="/"
               className="w-full py-2.5 px-4 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl transition-colors"
+            >
+              Voltar ao Site Público
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-stone-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl p-8 shadow-md border border-rose-200 text-center max-w-md w-full space-y-4 animate-fade-in">
+          <div className="w-16 h-16 bg-rose-50 text-rose-600 border border-rose-200 rounded-3xl mx-auto flex items-center justify-center shadow-xs">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <h2 className="font-serif font-bold text-stone-900 text-xl">Acesso Não Autorizado</h2>
+          <p className="text-xs text-stone-600 leading-relaxed">
+            A conta conectada (<strong>{currentUser.email}</strong>) não possui permissão de administradora. O painel é restrito exclusivamente para o e-mail: <strong className="text-stone-900">{PRIMARY_ADMIN_EMAIL}</strong>.
+          </p>
+          <div className="pt-2 flex flex-col gap-2">
+            <button
+              onClick={onSignOut}
+              className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <LogOut className="w-4 h-4 text-amber-300" />
+              <span>Sair e Entrar com E-mail Autorizado</span>
+            </button>
+            <Link
+              href="/"
+              className="w-full py-2.5 px-4 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl transition-colors text-center"
             >
               Voltar ao Site Público
             </Link>

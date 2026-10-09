@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { PlatformId, SiteSettings } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
 import {
@@ -109,55 +110,49 @@ export function HeroBanner({
             </span>
 
             {/* Home */}
-            <button
-              onClick={() => {
-                onSelectPlatform('all');
-                scrollToSection('topo');
-              }}
+            <Link
+              href="/"
               className="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-900 hover:text-white text-stone-800 font-bold text-xs border border-stone-200 shadow-2xs transition-all flex items-center gap-1.5 shrink-0"
             >
               <HomeIcon className="w-3.5 h-3.5 text-stone-600" />
               <span>Home</span>
-            </button>
+            </Link>
 
             {/* Achadinhos */}
-            <button
-              onClick={() => scrollToSection('achadinhos')}
+            <Link
+              href="/achadinhos"
               className="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-900 hover:text-white text-stone-800 font-bold text-xs border border-stone-200 shadow-2xs transition-all flex items-center gap-1.5 shrink-0"
             >
               <ShoppingBag className="w-3.5 h-3.5 text-[#EE4D2D]" />
               <span>Achadinhos</span>
-            </button>
+            </Link>
 
             {/* Blog */}
-            <button
-              onClick={() => scrollToSection('blog')}
+            <Link
+              href="/blog"
               className="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-900 hover:text-white text-stone-800 font-bold text-xs border border-stone-200 shadow-2xs transition-all flex items-center gap-1.5 shrink-0"
             >
               <BookOpen className="w-3.5 h-3.5 text-amber-600" />
               <span>Blog & Dicas</span>
-            </button>
+            </Link>
 
             {/* Cupons Desconto & Similares */}
-            <button
-              onClick={() => scrollToSection('cupons')}
+            <Link
+              href="/cupons"
               className="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-900 hover:text-white text-stone-800 font-bold text-xs border border-stone-200 shadow-2xs transition-all flex items-center gap-1.5 shrink-0"
             >
               <Tag className="w-3.5 h-3.5 text-emerald-600" />
               <span>Cupons Desconto & Similares</span>
-            </button>
+            </Link>
 
             {/* Buscar */}
-            <button
-              onClick={() => {
-                scrollToSection('achadinhos');
-                onFocusSearch?.();
-              }}
+            <Link
+              href="/busca"
               className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-stone-900 hover:text-white text-stone-900 font-bold text-xs border border-amber-300 shadow-2xs transition-all flex items-center gap-1.5 shrink-0"
             >
               <Search className="w-3.5 h-3.5 text-amber-600" />
               <span>Buscar</span>
-            </button>
+            </Link>
           </div>
 
           {/* Social Share Trigger */}

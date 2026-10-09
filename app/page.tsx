@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { PlatformId, Product, Article, SiteSettings, SortOption, CustomLandingPage, CustomCategory } from '@/lib/types';
@@ -26,12 +26,10 @@ import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { ArticlesSection } from '@/components/ArticlesSection';
 import { ArticleDetailModal } from '@/components/ArticleDetailModal';
 import { LandingPagesSection } from '@/components/LandingPagesSection';
-import { VipGroupSection } from '@/components/VipGroupSection';
 import { Footer } from '@/components/Footer';
 import {
   ArrowUpDown,
   ShoppingBag,
-  Database,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -79,20 +77,20 @@ export default function HomePage() {
     });
 
     // Listen to real-time landing pages
-    const unsubscribePages = subscribeFirestoreLandingPages((pagesList) => {
+    const unsubscribeLandingPages = subscribeFirestoreLandingPages((pagesList) => {
       if (pagesList && pagesList.length > 0) {
         setLandingPages(pagesList);
       }
     });
 
     // Listen to real-time categories
-    const unsubscribeCategories = subscribeFirestoreCategories((catsList) => {
-      if (catsList && catsList.length > 0) {
-        setCategories(catsList);
+    const unsubscribeCategories = subscribeFirestoreCategories((catList) => {
+      if (catList && catList.length > 0) {
+        setCategories(catList);
       }
     });
 
-    // Listen to auth
+    // Listen to auth state
     const unsubscribeAuth = subscribeAuth((user) => {
       setCurrentUser(user);
     });
@@ -101,7 +99,7 @@ export default function HomePage() {
       unsubscribeProducts();
       unsubscribeArticles();
       unsubscribeSettings();
-      unsubscribePages();
+      unsubscribeLandingPages();
       unsubscribeCategories();
       unsubscribeAuth();
     };
@@ -109,19 +107,19 @@ export default function HomePage() {
 
   const isAdmin = isUserAdmin(currentUser);
 
-  // Change platform
+  // Switch store platform
   const handleSelectPlatform = (platform: PlatformId | 'all') => {
     setActivePlatform(platform);
     setActiveCategory('Todos os Setores');
     setActiveCampaignSlug(null);
   };
 
-  // Change category
+  // Switch category sector
   const handleSelectCategory = (category: string) => {
     setActiveCategory(category);
   };
 
-  // Select campaign
+  // Select campaign from landing pages showcase
   const handleSelectCampaign = (page: CustomLandingPage) => {
     setActiveCampaignSlug(page.slug);
     if (page.platform) {
@@ -203,15 +201,6 @@ export default function HomePage() {
           onClearCampaign={() => setActiveCampaignSlug(null)}
         />
 
-        {/* Category & Sector Filter Bar */}
-        <CategoryBar
-          activePlatform={activePlatform}
-          activeCategory={activeCategory}
-          onSelectCategory={handleSelectCategory}
-          products={products}
-          customCategories={categories}
-        />
-
         {/* Section Header with Controls */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4 bg-white">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-stone-200">
@@ -227,11 +216,10 @@ export default function HomePage() {
                     {activeCategory}
                   </span>
                 )}
-                
               </div>
               <p className="text-xs text-stone-500 mt-1">
                 {currentPlatformInfo?.tagline ||
-                  'Produtos testados, preÃ§os imperdÃ­veis e links diretos para compras seguras.'}
+                  'Produtos testados, preços imperdíveis e links diretos para compras seguras.'}
               </p>
             </div>
 
@@ -245,8 +233,8 @@ export default function HomePage() {
                   className="bg-transparent text-stone-900 text-xs font-semibold focus:outline-none cursor-pointer"
                 >
                   <option value="recent">Mais Recentes</option>
-                  <option value="price-asc">Menor PreÃ§o</option>
-                  <option value="price-desc">Maior PreÃ§o</option>
+                  <option value="price-asc">Menor Preço</option>
+                  <option value="price-desc">Maior Preço</option>
                   <option value="discount">Maior Desconto (%)</option>
                   <option value="rating">Melhor Avaliados</option>
                 </select>
@@ -255,60 +243,70 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Product Grid */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 bg-white">
-          {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              {filteredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onOpenDetails={setSelectedProduct}
-                />
-              ))}
+        {/* Product Grid Layout with Responsive CategorySidebar */}
+        <section id="achadinhos" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 bg-white">
+          <div className="flex flex-col md:flex-row items-start gap-6 lg:gap-8">
+            <CategorySidebar
+              activePlatform={activePlatform}
+              activeCategory={activeCategory}
+              onSelectCategory={handleSelectCategory}
+              products={products}
+              customCategories={categories}
+            />
+
+            <div className="flex-1 min-w-0 w-full">
+              {filteredProducts.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
+                  {filteredProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onOpenDetails={setSelectedProduct}
+                    />
+                  ))}
+                </div>
+              ) : (
+                /* Empty State */
+                <div className="text-center py-16 px-4 bg-white rounded-3xl border border-stone-200 shadow-xs max-w-xl mx-auto my-8">
+                  <ShoppingBag className="w-12 h-12 text-stone-300 mx-auto mb-3" />
+                  <h3 className="font-serif text-lg font-bold text-stone-900 mb-1">
+                    Nenhum achadinho encontrado neste filtro
+                  </h3>
+                  <p className="text-xs text-stone-500 max-w-sm mx-auto mb-6">
+                    {searchQuery
+                      ? `Não encontramos resultados para "${searchQuery}". Tente outro termo.`
+                      : `Ainda não temos produtos cadastrados no setor "${activeCategory}".`}
+                  </p>
+                  <div className="flex items-center justify-center gap-3">
+                    {activeCategory !== 'Todos os Setores' && (
+                      <button
+                        onClick={() => handleSelectCategory('Todos os Setores')}
+                        className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold rounded-xl transition-colors border border-stone-300"
+                      >
+                        Ver todos os setores
+                      </button>
+                    )}
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl transition-colors shadow-xs"
+                      >
+                        Limpar busca
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-          ) : (
-            /* Empty State */
-            <div className="text-center py-16 px-4 bg-white rounded-3xl border border-stone-200 shadow-xs max-w-xl mx-auto my-8">
-              <ShoppingBag className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-              <h3 className="font-serif text-lg font-bold text-stone-900 mb-1">
-                Nenhum achadinho encontrado neste filtro
-              </h3>
-              <p className="text-xs text-stone-500 max-w-sm mx-auto mb-6">
-                {searchQuery
-                  ? `NÃ£o encontramos resultados para "${searchQuery}". Tente outro termo.`
-                  : `Ainda nÃ£o temos produtos cadastrados no setor "${activeCategory}".`}
-              </p>
-              <div className="flex items-center justify-center gap-3">
-                {activeCategory !== 'Todos os Setores' && (
-                  <button
-                    onClick={() => handleSelectCategory('Todos os Setores')}
-                    className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold rounded-xl transition-colors border border-stone-300"
-                  >
-                    Ver todos os setores
-                  </button>
-                )}
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl transition-colors shadow-xs"
-                  >
-                    Limpar busca
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
+          </div>
         </section>
 
-        {/* Blog & Articles Section (Public Display) */}
+        {/* Blog & Articles Section (Public Display - Apenas os 3 mais recentes na Home) */}
         <ArticlesSection
-          articles={articles}
+          articles={articles.slice(0, 3)}
           onSelectArticle={setSelectedArticle}
+          showViewAllButton={true}
         />
-
-        {/* VIP Channels & Community Banner */}
-        <VipGroupSection />
       </main>
 
       {/* Product Detail Modal */}
@@ -332,5 +330,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-

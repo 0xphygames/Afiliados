@@ -16,6 +16,8 @@ import {
   Share2,
   Tag,
   ShieldCheck,
+  Camera,
+  Flame,
 } from 'lucide-react';
 import { SocialShare } from './SocialShare';
 
@@ -103,13 +105,22 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
 
         {/* Top Badges overlay */}
         <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between pointer-events-none">
-          {/* Store Badge */}
-          <span
-            style={{ backgroundColor: platform.color }}
-            className="px-2.5 py-1 text-[11px] font-bold text-white rounded-md shadow-xs flex items-center gap-1 uppercase tracking-wider"
-          >
-            {platform.name}
-          </span>
+          {/* Store Badge and Photos count */}
+          <div className="flex items-center gap-1.5">
+            <span
+              style={{ backgroundColor: platform.color }}
+              className="px-2.5 py-1 text-[11px] font-bold text-white rounded-md shadow-xs flex items-center gap-1 uppercase tracking-wider"
+            >
+              {platform.name}
+            </span>
+
+            {product.images && product.images.length > 1 && (
+              <span className="px-2 py-0.5 text-[10px] font-bold bg-stone-900/80 backdrop-blur-xs text-stone-100 rounded-md shadow-xs flex items-center gap-1">
+                <Camera className="w-3 h-3 text-amber-300" />
+                <span>{product.images.length} fotos</span>
+              </span>
+            )}
+          </div>
 
           <div className="flex items-center gap-1.5 pointer-events-auto">
             {/* Quick Share to Social */}
@@ -155,8 +166,9 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
         {/* Promotional Tag or Discount overlay */}
         {discountPercent && discountPercent > 0 && (
           <div className="absolute bottom-2.5 left-2.5">
-            <span className="px-2 py-0.5 text-xs font-black bg-rose-600 text-white rounded-md shadow-xs">
-              -{discountPercent}% OFF
+            <span className="px-2 py-0.5 text-xs font-black bg-rose-600 text-white rounded-md shadow-xs flex items-center gap-1">
+              <Flame className="w-3 h-3 text-amber-300 fill-amber-300" />
+              <span>-{discountPercent}% OFF</span>
             </span>
           </div>
         )}

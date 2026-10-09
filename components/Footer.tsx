@@ -7,7 +7,7 @@ import { ShieldCheck, Heart, Lock, KeyRound, LogOut, CheckCircle2 } from 'lucide
 import { User } from 'firebase/auth';
 
 interface FooterProps {
-  onSelectPlatform: (platform: PlatformId | 'all') => void;
+  onSelectPlatform?: (platform: PlatformId | 'all') => void;
   onOpenAdmin?: () => void;
   onOpenAuth?: () => void;
   currentUser?: User | null;
@@ -21,6 +21,13 @@ export function Footer({
   currentUser,
   isAdmin,
 }: FooterProps) {
+  const handlePlatformClick = (platform: PlatformId | 'all') => {
+    if (onSelectPlatform) {
+      onSelectPlatform(platform);
+    } else if (typeof window !== 'undefined') {
+      window.location.href = `/achadinhos?loja=${platform}`;
+    }
+  };
   return (
     <footer className="bg-white text-stone-600 border-t border-stone-200 mt-16 pt-12 pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -49,40 +56,40 @@ export function Footer({
             <ul className="space-y-1.5 text-xs text-stone-600">
               <li>
                 <button
-                  onClick={() => onSelectPlatform('shopee')}
-                  className="hover:text-stone-950 transition-colors font-medium text-left"
+                  onClick={() => handlePlatformClick('shopee')}
+                  className="hover:text-stone-950 transition-colors font-medium text-left cursor-pointer"
                 >
                   🧡 Shopee (Setores & Achados)
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => onSelectPlatform('shein')}
-                  className="hover:text-stone-950 transition-colors font-medium text-left"
+                  onClick={() => handlePlatformClick('shein')}
+                  className="hover:text-stone-950 transition-colors font-medium text-left cursor-pointer"
                 >
                   🖤 Shein (Looks & Tendências)
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => onSelectPlatform('mercadolivre')}
-                  className="hover:text-stone-950 transition-colors font-medium text-left"
+                  onClick={() => handlePlatformClick('mercadolivre')}
+                  className="hover:text-stone-950 transition-colors font-medium text-left cursor-pointer"
                 >
                   💛 Mercado Livre (Entrega Rápida FULL)
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => onSelectPlatform('amazon')}
-                  className="hover:text-stone-950 transition-colors font-medium text-left"
+                  onClick={() => handlePlatformClick('amazon')}
+                  className="hover:text-stone-950 transition-colors font-medium text-left cursor-pointer"
                 >
                   📦 Amazon (Prime & Importados)
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => onSelectPlatform('all')}
-                  className="hover:text-stone-950 transition-colors font-medium text-left"
+                  onClick={() => handlePlatformClick('all')}
+                  className="hover:text-stone-950 transition-colors font-medium text-left cursor-pointer"
                 >
                   ✨ Todos os Achadinhos
                 </button>
@@ -93,17 +100,33 @@ export function Footer({
           {/* Área Restrita / Admin no Rodapé (Discreto conforme solicitado) */}
           <div className="space-y-2.5">
             <h4 className="text-xs font-bold text-stone-900 uppercase tracking-wider">
-              Institucional
+              Navegação
             </h4>
             <ul className="space-y-2 text-xs text-stone-600">
               <li>
-                <a
-                  href="#topo"
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="hover:text-stone-950 transition-colors block"
-                >
-                  Voltar ao Topo
-                </a>
+                <Link href="/" className="hover:text-stone-950 transition-colors block">
+                  Home (Vitrine Principal)
+                </Link>
+              </li>
+              <li>
+                <Link href="/achadinhos" className="hover:text-stone-950 transition-colors block">
+                  Todos os Achadinhos
+                </Link>
+              </li>
+              <li>
+                <Link href="/blog" className="hover:text-stone-950 transition-colors block">
+                  Blog & Dicas da Tamires
+                </Link>
+              </li>
+              <li>
+                <Link href="/cupons" className="hover:text-stone-950 transition-colors block">
+                  Cupons & Descontos Verificados
+                </Link>
+              </li>
+              <li>
+                <Link href="/busca" className="hover:text-stone-950 transition-colors block">
+                  Busca Geral no Site
+                </Link>
               </li>
 
               {/* Discreet login & management area */}

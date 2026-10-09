@@ -10,9 +10,14 @@ import { SocialShare } from './SocialShare';
 interface ArticlesSectionProps {
   articles: Article[];
   onSelectArticle?: (article: Article) => void;
+  showViewAllButton?: boolean;
 }
 
-export function ArticlesSection({ articles, onSelectArticle }: ArticlesSectionProps) {
+export function ArticlesSection({
+  articles,
+  onSelectArticle,
+  showViewAllButton = true,
+}: ArticlesSectionProps) {
   if (!articles || articles.length === 0) return null;
 
   return (
@@ -111,6 +116,19 @@ export function ArticlesSection({ articles, onSelectArticle }: ArticlesSectionPr
           );
         })}
       </div>
+
+      {showViewAllButton && (
+        <div className="pt-8 text-center">
+          <Link
+            href="/blog"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded-xl shadow-md hover:shadow-lg transition-all"
+          >
+            <BookOpen className="w-4 h-4 text-amber-300" />
+            <span>Ver Todos os Artigos e Resenhas do Blog</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      )}
     </section>
   );
 }

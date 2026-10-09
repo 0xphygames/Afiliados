@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import {
@@ -157,35 +157,28 @@ export function SocialShare({
         </button>
         {/* Facebook */}
         <button
-          onClick={(e) => handleShareWindow(e, `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`)}
-          className="w-7 h-7 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-200 flex items-center justify-center transition-colors shadow-2xs"
-          title="Compartilhar no Facebook"
-        >
-          <Share2 className="w-3.5 h-3.5" />
-        </button>
-
-        {/* X / Twitter */}
-        <button
-          onClick={(e) => handleShareWindow(e, `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`)}
-          className="w-7 h-7 rounded-full bg-stone-100 text-stone-800 hover:bg-stone-900 hover:text-white border border-stone-300 flex items-center justify-center transition-colors shadow-2xs"
-          title="Compartilhar no X (Twitter)"
-        >
-          <Share2 className="w-3.5 h-3.5" />
-        </button>
-
-        {/* Facebook */}
-        <button
           onClick={(e) => handleShareWindow(e, facebookUrl)}
           className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#1877F2]/10 hover:bg-[#1877F2] text-blue-800 hover:text-white font-semibold text-xs border border-blue-300 transition-all duration-150 shadow-2xs"
+          title="Compartilhar no Facebook"
         >
           <ExternalLink className="w-4 h-4" />
           <span>Facebook</span>
         </button>
 
+        {/* X / Twitter */}
+        <button
+          onClick={(e) => handleShareWindow(e, twitterUrl)}
+          className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-stone-100 hover:bg-stone-900 text-stone-800 hover:text-white font-semibold text-xs border border-stone-300 transition-all duration-150 shadow-2xs"
+          title="Compartilhar no X (Twitter)"
+        >
+          <Share2 className="w-4 h-4" />
+          <span>X (Twitter)</span>
+        </button>
+
         {/* Copiar Link */}
         <button
           onClick={handleCopy}
-          className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl font-semibold text-xs border transition-all duration-150 shadow-2xs ${
+          className={`col-span-2 sm:col-span-4 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl font-semibold text-xs border transition-all duration-150 shadow-2xs ${
             copied
               ? 'bg-emerald-600 text-white border-emerald-600'
               : 'bg-white hover:bg-stone-900 text-stone-800 hover:text-white border-stone-300'
