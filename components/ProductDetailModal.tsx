@@ -82,19 +82,35 @@ export function ProductDetailModal({ product, onClose, onEdit }: ProductDetailMo
           <X className="w-4 h-4" />
         </button>
 
-        {/* Media Column with Gallery */}
-        <div className="relative w-full md:w-1/2 flex flex-col bg-stone-100">
-          <div className="relative flex-1 min-h-[280px] sm:min-h-[340px] aspect-square md:aspect-auto">
+        {/* Media Column with Gallery (Non-cropping presentation) */}
+        <div className="relative w-full md:w-1/2 flex flex-col bg-stone-900/5">
+          <div className="relative flex-1 min-h-[300px] sm:min-h-[360px] aspect-square md:aspect-auto flex items-center justify-center overflow-hidden">
             {currentDisplayImage ? (
-              <Image
-                src={currentDisplayImage}
-                alt={product.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-                referrerPolicy="no-referrer"
-                unoptimized
-              />
+              <>
+                {/* Ambient blur backdrop */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  <Image
+                    src={currentDisplayImage}
+                    alt=""
+                    fill
+                    className="object-cover filter blur-2xl opacity-30 scale-125"
+                    referrerPolicy="no-referrer"
+                    unoptimized
+                    aria-hidden="true"
+                  />
+                </div>
+
+                {/* Main intact product photo */}
+                <Image
+                  src={currentDisplayImage}
+                  alt={product.title}
+                  fill
+                  className="object-contain p-4 relative z-1"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  referrerPolicy="no-referrer"
+                  unoptimized
+                />
+              </>
             ) : (
               <div className="w-full h-full flex items-center justify-center text-stone-400">
                 Sem foto

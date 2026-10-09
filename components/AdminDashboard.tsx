@@ -21,6 +21,7 @@ import {
   loginWithGoogle,
   logoutUser,
 } from '@/lib/firestore-products';
+import { optimizeImageFile } from '@/lib/image-compress';
 import {
   X,
   Plus,
@@ -51,6 +52,15 @@ import {
   BarChart3,
   TrendingUp,
   Percent,
+  Clock,
+  Flame,
+  MessageSquare,
+  HelpCircle,
+  ChevronDown,
+  ChevronUp,
+  Star,
+  Smartphone,
+  Activity,
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -140,6 +150,27 @@ export function AdminDashboard({
   const [pageBadge, setPageBadge] = useState('Campanha Especial');
   const [pageBannerUrl, setPageBannerUrl] = useState('/images/hero_achadinhos_looks_1791404026649.jpg');
   const [pageIsActive, setPageIsActive] = useState(true);
+
+  // Bottom of Funnel (Fundo de Funil) states
+  const [pageCountdownActive, setPageCountdownActive] = useState(false);
+  const [pageCountdownEnd, setPageCountdownEnd] = useState('');
+  const [pageScarcityText, setPageScarcityText] = useState('');
+  const [pageGuaranteeText, setPageGuaranteeText] = useState('Garantia Incondicional de 7 Dias · Compra 100% Blindada');
+  const [pageRatingScore, setPageRatingScore] = useState(4.9);
+  const [pageTestimonials, setPageTestimonials] = useState<Array<{ name: string; text: string; rating?: number; role?: string }>>([
+    { name: 'Camila Ribeiro', role: 'Compradora Verificada', rating: 5, text: 'O produto chegou super rápido e tem qualidade impecável!' },
+    { name: 'Mariana Duarte', role: 'Seguidora VIP', rating: 5, text: 'Aproveitei o cupom da Tamires e economizei bastante!' },
+  ]);
+  const [pageFaqs, setPageFaqs] = useState<Array<{ question: string; answer: string }>>([
+    { question: 'O link direciona para a loja oficial com segurança?', answer: 'Sim, direciona diretamente para o aplicativo oficial do marketplace com proteção total.' },
+    { question: 'Como funciona a garantia de 7 dias?', answer: 'Você tem garantia legal incondicional de 7 dias para devolução ou troca gratuita.' },
+  ]);
+  const [pageStickyMobileCta, setPageStickyMobileCta] = useState(true);
+  const [pageCtaText, setPageCtaText] = useState('Garantir Oferta Agora com Desconto');
+  const [pageCtaUrl, setPageCtaUrl] = useState('');
+  const [pageFacebookPixelId, setPageFacebookPixelId] = useState('');
+  const [pageGoogleAnalyticsId, setPageGoogleAnalyticsId] = useState('');
+  const [pageAdvancedTrackingOpen, setPageAdvancedTrackingOpen] = useState(false);
 
   // Category form state
   const [newCatName, setNewCatName] = useState('');
@@ -335,9 +366,29 @@ export function AdminDashboard({
     setPageSubheading('');
     setPagePlatform('all');
     setPageCategory('Vestuário');
-    setPageBadge('Campanha Especial');
+    setPageBadge('ÚLTIMAS UNIDADES');
     setPageBannerUrl('/images/hero_achadinhos_looks_1791404026649.jpg');
     setPageIsActive(true);
+
+    setPageCountdownActive(false);
+    setPageCountdownEnd('');
+    setPageScarcityText('');
+    setPageGuaranteeText('Garantia Incondicional de 7 Dias · Compra 100% Blindada');
+    setPageRatingScore(4.9);
+    setPageTestimonials([
+      { name: 'Camila Ribeiro', role: 'Compradora Verificada', rating: 5, text: 'O produto chegou super rápido e tem qualidade impecável!' },
+      { name: 'Mariana Duarte', role: 'Seguidora VIP', rating: 5, text: 'Aproveitei o cupom da Tamires e economizei bastante!' },
+    ]);
+    setPageFaqs([
+      { question: 'O link direciona para a loja oficial com segurança?', answer: 'Sim, direciona diretamente para o aplicativo oficial do marketplace com proteção total.' },
+      { question: 'Como funciona a garantia de 7 dias?', answer: 'Você tem garantia legal incondicional de 7 dias para devolução ou troca gratuita.' },
+    ]);
+    setPageStickyMobileCta(true);
+    setPageCtaText('Garantir Oferta Agora com Desconto');
+    setPageCtaUrl('');
+    setPageFacebookPixelId('');
+    setPageGoogleAnalyticsId('');
+    setPageAdvancedTrackingOpen(false);
   };
 
   const startEditPage = (page: CustomLandingPage) => {
@@ -348,9 +399,29 @@ export function AdminDashboard({
     setPageSubheading(page.subheading || '');
     setPagePlatform(page.platform || 'all');
     setPageCategory(page.category || 'Vestuário');
-    setPageBadge(page.badge || '');
+    setPageBadge(page.badge || 'PROMOÇÃO IMPERDÍVEL');
     setPageBannerUrl(page.bannerImageUrl || '/images/hero_achadinhos_looks_1791404026649.jpg');
     setPageIsActive(page.isActive !== false);
+
+    setPageCountdownActive(Boolean(page.countdownActive));
+    setPageCountdownEnd(page.countdownEnd || '');
+    setPageScarcityText(page.scarcityText || '');
+    setPageGuaranteeText(page.guaranteeText || 'Garantia Incondicional de 7 Dias · Compra 100% Blindada');
+    setPageRatingScore(page.ratingScore ?? 4.9);
+    setPageTestimonials(page.testimonials && page.testimonials.length > 0 ? page.testimonials : [
+      { name: 'Camila Ribeiro', role: 'Compradora Verificada', rating: 5, text: 'O produto chegou super rápido e tem qualidade impecável!' },
+      { name: 'Mariana Duarte', role: 'Seguidora VIP', rating: 5, text: 'Aproveitei o cupom da Tamires e economizei bastante!' },
+    ]);
+    setPageFaqs(page.faqs && page.faqs.length > 0 ? page.faqs : [
+      { question: 'O link direciona para a loja oficial com segurança?', answer: 'Sim, direciona diretamente para o app oficial do marketplace com proteção total.' },
+      { question: 'Como funciona a garantia de 7 dias?', answer: 'Você tem garantia legal de 7 dias para devolução ou troca gratuita.' },
+    ]);
+    setPageStickyMobileCta(page.stickyMobileCta !== false);
+    setPageCtaText(page.ctaText || 'Garantir Oferta Agora com Desconto');
+    setPageCtaUrl(page.ctaUrl || '');
+    setPageFacebookPixelId(page.facebookPixelId || '');
+    setPageGoogleAnalyticsId(page.googleAnalyticsId || '');
+    setPageAdvancedTrackingOpen(Boolean(page.facebookPixelId || page.googleAnalyticsId));
     setSubTab('create');
   };
 
@@ -374,11 +445,25 @@ export function AdminDashboard({
       bannerImageUrl: pageBannerUrl.trim(),
       isActive: pageIsActive,
       createdAt: editingPageId ? (landingPages.find((x) => x.id === editingPageId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+
+      // Funnel & Conversion fields
+      countdownActive: pageCountdownActive,
+      countdownEnd: pageCountdownEnd.trim() || undefined,
+      scarcityText: pageScarcityText.trim() || undefined,
+      guaranteeText: pageGuaranteeText.trim() || undefined,
+      ratingScore: Number(pageRatingScore) || 4.9,
+      testimonials: pageTestimonials.filter((t) => t.name.trim() && t.text.trim()),
+      faqs: pageFaqs.filter((f) => f.question.trim() && f.answer.trim()),
+      stickyMobileCta: pageStickyMobileCta,
+      ctaText: pageCtaText.trim() || 'Garantir Oferta Agora com Desconto',
+      ctaUrl: pageCtaUrl.trim() || undefined,
+      facebookPixelId: pageFacebookPixelId.trim() || undefined,
+      googleAnalyticsId: pageGoogleAnalyticsId.trim() || undefined,
     };
 
     try {
       await saveLandingPageToFirestore(newPage);
-      showToast(editingPageId ? 'Página / Campanha atualizada no banco!' : 'Nova página / landing page criada com sucesso!');
+      showToast(editingPageId ? 'Campanha / Landing page atualizada no banco!' : 'Nova campanha publicada com sucesso!');
       resetPageForm();
       setSubTab('list');
     } catch (err) {
@@ -1101,12 +1186,17 @@ export function AdminDashboard({
                               ref={fileInputRef}
                               type="file"
                               accept="image/*"
-                              onChange={(e) => {
+                              onChange={async (e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  const r = new FileReader();
-                                  r.onloadend = () => setProdImageUrl(r.result as string);
-                                  r.readAsDataURL(file);
+                                  try {
+                                    const optimized = await optimizeImageFile(file, 1200, 0.85);
+                                    setProdImageUrl(optimized);
+                                  } catch (err) {
+                                    const r = new FileReader();
+                                    r.onloadend = () => setProdImageUrl(r.result as string);
+                                    r.readAsDataURL(file);
+                                  }
                                 }
                               }}
                               className="hidden"
@@ -1114,12 +1204,20 @@ export function AdminDashboard({
                           </div>
 
                           {prodImageUrl && (
-                            <div className="relative aspect-16/9 w-full max-w-xs rounded-xl overflow-hidden border border-stone-200 bg-stone-100">
+                            <div className="relative aspect-square w-48 rounded-xl overflow-hidden border border-stone-200 bg-stone-100 flex items-center justify-center">
+                              <Image
+                                src={prodImageUrl}
+                                alt=""
+                                fill
+                                className="object-cover filter blur-md opacity-25"
+                                referrerPolicy="no-referrer"
+                                unoptimized
+                              />
                               <Image
                                 src={prodImageUrl}
                                 alt="Pré-visualização"
                                 fill
-                                className="object-cover"
+                                className="object-contain p-2 relative z-1"
                                 referrerPolicy="no-referrer"
                                 unoptimized
                               />
@@ -1424,174 +1522,607 @@ export function AdminDashboard({
                       ))}
                     </div>
                   ) : (
-                    /* Create / Edit Landing Page Form */
-                    <form onSubmit={handleSaveLandingPage} className="space-y-4 max-w-2xl bg-white">
-                      <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
-                        <h4 className="text-xs font-bold text-stone-900">
-                          {editingPageId ? 'Editando Landing Page / Campanha' : 'Criar Nova Landing Page'}
-                        </h4>
+                    /* Create / Edit Landing Page Form (Bottom of Funnel Conversion Builder) */
+                    <form onSubmit={handleSaveLandingPage} className="space-y-6 max-w-3xl bg-white">
+                      <div className="p-4 bg-amber-50/80 rounded-2xl border border-amber-200/80 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Flame className="w-4 h-4 text-amber-600 fill-amber-500" />
+                          <h4 className="text-xs font-bold text-amber-950 uppercase tracking-wider">
+                            {editingPageId ? 'Editando Campanha de Fundo de Funil' : 'Criar Nova Campanha de Alta Conversão'}
+                          </h4>
+                        </div>
+                        <p className="text-xs text-amber-900">
+                          Configure gatilhos de urgência, escassez, prova social e botões de compra para maximizar conversões.
+                        </p>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* 1. Informações Básicas */}
+                      <div className="space-y-4 p-4 bg-stone-50/70 rounded-2xl border border-stone-200">
+                        <h5 className="text-xs font-bold text-stone-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5 text-stone-500" />
+                          <span>1. Identificação da Campanha & Headline</span>
+                        </h5>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
+                              Nome Interno da Campanha
+                            </label>
+                            <input
+                              type="text"
+                              value={pageTitle}
+                              onChange={(e) => {
+                                setPageTitle(e.target.value);
+                                if (!editingPageId) {
+                                  setPageSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-'));
+                                }
+                              }}
+                              placeholder="Ex: Especial Looks de Verão"
+                              className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
+                              Identificador / Slug URL (/campanha/slug)
+                            </label>
+                            <input
+                              type="text"
+                              value={pageSlug}
+                              onChange={(e) => setPageSlug(e.target.value)}
+                              placeholder="ex: looks-de-verao"
+                              className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-900 font-mono bg-white"
+                              required
+                            />
+                          </div>
+                        </div>
+
                         <div>
                           <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
-                            Título da Campanha
+                            Título Principal no Banner (Headline de Conversão)
                           </label>
                           <input
                             type="text"
-                            value={pageTitle}
-                            onChange={(e) => {
-                              setPageTitle(e.target.value);
-                              if (!editingPageId) {
-                                setPageSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-'));
-                              }
-                            }}
-                            placeholder="Ex: Especial Looks de Verão"
-                            className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-900"
-                            required
+                            value={pageHeadline}
+                            onChange={(e) => setPageHeadline(e.target.value)}
+                            placeholder="Ex: Vestidos, Conjuntos e Alfaiataria que Vestem Perfeito"
+                            className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white"
                           />
                         </div>
 
                         <div>
                           <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
-                            Identificador / Slug URL
+                            Subtítulo Explicativo (Quebra de Objeção)
                           </label>
-                          <input
-                            type="text"
-                            value={pageSlug}
-                            onChange={(e) => setPageSlug(e.target.value)}
-                            placeholder="ex: looks-de-verao"
-                            className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-900 font-mono"
-                            required
+                          <textarea
+                            rows={2}
+                            value={pageSubheading}
+                            onChange={(e) => setPageSubheading(e.target.value)}
+                            placeholder="Garantia de originalidade ou seu dinheiro de volta + Frete Grátis para todo o Brasil."
+                            className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white"
                           />
+                          <p className="text-[10px] text-stone-500 mt-0.5">
+                            Dica de alta conversão: enfatize garantia de devolução, frete grátis ou autenticidade para destravar a compra.
+                          </p>
                         </div>
                       </div>
 
-                      <div>
-                        <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
-                          Título Principal do Banner (Headline)
-                        </label>
-                        <input
-                          type="text"
-                          value={pageHeadline}
-                          onChange={(e) => setPageHeadline(e.target.value)}
-                          placeholder="Ex: Vestidos, Conjuntos e Alfaiataria que Vestem Perfeito"
-                          className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-900"
-                        />
-                      </div>
+                      {/* 2. Selos e Gatilhos Psicológicos de Conversão */}
+                      <div className="space-y-4 p-4 bg-stone-50/70 rounded-2xl border border-stone-200">
+                        <h5 className="text-xs font-bold text-stone-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <Flame className="w-3.5 h-3.5 text-amber-600" />
+                          <span>2. Selo de Destaque, Escassez & Garantia</span>
+                        </h5>
 
-                      <div>
-                        <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
-                          Subtítulo / Descrição da Campanha
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={pageSubheading}
-                          onChange={(e) => setPageSubheading(e.target.value)}
-                          placeholder="Ex: Minha seleção exclusiva de peças confortáveis e elegantes com cupons liberados."
-                          className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-900"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {/* Selo Predefinido Agressivo */}
                         <div>
-                          <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
-                            Loja Alvo
+                          <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1.5">
+                            Selo da Campanha (Foco em Conversão Agressiva)
                           </label>
-                          <select
-                            value={pagePlatform}
-                            onChange={(e) => setPagePlatform(e.target.value as any)}
-                            className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg bg-white"
-                          >
-                            <option value="all">Todas as Lojas</option>
-                            <option value="shopee">Shopee</option>
-                            <option value="shein">Shein</option>
-                            <option value="mercadolivre">Mercado Livre</option>
-                            <option value="amazon">Amazon</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
-                            Setor Vinculado
-                          </label>
-                          <select
-                            value={pageCategory}
-                            onChange={(e) => setPageCategory(e.target.value)}
-                            className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg bg-white"
-                          >
-                            {allCategoryNames.map((c) => (
-                              <option key={c} value={c}>{c}</option>
+                          <div className="flex flex-wrap gap-1.5 mb-2">
+                            {[
+                              'ÚLTIMAS UNIDADES',
+                              'MENOR PREÇO DO ANO',
+                              'PROMOÇÃO IMPERDÍVEL',
+                              'OFERTA RELÂMPAGO',
+                              'ESTOQUE CRÍTICO',
+                              'TENDÊNCIA 2026',
+                            ].map((preset) => (
+                              <button
+                                key={preset}
+                                type="button"
+                                onClick={() => setPageBadge(preset)}
+                                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg border transition-all ${
+                                  pageBadge === preset
+                                    ? 'bg-amber-400 text-stone-950 border-amber-500 shadow-xs'
+                                    : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-100'
+                                }`}
+                              >
+                                {preset}
+                              </button>
                             ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
-                            Selo de Destaque
-                          </label>
+                          </div>
                           <input
                             type="text"
                             value={pageBadge}
                             onChange={(e) => setPageBadge(e.target.value)}
-                            placeholder="Ex: Tendência, Edição Limitada"
-                            className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg"
+                            placeholder="Ou digite um selo personalizado..."
+                            className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg bg-white"
                           />
+                        </div>
+
+                        {/* Gatilho de Escassez */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
+                              Gatilho de Escassez (Estoque Crítico)
+                            </label>
+                            <input
+                              type="text"
+                              value={pageScarcityText}
+                              onChange={(e) => setPageScarcityText(e.target.value)}
+                              placeholder="Ex: Restam apenas 7 unidades pelo valor promocional!"
+                              className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg bg-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
+                              Selo de Garantia & Reembolso
+                            </label>
+                            <input
+                              type="text"
+                              value={pageGuaranteeText}
+                              onChange={(e) => setPageGuaranteeText(e.target.value)}
+                              placeholder="Ex: Garantia incondicional de 7 dias · Reembolso 100%"
+                              className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg bg-white"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Gatilho de Urgência (Cronômetro Regressivo) */}
+                        <div className="p-3.5 bg-rose-50/70 border border-rose-200 rounded-xl space-y-3">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={pageCountdownActive}
+                              onChange={(e) => setPageCountdownActive(e.target.checked)}
+                              className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500"
+                            />
+                            <span className="text-xs font-bold text-rose-950 uppercase tracking-wider flex items-center gap-1.5">
+                              <Clock className="w-3.5 h-3.5 text-rose-600" />
+                              <span>Ativar Cronômetro Regressivo (Gatilho de Urgência)</span>
+                            </span>
+                          </label>
+
+                          {pageCountdownActive && (
+                            <div className="pt-1">
+                              <label className="block text-[11px] font-bold text-rose-900 mb-1">
+                                Data e Hora de Término da Oferta
+                              </label>
+                              <input
+                                type="datetime-local"
+                                value={pageCountdownEnd}
+                                onChange={(e) => setPageCountdownEnd(e.target.value)}
+                                className="w-full sm:w-64 px-3 py-2 text-xs border border-rose-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 font-mono"
+                              />
+                              <p className="text-[10px] text-rose-700 mt-1">
+                                O relógio regressivo em tempo real será exibido em destaque no topo da página de campanha.
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      {/* Banner Image */}
-                      <div>
-                        <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
-                          Foto do Banner da Campanha
-                        </label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={pageBannerUrl}
-                            onChange={(e) => setPageBannerUrl(e.target.value)}
-                            placeholder="Link da imagem do banner..."
-                            className="flex-1 px-3 py-2 text-xs border border-stone-300 rounded-lg"
-                          />
+                      {/* 3. Lojas, Setor e Mídia */}
+                      <div className="space-y-4 p-4 bg-stone-50/70 rounded-2xl border border-stone-200">
+                        <h5 className="text-xs font-bold text-stone-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <Tag className="w-3.5 h-3.5 text-stone-500" />
+                          <span>3. Vinculação de Loja, Categoria e Imagem</span>
+                        </h5>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
+                              Loja Alvo
+                            </label>
+                            <select
+                              value={pagePlatform}
+                              onChange={(e) => setPagePlatform(e.target.value as any)}
+                              className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg bg-white"
+                            >
+                              <option value="all">Todas as Lojas</option>
+                              <option value="shopee">Shopee</option>
+                              <option value="shein">Shein</option>
+                              <option value="mercadolivre">Mercado Livre</option>
+                              <option value="amazon">Amazon</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
+                              Setor Vinculado
+                            </label>
+                            <select
+                              value={pageCategory}
+                              onChange={(e) => setPageCategory(e.target.value)}
+                              className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg bg-white"
+                            >
+                              {allCategoryNames.map((c) => (
+                                <option key={c} value={c}>{c}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Banner Image with Auto Compression and Non-Cropping Preview */}
+                        <div>
+                          <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
+                            Foto do Banner da Campanha
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={pageBannerUrl}
+                              onChange={(e) => setPageBannerUrl(e.target.value)}
+                              placeholder="Cole o link da foto ou selecione no botão ao lado..."
+                              className="flex-1 px-3 py-2 text-xs border border-stone-300 rounded-lg bg-white"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => pageBannerInputRef.current?.click()}
+                              className="px-3.5 py-2 text-xs bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-lg flex items-center gap-1.5 font-semibold text-stone-800 transition-colors"
+                            >
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>Upload Foto</span>
+                            </button>
+                            <input
+                              ref={pageBannerInputRef}
+                              type="file"
+                              accept="image/*"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  try {
+                                    const opt = await optimizeImageFile(file, 1400, 0.85);
+                                    setPageBannerUrl(opt);
+                                  } catch (err) {
+                                    const r = new FileReader();
+                                    r.onloadend = () => setPageBannerUrl(r.result as string);
+                                    r.readAsDataURL(file);
+                                  }
+                                }
+                              }}
+                              className="hidden"
+                            />
+                          </div>
+
+                          {pageBannerUrl && (
+                            <div className="mt-2.5 relative aspect-16/10 w-full max-w-sm rounded-xl overflow-hidden border border-stone-200 bg-stone-900 flex items-center justify-center">
+                              <Image
+                                src={pageBannerUrl}
+                                alt=""
+                                fill
+                                className="object-cover filter blur-md opacity-30"
+                                referrerPolicy="no-referrer"
+                                unoptimized
+                              />
+                              <Image
+                                src={pageBannerUrl}
+                                alt="Pré-visualização do Banner"
+                                fill
+                                className="object-contain p-2 relative z-1"
+                                referrerPolicy="no-referrer"
+                                unoptimized
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 4. Prova Social (Depoimentos / Avaliações) */}
+                      <div className="space-y-4 p-4 bg-stone-50/70 rounded-2xl border border-stone-200">
+                        <div className="flex items-center justify-between">
+                          <h5 className="text-xs font-bold text-stone-900 uppercase tracking-wider flex items-center gap-1.5">
+                            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
+                            <span>4. Prova Social (Depoimentos de Clientes)</span>
+                          </h5>
                           <button
                             type="button"
-                            onClick={() => pageBannerInputRef.current?.click()}
-                            className="px-3 py-2 text-xs bg-stone-100 border border-stone-300 rounded-lg flex items-center gap-1 font-semibold"
+                            onClick={() =>
+                              setPageTestimonials([
+                                ...pageTestimonials,
+                                { name: '', role: 'Compradora Verificada', rating: 5, text: '' },
+                              ])
+                            }
+                            className="px-2.5 py-1 text-[11px] font-bold text-stone-900 bg-white border border-stone-300 rounded-lg hover:bg-stone-100 flex items-center gap-1"
                           >
-                            <Upload className="w-3.5 h-3.5" />
-                            <span>Upload</span>
+                            <Plus className="w-3 h-3" />
+                            <span>Adicionar Depoimento</span>
                           </button>
-                          <input
-                            ref={pageBannerInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const r = new FileReader();
-                                r.onloadend = () => setPageBannerUrl(r.result as string);
-                                r.readAsDataURL(file);
-                              }
-                            }}
-                            className="hidden"
-                          />
+                        </div>
+
+                        <div className="space-y-3">
+                          {pageTestimonials.map((t, idx) => (
+                            <div key={idx} className="p-3 bg-white border border-stone-200 rounded-xl space-y-2 relative">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setPageTestimonials(pageTestimonials.filter((_, i) => i !== idx))
+                                }
+                                className="absolute top-2 right-2 p-1 text-rose-500 hover:bg-rose-50 rounded-lg"
+                                title="Remover depoimento"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+
+                              <div className="grid grid-cols-2 gap-2 pr-8">
+                                <div>
+                                  <label className="block text-[10px] font-bold text-stone-600 uppercase mb-0.5">
+                                    Nome da Cliente
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={t.name}
+                                    onChange={(e) => {
+                                      const updated = [...pageTestimonials];
+                                      updated[idx].name = e.target.value;
+                                      setPageTestimonials(updated);
+                                    }}
+                                    placeholder="Ex: Amanda Silva"
+                                    className="w-full px-2.5 py-1.5 text-xs border border-stone-200 rounded-lg"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-stone-600 uppercase mb-0.5">
+                                    Selo / Papel
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={t.role || ''}
+                                    onChange={(e) => {
+                                      const updated = [...pageTestimonials];
+                                      updated[idx].role = e.target.value;
+                                      setPageTestimonials(updated);
+                                    }}
+                                    placeholder="Ex: Compradora Verificada"
+                                    className="w-full px-2.5 py-1.5 text-xs border border-stone-200 rounded-lg"
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-bold text-stone-600 uppercase mb-0.5">
+                                  Texto da Avaliação / Depoimento
+                                </label>
+                                <textarea
+                                  rows={2}
+                                  value={t.text}
+                                  onChange={(e) => {
+                                    const updated = [...pageTestimonials];
+                                    updated[idx].text = e.target.value;
+                                    setPageTestimonials(updated);
+                                  }}
+                                  placeholder="Ex: O conjunto é perfeito, tecido grosso que não marca nada! Chegou antes do prazo."
+                                  className="w-full px-2.5 py-1.5 text-xs border border-stone-200 rounded-lg"
+                                />
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
 
+                      {/* 5. Seção de FAQ (Perguntas Frequentes) */}
+                      <div className="space-y-4 p-4 bg-stone-50/70 rounded-2xl border border-stone-200">
+                        <div className="flex items-center justify-between">
+                          <h5 className="text-xs font-bold text-stone-900 uppercase tracking-wider flex items-center gap-1.5">
+                            <HelpCircle className="w-3.5 h-3.5 text-stone-500" />
+                            <span>5. Perguntas Frequentes (FAQ de Fundo de Funil)</span>
+                          </h5>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPageFaqs([...pageFaqs, { question: '', answer: '' }])
+                            }
+                            className="px-2.5 py-1 text-[11px] font-bold text-stone-900 bg-white border border-stone-300 rounded-lg hover:bg-stone-100 flex items-center gap-1"
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>Adicionar Pergunta</span>
+                          </button>
+                        </div>
+
+                        <div className="space-y-3">
+                          {pageFaqs.map((faq, idx) => (
+                            <div key={idx} className="p-3 bg-white border border-stone-200 rounded-xl space-y-2 relative">
+                              <button
+                                type="button"
+                                onClick={() => setPageFaqs(pageFaqs.filter((_, i) => i !== idx))}
+                                className="absolute top-2 right-2 p-1 text-rose-500 hover:bg-rose-50 rounded-lg"
+                                title="Remover pergunta"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+
+                              <div className="pr-8">
+                                <label className="block text-[10px] font-bold text-stone-600 uppercase mb-0.5">
+                                  Pergunta Rápida
+                                </label>
+                                <input
+                                  type="text"
+                                  value={faq.question}
+                                  onChange={(e) => {
+                                    const updated = [...pageFaqs];
+                                    updated[idx].question = e.target.value;
+                                    setPageFaqs(updated);
+                                  }}
+                                  placeholder="Ex: Qual o prazo de entrega?"
+                                  className="w-full px-2.5 py-1.5 text-xs border border-stone-200 rounded-lg"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-bold text-stone-600 uppercase mb-0.5">
+                                  Resposta Direta
+                                </label>
+                                <textarea
+                                  rows={2}
+                                  value={faq.answer}
+                                  onChange={(e) => {
+                                    const updated = [...pageFaqs];
+                                    updated[idx].answer = e.target.value;
+                                    setPageFaqs(updated);
+                                  }}
+                                  placeholder="Ex: Para pedidos com envio FULL, chega em até 24h na maioria das capitais."
+                                  className="w-full px-2.5 py-1.5 text-xs border border-stone-200 rounded-lg"
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 6. Ações de Conversão & CTA Mobile Fixo */}
+                      <div className="space-y-4 p-4 bg-stone-50/70 rounded-2xl border border-stone-200">
+                        <h5 className="text-xs font-bold text-stone-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <Smartphone className="w-3.5 h-3.5 text-stone-600" />
+                          <span>6. Botão de CTA & Barra Flutuante Mobile</span>
+                        </h5>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
+                              Texto do Botão de Conversão (CTA)
+                            </label>
+                            <input
+                              type="text"
+                              value={pageCtaText}
+                              onChange={(e) => setPageCtaText(e.target.value)}
+                              placeholder="Ex: Garantir Oferta Agora com Desconto"
+                              className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg bg-white font-bold"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
+                              Link de Destino / Link de Afiliada (Opcional)
+                            </label>
+                            <input
+                              type="url"
+                              value={pageCtaUrl}
+                              onChange={(e) => setPageCtaUrl(e.target.value)}
+                              placeholder="Ex: https://s.shopee.com.br/... ou deixe em branco"
+                              className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg bg-white font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        <label className="flex items-center gap-2 cursor-pointer pt-1">
+                          <input
+                            type="checkbox"
+                            checked={pageStickyMobileCta}
+                            onChange={(e) => setPageStickyMobileCta(e.target.checked)}
+                            className="w-4 h-4 rounded text-stone-900"
+                          />
+                          <span className="text-xs font-bold text-stone-800">
+                            Fixar Botão de Compra no Rodapé no Mobile (Sticky CTA) enquanto o usuário rola a página
+                          </span>
+                        </label>
+                      </div>
+
+                      {/* 7. Configurações Avançadas de Rastreamento (Pixel & Analytics) */}
+                      <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white">
+                        <button
+                          type="button"
+                          onClick={() => setPageAdvancedTrackingOpen(!pageAdvancedTrackingOpen)}
+                          className="w-full p-4 text-left flex items-center justify-between bg-stone-50 hover:bg-stone-100 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-stone-600" />
+                            <span className="text-xs font-bold text-stone-900 uppercase tracking-wider">
+                              Configurações Avançadas de Rastreamento (Pixel & Retargeting)
+                            </span>
+                          </div>
+                          {pageAdvancedTrackingOpen ? (
+                            <ChevronUp className="w-4 h-4 text-stone-500" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-stone-500" />
+                          )}
+                        </button>
+
+                        {pageAdvancedTrackingOpen && (
+                          <div className="p-4 space-y-4 border-t border-stone-200">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
+                                  ID do Meta / Facebook Pixel
+                                </label>
+                                <input
+                                  type="text"
+                                  value={pageFacebookPixelId}
+                                  onChange={(e) => setPageFacebookPixelId(e.target.value)}
+                                  placeholder="Ex: 123456789012345"
+                                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg font-mono"
+                                />
+                                <p className="text-[10px] text-stone-500 mt-1">
+                                  Dispara automaticamente o evento PageView para anúncios de Retargeting.
+                                </p>
+                              </div>
+
+                              <div>
+                                <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1">
+                                  Google Analytics Measurement ID
+                                </label>
+                                <input
+                                  type="text"
+                                  value={pageGoogleAnalyticsId}
+                                  onChange={(e) => setPageGoogleAnalyticsId(e.target.value)}
+                                  placeholder="Ex: G-XXXXXXXXXX"
+                                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg font-mono"
+                                />
+                                <p className="text-[10px] text-stone-500 mt-1">
+                                  Mensura tráfego e conversões de campanhas do Google Ads.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Status Ativa / Inativa */}
+                      <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl flex items-center justify-between">
+                        <div>
+                          <p className="text-xs font-bold text-stone-900">Visibilidade da Campanha</p>
+                          <p className="text-[11px] text-stone-500">Publicar imediatamente na lista /campanha e vitrines</p>
+                        </div>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={pageIsActive}
+                            onChange={(e) => setPageIsActive(e.target.checked)}
+                            className="w-4 h-4 rounded text-stone-900"
+                          />
+                          <span className="text-xs font-bold text-stone-800">
+                            {pageIsActive ? 'Ativa' : 'Inativa'}
+                          </span>
+                        </label>
+                      </div>
+
+                      {/* Botões de Ação */}
                       <div className="pt-2 flex gap-3">
                         <button
                           type="submit"
                           disabled={saving}
-                          className="flex-1 py-3 px-5 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                          className="flex-1 py-3.5 px-5 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
                         >
                           <CheckCircle2 className="w-4 h-4 text-amber-300" />
-                          <span>{saving ? 'Gravando...' : editingPageId ? 'Atualizar Página' : 'Salvar e Publicar Página'}</span>
+                          <span>{saving ? 'Gravando no Banco...' : editingPageId ? 'Atualizar Campanha no Banco' : 'Salvar e Publicar Campanha de Alta Conversão'}</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => setSubTab('list')}
-                          className="py-3 px-4 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl border border-stone-200"
+                          className="py-3.5 px-4 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl border border-stone-200"
                         >
                           Cancelar
                         </button>

@@ -4,7 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlatformId } from '@/lib/types';
-import { ShieldCheck, Tag, BookOpen, ShoppingBag, Home } from 'lucide-react';
+import { ShieldCheck, Tag, BookOpen, ShoppingBag, Home, Flame } from 'lucide-react';
 import { OmniSearch } from './OmniSearch';
 
 interface NavbarProps {
@@ -78,6 +78,13 @@ export function Navbar({
           >
             <Tag className="w-3.5 h-3.5 text-emerald-600" />
             <span>Cupons</span>
+          </Link>
+          <Link
+            href="/campanha"
+            className="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 text-stone-700 hover:text-stone-950 hover:bg-stone-200/60 flex items-center gap-1.5"
+          >
+            <Flame className="w-3.5 h-3.5 text-rose-500 fill-rose-500/20" />
+            <span>Campanhas</span>
           </Link>
         </nav>
 

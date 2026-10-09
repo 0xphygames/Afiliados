@@ -82,19 +82,36 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
       onClick={() => onOpenDetails?.(product)}
       className="group cursor-pointer bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md hover:border-stone-300 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between"
     >
-      {/* Top Media Container */}
-      <div className="relative aspect-4/3 w-full bg-stone-100 overflow-hidden border-b border-stone-100">
+      {/* Top Media Container: Proportional fashion container with non-cropping presentation */}
+      <div className="relative aspect-square sm:aspect-[4/5] w-full bg-stone-50/80 overflow-hidden border-b border-stone-100 flex items-center justify-center">
         {!imgError && product.imageUrl ? (
-          <Image
-            src={product.imageUrl}
-            alt={product.title}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover object-center group-hover:scale-103 transition-transform duration-300"
-            referrerPolicy="no-referrer"
-            unoptimized={isUnoptimizedImage}
-            onError={() => setImgError(true)}
-          />
+          <>
+            {/* Subtle ambient backdrop to avoid letterbox voids */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <Image
+                src={product.imageUrl}
+                alt=""
+                fill
+                sizes="100px"
+                className="object-cover filter blur-xl opacity-25 scale-125"
+                referrerPolicy="no-referrer"
+                unoptimized={isUnoptimizedImage}
+                aria-hidden="true"
+              />
+            </div>
+
+            {/* Main full product image (zero cropping of clothes, shoes and details) */}
+            <Image
+              src={product.imageUrl}
+              alt={product.title}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-contain p-2 group-hover:scale-104 transition-transform duration-300 relative z-1"
+              referrerPolicy="no-referrer"
+              unoptimized={isUnoptimizedImage}
+              onError={() => setImgError(true)}
+            />
+          </>
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-stone-50 text-stone-500">
             <ShoppingBag className="w-10 h-10 text-stone-400 mb-2" />

@@ -53,6 +53,19 @@ export interface SiteSettings {
   updatedAt?: string;
 }
 
+export interface CampaignTestimonial {
+  name: string;
+  text: string;
+  rating?: number;
+  role?: string;
+  avatarUrl?: string;
+}
+
+export interface CampaignFaq {
+  question: string;
+  answer: string;
+}
+
 export interface CustomLandingPage {
   id: string;
   title: string;
@@ -65,6 +78,21 @@ export interface CustomLandingPage {
   bannerImageUrl?: string;
   isActive: boolean;
   createdAt: string;
+
+  // Bottom of funnel / Fundo de funil fields
+  countdownActive?: boolean;
+  countdownEnd?: string; // ISO date string or YYYY-MM-DDTHH:mm
+  scarcityText?: string; // Ex: "Apenas 12 unidades restantes em estoque"
+  guaranteeText?: string; // Ex: "Garantia incondicional de 7 dias ou seu dinheiro de volta"
+  ratingScore?: number; // Ex: 4.9
+  testimonials?: CampaignTestimonial[];
+  faqs?: CampaignFaq[];
+  stickyMobileCta?: boolean;
+  ctaText?: string; // Ex: "Garantir Oferta Agora com Desconto"
+  ctaUrl?: string; // Target direct link or affiliate URL
+  facebookPixelId?: string;
+  googleAnalyticsId?: string;
+  customTrackingCode?: string;
 }
 
 export interface CustomCategory {

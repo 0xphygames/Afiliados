@@ -1,4 +1,4 @@
-import { Product, Article, Coupon } from './types';
+import { Product, Article, Coupon, CustomLandingPage } from './types';
 
 /**
  * Normalizes text for accent-insensitive and case-insensitive comparison
@@ -313,4 +313,56 @@ export function rankCoupons(coupons: Coupon[], query: string): Coupon[] {
     .sort((a, b) => b.score - a.score);
 
   return scored.map((item) => item.coupon);
+}
+
+/**
+ * Scores a campaign/landing page based on query relevance
+ */
+export function scoreCampaign(page: CustomLandingPage, query: string): number {
+  if (!query.trim() || !page.isActive) return 0;
+
+  const cleanQ = normalizeSearchText(query);
+  const { tokens } = extractQueryTokens(query);
+  if (tokens.length === 0) return 0;
+
+  const titleNorm = normalizeSearchText(page.title);
+  const headlineNorm = normalizeSearchText(page.headline || '');
+  const subNorm = normalizeSearchText(page.subheading || '');
+  const catNorm = normalizeSearchText(page.category || '');
+  const badgeNorm = normalizeSearchText(page.badge || '');
+
+  let score = 0;
+
+  if (titleNorm === cleanQ) score += 8000;
+  if (titleNorm.startsWith(cleanQ)) score += 5000;
+  if (titleNorm.includes(cleanQ)) score += 3000;
+  if (headlineNorm.includes(cleanQ)) score += 2000;
+  if (badgeNorm.includes(cleanQ)) score += 1500;
+  if (catNorm.includes(cleanQ)) score += 1200;
+  if (subNorm.includes(cleanQ)) score += 800;
+
+  for (const token of tokens) {
+    if (titleNorm.includes(token)) score += 600;
+    if (headlineNorm.includes(token)) score += 400;
+    if (catNorm.includes(token)) score += 300;
+  }
+
+  return score;
+}
+
+/**
+ * Ranks an array of campaigns by relevance to a query
+ */
+export function rankCampaigns(pages: CustomLandingPage[], query: string): CustomLandingPage[] {
+  if (!query.trim()) return pages;
+
+  const scored = pages
+    .map((page) => ({
+      page,
+      score: scoreCampaign(page, query),
+    }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  return scored.map((item) => item.page);
 }

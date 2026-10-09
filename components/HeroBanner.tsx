@@ -9,6 +9,9 @@ import {
   CheckCircle2,
   ShieldCheck,
   HeartHandshake,
+  Flame,
+  ArrowRight,
+  Tag,
 } from 'lucide-react';
 
 interface HeroBannerProps {
@@ -128,6 +131,25 @@ export function HeroBanner({
               <HeartHandshake className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>Testado por Tamires</span>
             </div>
+          </div>
+
+          {/* Campanhas & Páginas Especiais Callout in Hero */}
+          <div className="pt-1 flex flex-wrap items-center gap-3">
+            <Link
+              href="/campanha"
+              className="py-2.5 px-4 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-2 group"
+            >
+              <Flame className="w-3.5 h-3.5 text-amber-400 fill-amber-400 group-hover:scale-110 transition-transform" />
+              <span>Ver Campanhas & Páginas Especiais</span>
+              <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link
+              href="/cupons"
+              className="py-2.5 px-4 bg-stone-100 hover:bg-stone-200 text-stone-800 font-semibold text-xs rounded-xl border border-stone-200 transition-all flex items-center gap-1.5"
+            >
+              <Tag className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Cupons Relâmpago</span>
+            </Link>
           </div>
 
           {/* Quick Platform Switcher */}

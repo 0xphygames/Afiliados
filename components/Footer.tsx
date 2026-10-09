@@ -124,6 +124,11 @@ export function Footer({
                 </Link>
               </li>
               <li>
+                <Link href="/campanha" className="hover:text-stone-950 transition-colors block font-semibold text-amber-700">
+                  Campanhas & Páginas Especiais
+                </Link>
+              </li>
+              <li>
                 <Link href="/busca" className="hover:text-stone-950 transition-colors block">
                   Busca Geral no Site
                 </Link>
