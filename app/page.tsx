@@ -1,96 +1,72 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { PlatformId, Product, Article, SiteSettings, SortOption, CustomLandingPage, CustomCategory } from '@/lib/types';
-import { PLATFORMS, INITIAL_PRODUCTS } from '@/lib/constants';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Product, Article, Coupon, SiteSettings } from '@/lib/types';
+import { INITIAL_PRODUCTS, INITIAL_COUPONS, PLATFORMS } from '@/lib/constants';
 import {
   subscribeFirestoreProducts,
   subscribeFirestoreArticles,
   subscribeFirestoreSettings,
-  subscribeFirestoreLandingPages,
-  subscribeFirestoreCategories,
   subscribeAuth,
   isUserAdmin,
   INITIAL_ARTICLES,
   INITIAL_SETTINGS,
-  INITIAL_LANDING_PAGES,
-  INITIAL_CUSTOM_CATEGORIES,
 } from '@/lib/firestore-products';
 import { testConnection } from '@/lib/firebase';
 import { User } from 'firebase/auth';
 import { Navbar } from '@/components/Navbar';
 import { HeroBanner } from '@/components/HeroBanner';
-import { CategorySidebar } from '@/components/CategorySidebar';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { ArticlesSection } from '@/components/ArticlesSection';
 import { ArticleDetailModal } from '@/components/ArticleDetailModal';
-import { LandingPagesSection } from '@/components/LandingPagesSection';
 import { Footer } from '@/components/Footer';
 import {
-  ArrowUpDown,
   ShoppingBag,
+  Tag,
+  ArrowRight,
+  Sparkles,
+  Check,
+  Copy,
+  Clock,
+  ExternalLink,
 } from 'lucide-react';
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
+  const [coupons] = useState<Coupon[]>(INITIAL_COUPONS);
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
-  const [landingPages, setLandingPages] = useState<CustomLandingPage[]>(INITIAL_LANDING_PAGES);
-  const [categories, setCategories] = useState<CustomCategory[]>(INITIAL_CUSTOM_CATEGORIES);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  const [activePlatform, setActivePlatform] = useState<PlatformId | 'all'>('shopee');
-  const [activeCategory, setActiveCategory] = useState<string>('Todos os Setores');
-  const [activeCampaignSlug, setActiveCampaignSlug] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [sortOption, setSortOption] = useState<SortOption>('recent');
-
-  // Modal states for customer viewing
+  // Modals
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   // Subscribe to real-time Firestore database & Auth
   useEffect(() => {
-    // Validate connection
     testConnection();
 
-    // Listen to real-time products
     const unsubscribeProducts = subscribeFirestoreProducts((list) => {
       if (list && list.length > 0) {
         setProducts(list);
       }
     });
 
-    // Listen to real-time articles
     const unsubscribeArticles = subscribeFirestoreArticles((artList) => {
       if (artList && artList.length > 0) {
         setArticles(artList);
       }
     });
 
-    // Listen to real-time settings
     const unsubscribeSettings = subscribeFirestoreSettings((siteSettings) => {
       if (siteSettings) {
         setSettings(siteSettings);
       }
     });
 
-    // Listen to real-time landing pages
-    const unsubscribeLandingPages = subscribeFirestoreLandingPages((pagesList) => {
-      if (pagesList && pagesList.length > 0) {
-        setLandingPages(pagesList);
-      }
-    });
-
-    // Listen to real-time categories
-    const unsubscribeCategories = subscribeFirestoreCategories((catList) => {
-      if (catList && catList.length > 0) {
-        setCategories(catList);
-      }
-    });
-
-    // Listen to auth state
     const unsubscribeAuth = subscribeAuth((user) => {
       setCurrentUser(user);
     });
@@ -99,211 +75,216 @@ export default function HomePage() {
       unsubscribeProducts();
       unsubscribeArticles();
       unsubscribeSettings();
-      unsubscribeLandingPages();
-      unsubscribeCategories();
       unsubscribeAuth();
     };
   }, []);
 
   const isAdmin = isUserAdmin(currentUser);
 
-  // Switch store platform
-  const handleSelectPlatform = (platform: PlatformId | 'all') => {
-    setActivePlatform(platform);
-    setActiveCategory('Todos os Setores');
-    setActiveCampaignSlug(null);
-  };
+  // Strictly the 3 most recent items for each section on Home
+  const recentProducts = products.slice(0, 3);
+  const recentCoupons = coupons.slice(0, 3);
+  const recentArticles = articles.slice(0, 3);
 
-  // Switch category sector
-  const handleSelectCategory = (category: string) => {
-    setActiveCategory(category);
-  };
-
-  // Select campaign from landing pages showcase
-  const handleSelectCampaign = (page: CustomLandingPage) => {
-    setActiveCampaignSlug(page.slug);
-    if (page.platform) {
-      setActivePlatform(page.platform);
-    }
-    if (page.category) {
-      setActiveCategory(page.category);
+  const handleCopyCode = (code: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(code);
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2500);
     }
   };
-
-  // Filter and sort products
-  const filteredProducts = useMemo(() => {
-    return products
-      .filter((p) => {
-        // Platform filter
-        if (activePlatform !== 'all' && p.platform !== activePlatform) {
-          return false;
-        }
-        // Category filter
-        if (
-          activeCategory !== 'Todos os Setores' &&
-          p.category.toLowerCase() !== activeCategory.toLowerCase()
-        ) {
-          return false;
-        }
-        // Search query
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
-          const matchTitle = p.title.toLowerCase().includes(q);
-          const matchCat = p.category.toLowerCase().includes(q);
-          const matchTip = p.tamiresTip?.toLowerCase().includes(q) ?? false;
-          const matchBadge = p.badge?.toLowerCase().includes(q) ?? false;
-          if (!matchTitle && !matchCat && !matchTip && !matchBadge) {
-            return false;
-          }
-        }
-        return true;
-      })
-      .sort((a, b) => {
-        if (sortOption === 'price-asc') return a.price - b.price;
-        if (sortOption === 'price-desc') return b.price - a.price;
-        if (sortOption === 'discount') {
-          const discA = a.originalPrice ? (a.originalPrice - a.price) / a.originalPrice : 0;
-          const discB = b.originalPrice ? (b.originalPrice - b.price) / b.originalPrice : 0;
-          return discB - discA;
-        }
-        if (sortOption === 'rating') return b.rating - a.rating;
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
-  }, [products, activePlatform, activeCategory, searchQuery, sortOption]);
-
-  const currentPlatformInfo = activePlatform !== 'all' ? PLATFORMS[activePlatform] : null;
 
   return (
     <div id="topo" className="min-h-screen flex flex-col bg-white text-stone-900 selection:bg-stone-900 selection:text-white">
-      {/* Top Navigation */}
+      {/* Top Navbar */}
       <Navbar
-        activePlatform={activePlatform}
-        onSelectPlatform={handleSelectPlatform}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        productCount={products.length}
         bannerNotice={settings.topBannerNotice}
       />
 
       <main className="flex-1 bg-white">
-        {/* Campaign Hero Showcase */}
+        {/* Clean Hero (only top banner, without duplicate navigation) */}
         <HeroBanner
-          activePlatform={activePlatform}
-          onSelectPlatform={handleSelectPlatform}
+          activePlatform="all"
+          onSelectPlatform={() => {}}
           settings={settings}
         />
 
-        {/* Landing Pages & Special Campaigns Carousel */}
-        <LandingPagesSection
-          pages={landingPages}
-          onSelectCampaign={handleSelectCampaign}
-          activeCampaignSlug={activeCampaignSlug}
-          onClearCampaign={() => setActiveCampaignSlug(null)}
-        />
-
-        {/* Section Header with Controls */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4 bg-white">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-stone-200">
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-serif text-2xl font-bold text-stone-900 tracking-tight">
-                  {activePlatform === 'all'
-                    ? 'Todos os Achadinhos Selecionados'
-                    : `Achadinhos da ${currentPlatformInfo?.name}`}
-                </h2>
-                {activeCategory !== 'Todos os Setores' && (
-                  <span className="text-xs font-bold text-stone-700 bg-stone-100 px-2.5 py-0.5 rounded-full border border-stone-300">
-                    {activeCategory}
-                  </span>
-                )}
+        {/* 1. SEÇÃO DE ACHADINHOS: APENAS OS 3 MAIS RECENTES */}
+        <section id="achadinhos" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 border-b border-stone-200">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-50 text-[#EE4D2D] border border-orange-200 text-xs font-bold uppercase tracking-wider">
+                <ShoppingBag className="w-3.5 h-3.5" />
+                <span>Últimos Achadinhos da Curadoria</span>
               </div>
-              <p className="text-xs text-stone-500 mt-1">
-                {currentPlatformInfo?.tagline ||
-                  'Produtos testados, preços imperdíveis e links diretos para compras seguras.'}
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">
+                Achadinhos Mais Recentes
+              </h2>
+              <p className="text-xs sm:text-sm text-stone-600 max-w-2xl">
+                Os 3 produtos mais novos garimpados, testados e aprovados pela Tamires Santos com os melhores preços e links oficiais verificados.
               </p>
             </div>
 
-            {/* Sort and Filters */}
-            <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
-              <div className="flex items-center gap-1.5 text-xs text-stone-600 bg-white border border-stone-300 rounded-xl px-3 py-1.5 shadow-xs">
-                <ArrowUpDown className="w-3.5 h-3.5 text-stone-400" />
-                <select
-                  value={sortOption}
-                  onChange={(e) => setSortOption(e.target.value as SortOption)}
-                  className="bg-transparent text-stone-900 text-xs font-semibold focus:outline-none cursor-pointer"
-                >
-                  <option value="recent">Mais Recentes</option>
-                  <option value="price-asc">Menor Preço</option>
-                  <option value="price-desc">Maior Preço</option>
-                  <option value="discount">Maior Desconto (%)</option>
-                  <option value="rating">Melhor Avaliados</option>
-                </select>
-              </div>
-            </div>
+            <Link
+              href="/achadinhos"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs shadow-xs transition-all shrink-0 hover:gap-3"
+            >
+              <span>Ver todos os Achadinhos</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* 3 Most Recent Products Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {recentProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onOpenDetails={setSelectedProduct}
+              />
+            ))}
+          </div>
+
+          {/* Direct CTA button to full catalog */}
+          <div className="mt-10 text-center">
+            <Link
+              href="/achadinhos"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-stone-50 hover:bg-stone-100 text-stone-900 font-bold text-xs sm:text-sm border border-stone-300 shadow-2xs hover:shadow-xs transition-all"
+            >
+              <ShoppingBag className="w-4 h-4 text-[#EE4D2D]" />
+              <span>Explorar Catálogo Completo com Filtros por Loja & Setores ({products.length} itens)</span>
+              <ArrowRight className="w-4 h-4 text-stone-400" />
+            </Link>
           </div>
         </section>
 
-        {/* Product Grid Layout with Responsive CategorySidebar */}
-        <section id="achadinhos" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 bg-white">
-          <div className="flex flex-col md:flex-row items-start gap-6 lg:gap-8">
-            <CategorySidebar
-              activePlatform={activePlatform}
-              activeCategory={activeCategory}
-              onSelectCategory={handleSelectCategory}
-              products={products}
-              customCategories={categories}
-            />
+        {/* 2. SEÇÃO DE CUPONS: APENAS OS 3 MAIS RECENTES */}
+        <section id="cupons" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 border-b border-stone-200 bg-stone-50/40">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold uppercase tracking-wider">
+                <Tag className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Economia Garantida</span>
+              </div>
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">
+                Cupons de Desconto & Campanhas em Destaque
+              </h2>
+              <p className="text-xs sm:text-sm text-stone-600 max-w-2xl">
+                Aproveite os 3 cupons mais recentes testados e aplicáveis diretamente no checkout da Shopee, Shein, Mercado Livre e Amazon.
+              </p>
+            </div>
 
-            <div className="flex-1 min-w-0 w-full">
-              {filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
-                  {filteredProducts.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onOpenDetails={setSelectedProduct}
-                    />
-                  ))}
-                </div>
-              ) : (
-                /* Empty State */
-                <div className="text-center py-16 px-4 bg-white rounded-3xl border border-stone-200 shadow-xs max-w-xl mx-auto my-8">
-                  <ShoppingBag className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-                  <h3 className="font-serif text-lg font-bold text-stone-900 mb-1">
-                    Nenhum achadinho encontrado neste filtro
-                  </h3>
-                  <p className="text-xs text-stone-500 max-w-sm mx-auto mb-6">
-                    {searchQuery
-                      ? `Não encontramos resultados para "${searchQuery}". Tente outro termo.`
-                      : `Ainda não temos produtos cadastrados no setor "${activeCategory}".`}
-                  </p>
-                  <div className="flex items-center justify-center gap-3">
-                    {activeCategory !== 'Todos os Setores' && (
-                      <button
-                        onClick={() => handleSelectCategory('Todos os Setores')}
-                        className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold rounded-xl transition-colors border border-stone-300"
+            <Link
+              href="/cupons"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-xs transition-all shrink-0 hover:gap-3"
+            >
+              <span>Ver todos os Cupons</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* 3 Most Recent Coupons Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {recentCoupons.map((coupon) => {
+              const platformConfig = PLATFORMS[coupon.platform] || PLATFORMS.shopee;
+              const isCopied = copiedCode === coupon.code;
+
+              return (
+                <div
+                  key={coupon.id}
+                  className="bg-white rounded-3xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+                >
+                  <div className="p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span
+                        style={{ backgroundColor: platformConfig.color }}
+                        className="px-2.5 py-1 text-[11px] font-bold text-white rounded-md uppercase tracking-wider shadow-2xs"
                       >
-                        Ver todos os setores
-                      </button>
-                    )}
-                    {searchQuery && (
-                      <button
-                        onClick={() => setSearchQuery('')}
-                        className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl transition-colors shadow-xs"
-                      >
-                        Limpar busca
-                      </button>
-                    )}
+                        {platformConfig.name}
+                      </span>
+
+                      <div className="flex items-center gap-1 text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        <span>Verificado</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
+                        {coupon.discount}
+                      </div>
+                      <h3 className="font-serif font-bold text-base text-stone-800 mt-0.5 line-clamp-1">
+                        {coupon.title}
+                      </h3>
+                    </div>
+
+                    <p className="text-xs text-stone-600 leading-relaxed line-clamp-2">
+                      {coupon.description}
+                    </p>
+
+                    <div className="pt-2 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
+                      <span>Mínimo: <strong className="text-stone-800">{coupon.minSpend}</strong></span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-stone-400" />
+                        <span>{coupon.expirationDate || 'Ativo'}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-stone-50 border-t border-stone-100 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => handleCopyCode(coupon.code, e)}
+                      className={`flex-1 py-2.5 px-3 rounded-xl font-mono font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                        isCopied
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'bg-stone-900 text-amber-300 hover:bg-stone-800'
+                      }`}
+                    >
+                      {isCopied ? (
+                        <>
+                          <Check className="w-4 h-4 text-white" />
+                          <span>Copiado!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4 text-stone-400" />
+                          <span>{coupon.code}</span>
+                        </>
+                      )}
+                    </button>
+
+                    <a
+                      href={coupon.affiliateUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-100 text-stone-700 transition-colors"
+                      title="Ir para a loja parceira"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
                   </div>
                 </div>
-              )}
-            </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link
+              href="/cupons"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-white hover:bg-stone-100 text-stone-900 font-bold text-xs sm:text-sm border border-stone-300 shadow-2xs hover:shadow-xs transition-all"
+            >
+              <Tag className="w-4 h-4 text-emerald-600" />
+              <span>Ver Lista Completa de Cupons & Regras ({coupons.length} cupons ativos)</span>
+              <ArrowRight className="w-4 h-4 text-stone-400" />
+            </Link>
           </div>
         </section>
 
-        {/* Blog & Articles Section (Public Display - Apenas os 3 mais recentes na Home) */}
+        {/* 3. SEÇÃO DO BLOG: APENAS OS 3 MAIS RECENTES */}
         <ArticlesSection
-          articles={articles.slice(0, 3)}
+          articles={recentArticles}
           onSelectArticle={setSelectedArticle}
           showViewAllButton={true}
         />
@@ -321,9 +302,9 @@ export default function HomePage() {
         onClose={() => setSelectedArticle(null)}
       />
 
-      {/* Footer with discrete backoffice routing */}
+      {/* Footer */}
       <Footer
-        onSelectPlatform={handleSelectPlatform}
+        onSelectPlatform={() => {}}
         currentUser={currentUser}
         isAdmin={isAdmin}
       />

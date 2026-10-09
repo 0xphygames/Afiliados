@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import Image from 'next/image';
 import { getDownloadURL, uploadBytesResumable, ref } from 'firebase/storage';
 import { storage } from '@/lib/firebase';
 
@@ -45,7 +46,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, initialU
   return (
     <div className="flex flex-col gap-2">
       {preview && (
-        <img src={preview} alt="preview" className="w-32 h-32 object-cover rounded" />
+        <div className="relative w-32 h-32 rounded overflow-hidden">
+          <Image src={preview} alt="preview" fill className="object-cover" unoptimized referrerPolicy="no-referrer" />
+        </div>
       )}
       <button
         type="button"

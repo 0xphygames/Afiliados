@@ -25,6 +25,7 @@ import {
   subscribeFirestoreArticles,
   INITIAL_ARTICLES,
 } from '@/lib/firestore-products';
+import { rankProducts, rankArticles, rankCoupons } from '@/lib/search-ranking';
 
 interface OmniSearchProps {
   onSelectProduct?: (product: Product) => void;
@@ -77,9 +78,9 @@ export function OmniSearch({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Omni Search Algorithm (Multi-entity elastic search)
+  // Omni Search Algorithm (Multi-entity elastic search with weighted relevance ranking)
   const results = useMemo(() => {
-    const cleanQ = query.trim().toLowerCase();
+    const cleanQ = query.trim();
     if (!cleanQ || cleanQ.length < 2) {
       return {
         products: [],
@@ -89,31 +90,9 @@ export function OmniSearch({
       };
     }
 
-    const tokens = cleanQ.split(/\s+/).filter(Boolean);
-
-    // Score function
-    const matchesTokens = (text: string) => {
-      const lower = text.toLowerCase();
-      return tokens.every((tok) => lower.includes(tok));
-    };
-
-    // 1. Matched Products
-    const matchedProducts = products.filter((p) => {
-      const fullText = `${p.title} ${p.category} ${p.platform} ${p.tamiresTip || ''} ${p.badge || ''} ${(p.bottomFunnelKeywords || []).join(' ')}`;
-      return matchesTokens(fullText);
-    });
-
-    // 2. Matched Articles
-    const matchedArticles = articles.filter((a) => {
-      const fullText = `${a.title} ${a.category} ${a.summary} ${a.content} ${a.author || ''}`;
-      return matchesTokens(fullText);
-    });
-
-    // 3. Matched Coupons
-    const matchedCoupons = coupons.filter((c) => {
-      const fullText = `${c.code} ${c.title} ${c.discount} ${c.platform} ${c.description} ${c.category}`;
-      return matchesTokens(fullText);
-    });
+    const matchedProducts = rankProducts(products, cleanQ);
+    const matchedArticles = rankArticles(articles, cleanQ);
+    const matchedCoupons = rankCoupons(coupons, cleanQ);
 
     return {
       products: matchedProducts,

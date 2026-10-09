@@ -6,18 +6,10 @@ import Link from 'next/link';
 import { PlatformId, SiteSettings } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
 import {
-  Sparkles,
   CheckCircle2,
   ShieldCheck,
   HeartHandshake,
-  ShoppingBag,
-  Home as HomeIcon,
-  BookOpen,
-  Tag,
-  Search,
-  Share2,
 } from 'lucide-react';
-import { SocialShare } from './SocialShare';
 
 interface HeroBannerProps {
   activePlatform: PlatformId | 'all';
@@ -101,71 +93,6 @@ export function HeroBanner({
 
   return (
     <section className="bg-white rounded-3xl mx-4 sm:mx-6 lg:mx-8 my-6 border border-stone-200 shadow-sm overflow-hidden transition-all">
-      {/* 1. SEPARAÇÃO DAS PRINCIPAIS PÁGINAS NO TOPO DO HERO */}
-      <div className="bg-stone-50/90 border-b border-stone-200 px-4 sm:px-6 lg:px-8 py-3">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar w-full sm:w-auto">
-            <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider mr-1 hidden md:inline">
-              Páginas Principais:
-            </span>
-
-            {/* Home */}
-            <Link
-              href="/"
-              className="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-900 hover:text-white text-stone-800 font-bold text-xs border border-stone-200 shadow-2xs transition-all flex items-center gap-1.5 shrink-0"
-            >
-              <HomeIcon className="w-3.5 h-3.5 text-stone-600" />
-              <span>Home</span>
-            </Link>
-
-            {/* Achadinhos */}
-            <Link
-              href="/achadinhos"
-              className="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-900 hover:text-white text-stone-800 font-bold text-xs border border-stone-200 shadow-2xs transition-all flex items-center gap-1.5 shrink-0"
-            >
-              <ShoppingBag className="w-3.5 h-3.5 text-[#EE4D2D]" />
-              <span>Achadinhos</span>
-            </Link>
-
-            {/* Blog */}
-            <Link
-              href="/blog"
-              className="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-900 hover:text-white text-stone-800 font-bold text-xs border border-stone-200 shadow-2xs transition-all flex items-center gap-1.5 shrink-0"
-            >
-              <BookOpen className="w-3.5 h-3.5 text-amber-600" />
-              <span>Blog & Dicas</span>
-            </Link>
-
-            {/* Cupons Desconto & Similares */}
-            <Link
-              href="/cupons"
-              className="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-900 hover:text-white text-stone-800 font-bold text-xs border border-stone-200 shadow-2xs transition-all flex items-center gap-1.5 shrink-0"
-            >
-              <Tag className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Cupons Desconto & Similares</span>
-            </Link>
-
-            {/* Buscar */}
-            <Link
-              href="/busca"
-              className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-stone-900 hover:text-white text-stone-900 font-bold text-xs border border-amber-300 shadow-2xs transition-all flex items-center gap-1.5 shrink-0"
-            >
-              <Search className="w-3.5 h-3.5 text-amber-600" />
-              <span>Buscar</span>
-            </Link>
-          </div>
-
-          {/* Social Share Trigger */}
-          <div className="hidden lg:flex items-center gap-2">
-            <span className="text-[11px] font-medium text-stone-500">Compartilhar:</span>
-            <SocialShare
-              compact
-              title="Achadinhos & Looks por Tamires Santos · Melhores Ofertas e Cupons"
-            />
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-6 py-8 sm:py-12 lg:py-14 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
         {/* Left Column: Editorial Information */}
         <div className="flex-1 space-y-4 sm:space-y-5">

@@ -16,6 +16,7 @@ import {
   subscribeFirestoreArticles,
   INITIAL_ARTICLES,
 } from '@/lib/firestore-products';
+import { rankProducts, rankArticles, rankCoupons } from '@/lib/search-ranking';
 import {
   Search,
   ArrowLeft,
@@ -61,31 +62,14 @@ function SearchContent() {
   }, []);
 
   const results = useMemo(() => {
-    const cleanQ = query.trim().toLowerCase();
+    const cleanQ = query.trim();
     if (!cleanQ) {
       return { products, articles, coupons, total: products.length + articles.length + coupons.length };
     }
 
-    const tokens = cleanQ.split(/\s+/).filter(Boolean);
-    const matchesTokens = (text: string) => {
-      const lower = text.toLowerCase();
-      return tokens.every((tok) => lower.includes(tok));
-    };
-
-    const matchedProducts = products.filter((p) => {
-      const fullText = `${p.title} ${p.category} ${p.platform} ${p.tamiresTip || ''} ${p.badge || ''} ${(p.bottomFunnelKeywords || []).join(' ')}`;
-      return matchesTokens(fullText);
-    });
-
-    const matchedArticles = articles.filter((a) => {
-      const fullText = `${a.title} ${a.category} ${a.summary} ${a.content} ${a.author || ''}`;
-      return matchesTokens(fullText);
-    });
-
-    const matchedCoupons = coupons.filter((c) => {
-      const fullText = `${c.code} ${c.title} ${c.discount} ${c.platform} ${c.description} ${c.category}`;
-      return matchesTokens(fullText);
-    });
+    const matchedProducts = rankProducts(products, cleanQ);
+    const matchedArticles = rankArticles(articles, cleanQ);
+    const matchedCoupons = rankCoupons(coupons, cleanQ);
 
     return {
       products: matchedProducts,
