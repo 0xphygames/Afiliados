@@ -22,6 +22,7 @@ import {
   ImageIcon,
   Eye,
 } from 'lucide-react';
+import { optimizeImageFile } from '@/lib/image-compress';
 
 const BANNER_PRESETS = [
   {
@@ -80,18 +81,24 @@ export default function PainelCampanhasPage() {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      if (result) {
-        setBannerImageUrl(result);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const optimized = await optimizeImageFile(file, 900, 0.72);
+      setBannerImageUrl(optimized);
+    } catch (err) {
+      console.error('Erro ao otimizar banner da campanha:', err);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        if (result) {
+          setBannerImageUrl(result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleCopyLink = (pageSlug: string) => {

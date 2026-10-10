@@ -17,6 +17,7 @@ import {
   Image as ImageIcon,
   Check,
 } from 'lucide-react';
+import { optimizeImageFile } from '@/lib/image-compress';
 
 const PRESET_ARTICLE_COVERS = [
   {
@@ -53,18 +54,24 @@ export default function PainelArtigosPage() {
   const [coverImageUrl, setCoverImageUrl] = useState('/images/hero_achadinhos_looks_1791404026649.jpg');
   const [saving, setSaving] = useState(false);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      if (result) {
-        setCoverImageUrl(result);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const optimized = await optimizeImageFile(file, 800, 0.72);
+      setCoverImageUrl(optimized);
+    } catch (err) {
+      console.error('Erro ao otimizar imagem do artigo:', err);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        if (result) {
+          setCoverImageUrl(result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const startCreate = () => {

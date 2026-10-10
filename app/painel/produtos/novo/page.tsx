@@ -23,7 +23,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Layers,
+  Loader2,
 } from 'lucide-react';
+import { optimizeImageFile, optimizeDataUrl } from '@/lib/image-compress';
+
 
 const PRESET_IMAGES = [
   { label: 'Look Elegante / Vestuário', url: '/images/product_vestuario_conjunto_1791404036584.jpg' },
@@ -38,6 +41,7 @@ export default function NovoAchadinhoPage() {
   const { categories, handleSaveProduct } = useAdmin();
 
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Form states
@@ -60,9 +64,20 @@ export default function NovoAchadinhoPage() {
   const [rating, setRating] = useState('5.0');
   const [reviewCount, setReviewCount] = useState('240');
 
-  const handleAddImage = (urlToAdd?: string) => {
-    const url = (urlToAdd || newImageUrl).trim();
-    if (!url) return;
+  const handleAddImage = async (urlToAdd?: string) => {
+    const rawUrl = (urlToAdd || newImageUrl).trim();
+    if (!rawUrl) return;
+
+    // Optimize if it is a large base64 data URL
+    let url = rawUrl;
+    if (rawUrl.startsWith('data:image/')) {
+      try {
+        url = await optimizeDataUrl(rawUrl, 800, 0.72);
+      } catch (err) {
+        console.warn('Falha ao recompactar data URL:', err);
+      }
+    }
+
     if (!images.includes(url)) {
       setImages((prev) => [...prev, url]);
     }
@@ -90,20 +105,35 @@ export default function NovoAchadinhoPage() {
     setActivePreviewIndex(0);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        if (result) {
-          setImages((prev) => [...prev, result]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    setUploadingImage(true);
+    setErrorMsg(null);
+
+    try {
+      const fileList = Array.from(files);
+      const optimizedUrls = await Promise.all(
+        fileList.map((file) => optimizeImageFile(file, 800, 0.72))
+      );
+
+      setImages((prev) => {
+        const next = [...prev];
+        optimizedUrls.forEach((url) => {
+          if (!next.includes(url)) {
+            next.push(url);
+          }
+        });
+        return next;
+      });
+    } catch (err) {
+      console.error('Erro ao otimizar imagem do arquivo:', err);
+      setErrorMsg('Não foi possível processar a imagem do dispositivo. Tente outro formato ou arquivo.');
+    } finally {
+      setUploadingImage(false);
+      e.target.value = '';
+    }
   };
 
   const numPrice = parseFloat(price.replace(',', '.')) || 0;
@@ -133,32 +163,63 @@ export default function NovoAchadinhoPage() {
     setSaving(true);
     setErrorMsg(null);
 
-    const validImages = images.filter((img) => img.trim().length > 0);
-    const primaryImg = validImages[0] || '/images/hero_achadinhos_looks_1791404026649.jpg';
-
-    const newProduct: Product = {
-      id: `prod-${Date.now()}`,
-      title: title.trim(),
-      platform,
-      category: category.trim() || 'Geral',
-      price: numPrice,
-      originalPrice: numOrigPrice > numPrice ? numOrigPrice : undefined,
-      affiliateUrl: affiliateUrl.trim(),
-      imageUrl: primaryImg,
-      images: validImages.length > 0 ? validImages : [primaryImg],
-      badge: badge.trim() || undefined,
-      tamiresTip: tamiresTip.trim() || undefined,
-      rating: parseFloat(rating) || 5.0,
-      reviewCount: parseInt(reviewCount) || 120,
-      createdAt: new Date().toISOString(),
-    };
-
     try {
+      const validImages = images.filter((img) => img.trim().length > 0);
+      
+      // Re-compress any raw data URLs in the list to make sure total payload is lightweight
+      const optimizedImages = await Promise.all(
+        validImages.map((img) => (img.startsWith('data:image/') ? optimizeDataUrl(img, 800, 0.72) : Promise.resolve(img)))
+      );
+
+      const primaryImg = optimizedImages[0] || '/images/hero_achadinhos_looks_1791404026649.jpg';
+
+      const newProduct: Product = {
+        id: `prod-${Date.now()}`,
+        title: title.trim(),
+        platform,
+        category: category.trim() || 'Geral',
+        price: numPrice,
+        originalPrice: numOrigPrice > numPrice ? numOrigPrice : undefined,
+        affiliateUrl: affiliateUrl.trim(),
+        imageUrl: primaryImg,
+        images: optimizedImages.length > 0 ? optimizedImages : [primaryImg],
+        badge: badge.trim() || undefined,
+        tamiresTip: tamiresTip.trim() || undefined,
+        rating: parseFloat(rating) || 5.0,
+        reviewCount: parseInt(reviewCount) || 120,
+        createdAt: new Date().toISOString(),
+      };
+
       await handleSaveProduct(newProduct);
       router.push('/painel/produtos');
-    } catch (err) {
-      console.error(err);
-      setErrorMsg('Erro ao salvar no banco de dados. Tente novamente.');
+    } catch (err: unknown) {
+      console.error('Erro detalhado ao salvar produto:', err);
+      let message = 'Erro ao salvar no banco de dados. Tente novamente.';
+      if (err instanceof Error) {
+        try {
+          const parsed = JSON.parse(err.message);
+          if (parsed.error) {
+            if (
+              parsed.error.includes('permission-denied') ||
+              parsed.error.includes('Missing or insufficient permissions')
+            ) {
+              message =
+                'Permissão de gravação negada no Firestore. Verifique se você está conectada com o e-mail de administradora (taper.sant@gmail.com).';
+            } else if (
+              parsed.error.includes('maximum allowed size') ||
+              parsed.error.includes('exceeds')
+            ) {
+              message =
+                'O tamanho das imagens anexadas excedeu o limite do Firestore (1MB). Tente remover fotos ou usar imagens mais leves.';
+            } else {
+              message = `Erro no Firestore: ${parsed.error}`;
+            }
+          }
+        } catch {
+          message = `Erro: ${err.message}`;
+        }
+      }
+      setErrorMsg(message);
       setSaving(false);
     }
   };
@@ -320,13 +381,18 @@ export default function NovoAchadinhoPage() {
                 </p>
               </div>
 
-              <label className="cursor-pointer py-1.5 px-3 bg-white hover:bg-stone-100 border border-stone-300 rounded-xl text-xs font-semibold text-stone-700 transition-colors flex items-center gap-1.5 shadow-2xs">
-                <Upload className="w-3.5 h-3.5 text-stone-600" />
-                <span>Subir do Dispositivo</span>
+              <label className={`cursor-pointer py-1.5 px-3 bg-white hover:bg-stone-100 border border-stone-300 rounded-xl text-xs font-semibold text-stone-700 transition-colors flex items-center gap-1.5 shadow-2xs ${uploadingImage ? 'opacity-50 pointer-events-none' : ''}`}>
+                {uploadingImage ? (
+                  <Loader2 className="w-3.5 h-3.5 text-stone-600 animate-spin" />
+                ) : (
+                  <Upload className="w-3.5 h-3.5 text-stone-600" />
+                )}
+                <span>{uploadingImage ? 'Otimizando fotos...' : 'Subir do Dispositivo'}</span>
                 <input
                   type="file"
                   accept="image/*"
                   multiple
+                  disabled={uploadingImage}
                   onChange={handleFileUpload}
                   className="hidden"
                 />

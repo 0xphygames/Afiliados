@@ -9,7 +9,7 @@
           "type": "string",
           "description": "Título descritivo do produto",
           "minLength": 1,
-          "maxLength": 300
+          "maxLength": 800
         },
         "platform": {
           "type": "string",
@@ -20,19 +20,19 @@
           "type": "string",
           "description": "Setor do produto (Vestuário, Suplementos, Musculação, Natal, etc)",
           "minLength": 1,
-          "maxLength": 100
+          "maxLength": 200
         },
         "imageUrl": {
           "type": "string",
           "description": "URL ou imagem do produto",
           "minLength": 1,
-          "maxLength": 500000
+          "maxLength": 1000000
         },
         "affiliateUrl": {
           "type": "string",
           "description": "Link de afiliado com código de comissão",
           "minLength": 1,
-          "maxLength": 2048
+          "maxLength": 10000
         },
         "price": {
           "type": "number",

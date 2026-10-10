@@ -424,22 +424,25 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
       ? product.images.filter(Boolean)
       : (product.imageUrl ? [product.imageUrl] : []);
 
+    const cleanedImages = imagesList.map((img) => img.trim()).filter(Boolean);
+    const primaryImage = (product.imageUrl || cleanedImages[0] || '').trim();
+
     await setDoc(
       docRef,
       {
         id: product.id,
-        title: product.title,
+        title: product.title.trim(),
         platform: product.platform,
-        category: product.category,
-        imageUrl: product.imageUrl || (imagesList[0] || ''),
-        images: imagesList,
-        affiliateUrl: product.affiliateUrl,
-        price: Number(product.price),
-        originalPrice: product.originalPrice ? Number(product.originalPrice) : null,
+        category: (product.category || 'Geral').trim(),
+        imageUrl: primaryImage,
+        images: cleanedImages.length > 0 ? cleanedImages : [primaryImage],
+        affiliateUrl: product.affiliateUrl.trim(),
+        price: Math.max(0, Number(product.price) || 0),
+        originalPrice: product.originalPrice ? Math.max(0, Number(product.originalPrice)) : null,
         rating: Number(product.rating || 5.0),
-        reviewCount: Number(product.reviewCount || 10),
-        badge: product.badge || null,
-        tamiresTip: product.tamiresTip || null,
+        reviewCount: Math.max(1, Number(product.reviewCount || 10)),
+        badge: product.badge?.trim() || null,
+        tamiresTip: product.tamiresTip?.trim() || null,
         isFeatured: Boolean(product.isFeatured),
         createdAt: product.createdAt || new Date().toISOString(),
         authorEmail: auth.currentUser?.email || ADMIN_EMAIL,
