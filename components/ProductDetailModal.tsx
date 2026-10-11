@@ -82,35 +82,21 @@ export function ProductDetailModal({ product, onClose, onEdit }: ProductDetailMo
           <X className="w-4 h-4" />
         </button>
 
-        {/* Media Column with Gallery (Non-cropping presentation) */}
-        <div className="relative w-full md:w-1/2 flex flex-col bg-stone-900/5">
+        {/* Media Column with Gallery */}
+        <div className="relative w-full md:w-1/2 flex flex-col bg-stone-50">
           <div className="relative flex-1 min-h-[300px] sm:min-h-[360px] aspect-square md:aspect-auto flex items-center justify-center overflow-hidden">
             {currentDisplayImage ? (
-              <>
-                {/* Ambient blur backdrop */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  <Image
-                    src={currentDisplayImage}
-                    alt=""
-                    fill
-                    className="object-cover filter blur-2xl opacity-30 scale-125"
-                    referrerPolicy="no-referrer"
-                    unoptimized
-                    aria-hidden="true"
-                  />
-                </div>
-
-                {/* Main intact product photo */}
+              <div className="absolute inset-4 sm:inset-6 flex items-center justify-center">
                 <Image
                   src={currentDisplayImage}
                   alt={product.title}
                   fill
-                  className="object-contain p-4 relative z-1"
+                  className="object-contain"
                   sizes="(max-width: 768px) 100vw, 50vw"
                   referrerPolicy="no-referrer"
                   unoptimized
                 />
-              </>
+              </div>
             ) : (
               <div className="w-full h-full flex items-center justify-center text-stone-400">
                 Sem foto
@@ -118,7 +104,7 @@ export function ProductDetailModal({ product, onClose, onEdit }: ProductDetailMo
             )}
 
             {/* Store Badge */}
-            <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5">
+            <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5">
               <span
                 style={{ backgroundColor: platform.color }}
                 className="px-3 py-1 text-xs font-bold text-white rounded-md uppercase tracking-wider shadow-xs"
@@ -134,7 +120,7 @@ export function ProductDetailModal({ product, onClose, onEdit }: ProductDetailMo
 
             {/* Discount Badge */}
             {discountPercent && (
-              <div className="absolute bottom-4 left-4 z-10">
+              <div className="absolute bottom-4 left-4 z-20">
                 <span className="px-3 py-1 text-xs font-black bg-rose-600 text-white rounded-md shadow-xs">
                   -{discountPercent}% OFF
                 </span>
@@ -143,7 +129,7 @@ export function ProductDetailModal({ product, onClose, onEdit }: ProductDetailMo
 
             {/* Navigation Arrows */}
             {allImages.length > 1 && (
-              <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2.5 z-10 pointer-events-none">
+              <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2.5 z-20 pointer-events-none">
                 <button
                   type="button"
                   onClick={() =>

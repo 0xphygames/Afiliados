@@ -82,36 +82,21 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
       onClick={() => onOpenDetails?.(product)}
       className="group cursor-pointer bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md hover:border-stone-300 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between"
     >
-      {/* Top Media Container: Proportional fashion container with non-cropping presentation */}
-      <div className="relative aspect-square sm:aspect-[4/5] w-full bg-stone-50/80 overflow-hidden border-b border-stone-100 flex items-center justify-center">
+      {/* Top Media Container: Proportional 1:1 e-commerce container with safe inset containment */}
+      <div className="relative aspect-square w-full bg-stone-50/70 overflow-hidden border-b border-stone-100 flex items-center justify-center">
         {!imgError && product.imageUrl ? (
-          <>
-            {/* Subtle ambient backdrop to avoid letterbox voids */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <Image
-                src={product.imageUrl}
-                alt=""
-                fill
-                sizes="100px"
-                className="object-cover filter blur-xl opacity-25 scale-125"
-                referrerPolicy="no-referrer"
-                unoptimized={isUnoptimizedImage}
-                aria-hidden="true"
-              />
-            </div>
-
-            {/* Main full product image (zero cropping of clothes, shoes and details) */}
+          <div className="absolute inset-4 flex items-center justify-center">
             <Image
               src={product.imageUrl}
               alt={product.title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-contain p-2 group-hover:scale-104 transition-transform duration-300 relative z-1"
+              className="object-contain transition-transform duration-300 group-hover:scale-102"
               referrerPolicy="no-referrer"
               unoptimized={isUnoptimizedImage}
               onError={() => setImgError(true)}
             />
-          </>
+          </div>
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-stone-50 text-stone-500">
             <ShoppingBag className="w-10 h-10 text-stone-400 mb-2" />
@@ -120,10 +105,10 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
           </div>
         )}
 
-        {/* Top Badges overlay */}
-        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between pointer-events-none">
+        {/* Top Badges overlay - Always in front (z-20) */}
+        <div className="absolute top-2.5 left-2.5 right-2.5 z-20 flex items-start justify-between pointer-events-none">
           {/* Store Badge and Photos count */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 pointer-events-auto">
             <span
               style={{ backgroundColor: platform.color }}
               className="px-2.5 py-1 text-[11px] font-bold text-white rounded-md shadow-xs flex items-center gap-1 uppercase tracking-wider"
@@ -180,9 +165,9 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
           </div>
         </div>
 
-        {/* Promotional Tag or Discount overlay */}
+        {/* Promotional Tag or Discount overlay - Always in front (z-20) */}
         {discountPercent && discountPercent > 0 && (
-          <div className="absolute bottom-2.5 left-2.5">
+          <div className="absolute bottom-2.5 left-2.5 z-20 pointer-events-none">
             <span className="px-2 py-0.5 text-xs font-black bg-rose-600 text-white rounded-md shadow-xs flex items-center gap-1">
               <Flame className="w-3 h-3 text-amber-300 fill-amber-300" />
               <span>-{discountPercent}% OFF</span>
@@ -191,7 +176,7 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
         )}
 
         {product.badge && (
-          <div className="absolute bottom-2.5 right-2.5">
+          <div className="absolute bottom-2.5 right-2.5 z-20 pointer-events-none">
             <span className="px-2 py-0.5 text-[11px] font-semibold bg-stone-900 text-amber-300 rounded-md shadow-xs">
               {product.badge}
             </span>

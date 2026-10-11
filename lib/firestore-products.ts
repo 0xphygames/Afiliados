@@ -183,11 +183,11 @@ export const INITIAL_ARTICLES: Article[] = [
     summary: 'Testei as peças mais famosas das redes sociais: conjunto modal, faixas elásticas e câmera retrô.',
     content: `Quem me acompanha no Instagram sabe que eu testo de tudo antes de postar! A Shopee tem milhares de produtos, mas alguns se destacam pela qualidade surpreendente:
 
-1. **Conjunto Canelado Modal**: Tecido encorpado que não fica transparente. Comprei no tamanho M e o caimento foi perfeito tanto com tênis quanto com salto.
+1. **Conjunto Canelado Modal**: Tecido encorpado que não fica transparente. Comprei no tamanho M e o caimento foi perfeito. Confira aqui o [Link Oficial do Conjunto na Shopee](https://shopee.com.br) com cupom ativo!
 2. **Faixas Elásticas de Musculação**: O kit com 5 níveis de intensidade é super resistente e não enrola durante o treino de pernas e glúteos.
-3. **Câmera Infantil Retrô**: Ótima opção de presente para o Dia das Crianças ou aniversários, com fotos reais e jogos divertidos.
+3. **Câmera Infantil Retrô**: Ótima opção de presente com fotos reais e jogos divertidos. Veja os detalhes em [Garimpo de Brinquedos e Câmeras](https://shopee.com.br).
 
-Sempre confira os comentários com fotos reais antes de comprar e aproveite os cupons de frete grátis que libero nos grupos VIP!`,
+> 💡 Dica da Tamires: Sempre confira os comentários com fotos reais antes de comprar e aproveite os cupons de frete grátis liberados nos nossos grupos!`,
     coverImageUrl: '/images/product_vestuario_conjunto_1791404036584.jpg',
     author: 'Tamires Santos',
     featured: true,
@@ -202,8 +202,8 @@ Sempre confira os comentários com fotos reais antes de comprar e aproveite os c
 
 - **Meça com fita métrica**: Não se guie apenas por P, M ou G. Olhe a tabela de medidas em centímetros de cada peça individualmente.
 - **Filtre por composição**: Peças com viscose, modal ou algodão com elastano vestem muito melhor do que 100% poliéster fino.
-- **Vestidos Canelados e Alfaiataria**: São as categorias com melhor custo-benefício da plataforma.
-- **Acessórios Banhados**: Sempre passo uma camada fina de verniz protetor para bijuterias para manter o brilho dourado por mais de 6 meses.`,
+- **Vestidos Canelados e Alfaiataria**: São as categorias com melhor custo-benefício. Acesse nossa seleção em [Vitrine Oficial de Moda Shein](https://br.shein.com).
+- **Acessórios Banhados**: Sempre passo uma camada fina de verniz protetor para bijuterias para manter o brilho dourado por meses.`,
     coverImageUrl: '/images/hero_achadinhos_looks_1791404026649.jpg',
     author: 'Tamires Santos',
     featured: true,

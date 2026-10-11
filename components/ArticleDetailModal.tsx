@@ -4,6 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Article } from '@/lib/types';
 import { X, Calendar, User as UserIcon, BookOpen, Share2, Check } from 'lucide-react';
+import { BlogContentRenderer } from './BlogContentRenderer';
 
 interface ArticleDetailModalProps {
   article: Article | null;
@@ -87,9 +88,9 @@ export function ArticleDetailModal({ article, onClose }: ArticleDetailModalProps
             </div>
           )}
 
-          {/* Article formatted content */}
-          <div className="text-stone-800 text-sm leading-relaxed space-y-4 whitespace-pre-line font-sans">
-            {article.content}
+          {/* Article formatted content with rich hyperlinks */}
+          <div className="pt-2 border-t border-stone-100">
+            <BlogContentRenderer content={article.content} className="text-sm leading-relaxed" />
           </div>
         </div>
       </div>

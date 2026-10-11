@@ -18,6 +18,7 @@ import {
   Check,
 } from 'lucide-react';
 import { optimizeImageFile } from '@/lib/image-compress';
+import { BlogContentEditor } from '@/components/BlogContentEditor';
 
 const PRESET_ARTICLE_COVERS = [
   {
@@ -312,14 +313,19 @@ export default function PainelArtigosPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-stone-900">Conteúdo do Artigo</label>
-            <textarea
-              rows={8}
-              required
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-stone-900">
+                Conteúdo do Artigo com Hiperlinks e Dicas
+              </label>
+              <span className="text-[11px] text-amber-700 font-medium">
+                Dica: clique em &quot;Inserir Link&quot; para adicionar links de produtos
+              </span>
+            </div>
+            <BlogContentEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Escreva seu artigo completo aqui com dicas, tamanhos, conselhos sinceros e links..."
-              className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900 leading-relaxed font-sans"
+              onChange={setContent}
+              rows={10}
+              placeholder="Escreva seu artigo completo aqui com dicas, tamanhos, conselhos sinceros e links de afiliados..."
             />
           </div>
 

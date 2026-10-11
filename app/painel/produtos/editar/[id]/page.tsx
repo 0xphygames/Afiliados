@@ -596,17 +596,19 @@ function EditProductForm({
           </div>
 
           <div className="bg-white rounded-3xl border border-stone-200 shadow-md overflow-hidden max-w-sm mx-auto">
-            {/* Card Media Container */}
-            <div className="relative aspect-4/3 w-full bg-stone-100 overflow-hidden border-b border-stone-100">
+            {/* Card Media Container: 1:1 e-commerce square with inset containment */}
+            <div className="relative aspect-square w-full bg-stone-50 overflow-hidden border-b border-stone-100 flex items-center justify-center">
               {images.length > 0 && images[activePreviewIndex] ? (
-                <Image
-                  src={images[activePreviewIndex]}
-                  alt={title || 'Prévia do Produto'}
-                  fill
-                  className="object-cover"
-                  referrerPolicy="no-referrer"
-                  unoptimized
-                />
+                <div className="absolute inset-4 flex items-center justify-center">
+                  <Image
+                    src={images[activePreviewIndex]}
+                    alt={title || 'Prévia do Produto'}
+                    fill
+                    className="object-contain"
+                    referrerPolicy="no-referrer"
+                    unoptimized
+                  />
+                </div>
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center p-6 text-stone-400">
                   <ShoppingBag className="w-10 h-10 mb-2" />
@@ -617,13 +619,13 @@ function EditProductForm({
               {/* Photo navigation if multiple */}
               {images.length > 1 && (
                 <>
-                  <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2 pointer-events-none">
+                  <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2 z-20 pointer-events-none">
                     <button
                       type="button"
                       onClick={() =>
                         setActivePreviewIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1))
                       }
-                      className="p-1 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors pointer-events-auto"
+                      className="p-1 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors pointer-events-auto shadow-xs"
                     >
                       <ChevronLeft className="w-3.5 h-3.5" />
                     </button>
@@ -632,20 +634,20 @@ function EditProductForm({
                       onClick={() =>
                         setActivePreviewIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0))
                       }
-                      className="p-1 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors pointer-events-auto"
+                      className="p-1 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors pointer-events-auto shadow-xs"
                     >
                       <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
-                  <div className="absolute bottom-2.5 right-2.5 bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  <div className="absolute bottom-2.5 right-2.5 z-20 bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                     {activePreviewIndex + 1}/{images.length} fotos
                   </div>
                 </>
               )}
 
               {/* Badges */}
-              <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between">
+              <div className="absolute top-2.5 left-2.5 right-2.5 z-20 flex items-start justify-between">
                 <span
                   style={{ backgroundColor: currentPlatformConfig.color }}
                   className="px-2.5 py-1 text-[11px] font-bold text-white rounded-md uppercase tracking-wider shadow-xs"
@@ -661,7 +663,7 @@ function EditProductForm({
               </div>
 
               {discountPercent && discountPercent > 0 && (
-                <div className="absolute bottom-2.5 left-2.5">
+                <div className="absolute bottom-2.5 left-2.5 z-20">
                   <span className="px-2 py-0.5 text-xs font-black bg-rose-600 text-white rounded-md shadow-xs">
                     -{discountPercent}% OFF
                   </span>

@@ -62,6 +62,7 @@ import {
   Smartphone,
   Activity,
 } from 'lucide-react';
+import { BlogContentEditor } from './BlogContentEditor';
 
 interface AdminDashboardProps {
   isOpen: boolean;
@@ -1204,20 +1205,12 @@ export function AdminDashboard({
                           </div>
 
                           {prodImageUrl && (
-                            <div className="relative aspect-square w-48 rounded-xl overflow-hidden border border-stone-200 bg-stone-100 flex items-center justify-center">
-                              <Image
-                                src={prodImageUrl}
-                                alt=""
-                                fill
-                                className="object-cover filter blur-md opacity-25"
-                                referrerPolicy="no-referrer"
-                                unoptimized
-                              />
+                            <div className="relative aspect-square w-48 rounded-xl overflow-hidden border border-stone-200 bg-stone-50 flex items-center justify-center">
                               <Image
                                 src={prodImageUrl}
                                 alt="Pré-visualização"
                                 fill
-                                className="object-contain p-2 relative z-1"
+                                className="object-contain p-2"
                                 referrerPolicy="no-referrer"
                                 unoptimized
                               />
@@ -1802,17 +1795,9 @@ export function AdminDashboard({
                             <div className="mt-2.5 relative aspect-16/10 w-full max-w-sm rounded-xl overflow-hidden border border-stone-200 bg-stone-900 flex items-center justify-center">
                               <Image
                                 src={pageBannerUrl}
-                                alt=""
-                                fill
-                                className="object-cover filter blur-md opacity-30"
-                                referrerPolicy="no-referrer"
-                                unoptimized
-                              />
-                              <Image
-                                src={pageBannerUrl}
                                 alt="Pré-visualização do Banner"
                                 fill
-                                className="object-contain p-2 relative z-1"
+                                className="object-cover"
                                 referrerPolicy="no-referrer"
                                 unoptimized
                               />
@@ -2294,16 +2279,19 @@ export function AdminDashboard({
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider mb-1.5">
-                          Conteúdo Completo do Artigo
-                        </label>
-                        <textarea
-                          rows={8}
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider">
+                            Conteúdo Completo do Artigo
+                          </label>
+                          <span className="text-[11px] text-amber-700 font-medium">
+                            Use o botão &quot;Inserir Link&quot; para colocar hiperlinks de produtos
+                          </span>
+                        </div>
+                        <BlogContentEditor
                           value={artContent}
-                          onChange={(e) => setArtContent(e.target.value)}
+                          onChange={setArtContent}
+                          rows={8}
                           placeholder="Escreva suas dicas, resenhas dos produtos, tamanhos recomendados e links de compra..."
-                          className="w-full px-3.5 py-2.5 text-xs border border-stone-300 rounded-xl focus:ring-2 focus:ring-stone-900 focus:outline-none font-sans leading-relaxed"
-                          required
                         />
                       </div>
 

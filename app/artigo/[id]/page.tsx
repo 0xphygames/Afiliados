@@ -13,6 +13,7 @@ import {
 } from '@/lib/firestore-products';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { BlogContentRenderer } from '@/components/BlogContentRenderer';
 import {
   ArrowLeft,
   Calendar,
@@ -138,9 +139,9 @@ export default function PublicArticlePage() {
                 </div>
               )}
 
-              {/* Article Content */}
-              <div className="text-stone-800 text-base leading-relaxed space-y-4 whitespace-pre-line font-sans pt-4 max-w-none">
-                {article.content}
+              {/* Article Content with rich hyperlinks and markdown formatting */}
+              <div className="pt-6 border-t border-stone-100 max-w-none">
+                <BlogContentRenderer content={article.content} className="text-base sm:text-lg leading-relaxed space-y-4" />
               </div>
             </article>
           ) : (

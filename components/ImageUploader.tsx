@@ -80,20 +80,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, initialU
   return (
     <div className="flex flex-col gap-2">
       {preview && (
-        <div className="relative w-36 h-36 rounded-xl overflow-hidden border border-stone-200 bg-stone-100 flex items-center justify-center">
-          <Image
-            src={preview}
-            alt=""
-            fill
-            className="object-cover filter blur-md opacity-25"
-            referrerPolicy="no-referrer"
-            unoptimized
-          />
+        <div className="relative w-36 h-36 rounded-xl overflow-hidden border border-stone-200 bg-stone-50 flex items-center justify-center">
           <Image
             src={preview}
             alt="preview"
             fill
-            className="object-contain p-2 relative z-1"
+            className="object-contain p-2"
             unoptimized
             referrerPolicy="no-referrer"
           />
