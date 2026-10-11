@@ -15,16 +15,16 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Achadinhos & Looks - Tamires Santos',
+  title: 'Achadinhos & Looks - Tamires Santos | Teste Autodeploy',
   description: 'Curadoria exclusiva de achadinhos e looks da Shopee, Shein, Mercado Livre e Amazon por Tamires Santos.',
   openGraph: {
-    title: 'Achadinhos & Looks - Tamires Santos',
+    title: 'Achadinhos & Looks - Tamires Santos | Teste Autodeploy',
     description: 'Curadoria exclusiva de achadinhos e looks da Shopee, Shein, Mercado Livre e Amazon por Tamires Santos.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Achadinhos & Looks - Tamires Santos',
+    title: 'Achadinhos & Looks - Tamires Santos | Teste Autodeploy',
     description: 'Curadoria exclusiva de achadinhos e looks da Shopee, Shein, Mercado Livre e Amazon por Tamires Santos.',
   },
 };
