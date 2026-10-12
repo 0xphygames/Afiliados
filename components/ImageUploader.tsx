@@ -34,6 +34,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, initialU
 
       // 2. Try Firebase storage if available, fallback to compressed data URL
       try {
+        if (!storage) {
+          throw new Error('Firebase Storage not available');
+        }
         const fileRef = ref(storage, `products/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`);
         const uploadTask = uploadBytesResumable(fileRef, file);
 
