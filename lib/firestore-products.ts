@@ -256,6 +256,12 @@ export function subscribeFirestoreProducts(
   onSuccess: (products: Product[]) => void,
   onError?: (err: Error) => void
 ): () => void {
+  // Immediately provide cached/initial products (all 55) so there is zero flash of missing products
+  const initial = getStoredProducts();
+  if (initial && initial.length > 0) {
+    onSuccess(initial);
+  }
+
   const productsCol = collection(db, 'products');
 
   const unsubscribe = onSnapshot(
@@ -299,10 +305,15 @@ export function subscribeFirestoreProducts(
         });
       });
 
-      // Sort by createdAt descending
-      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      saveStoredProducts(list);
-      onSuccess(list);
+      // Merge with INITIAL_PRODUCTS to guarantee full 55-item catalog + user additions
+      const mergedMap = new Map<string, Product>();
+      INITIAL_PRODUCTS.forEach((p) => mergedMap.set(p.id, p));
+      list.forEach((p) => mergedMap.set(p.id, p));
+      const fullList = Array.from(mergedMap.values());
+      fullList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      saveStoredProducts(fullList);
+      onSuccess(fullList);
     },
     (error) => {
       console.warn('Leitura do Firestore (usando fallback seguro):', error);
