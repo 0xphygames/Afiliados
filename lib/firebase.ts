@@ -1,30 +1,53 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, browserLocalPersistence, setPersistence, Auth } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer, Firestore } from 'firebase/firestore';
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  doc,
+  getDocFromServer,
+  Firestore,
+} from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import firebaseConfig from '../firebase-applet-config.json';
 
-// Initialize Firebase only on client-side
-let app;
-let db: Firestore | null = null;
-let auth: Auth | null = null;
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+
+let db: Firestore;
+try {
+  if (typeof window !== 'undefined') {
+    db = initializeFirestore(
+      app,
+      {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager(),
+        }),
+      },
+      firebaseConfig.firestoreDatabaseId
+    );
+  } else {
+    db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+  }
+} catch {
+  db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+}
+const auth = getAuth(app);
 let storage: FirebaseStorage | null = null;
-let googleProvider: GoogleAuthProvider | null = null;
+try {
+  storage = getStorage(app);
+} catch {
+  storage = null;
+}
+const googleProvider = new GoogleAuthProvider();
 
 if (typeof window !== 'undefined') {
-  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-  db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-  auth = getAuth(app);
-  storage = getStorage(app);
-  googleProvider = new GoogleAuthProvider();
-
-  // Ensure local persistence for auth
   setPersistence(auth, browserLocalPersistence).catch((err) => {
     console.error('Erro ao definir persistência do Auth:', err);
   });
 }
 
-export { db, auth, storage, googleProvider };
+export { app, db, auth, storage, googleProvider };
 
 // Error handling mandated by skill
 export enum OperationType {

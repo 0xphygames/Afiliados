@@ -28,6 +28,13 @@ import {
   INITIAL_CUSTOM_CATEGORIES,
 } from './firestore-products';
 
+import {
+  getStoredProducts,
+  getStoredArticles,
+  getStoredLandingPages,
+  getStoredSettings,
+} from './storage';
+
 interface AdminContextType {
   currentUser: User | null;
   isAdmin: boolean;
@@ -62,6 +69,18 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [categories, setCategories] = useState<CustomCategory[]>(INITIAL_CUSTOM_CATEGORIES);
 
   useEffect(() => {
+    // Instant hydration from local cache
+    queueMicrotask(() => {
+      const localProds = getStoredProducts();
+      if (localProds && localProds.length > 0) setProducts(localProds);
+      const localArts = getStoredArticles();
+      if (localArts && localArts.length > 0) setArticles(localArts);
+      const localPages = getStoredLandingPages();
+      if (localPages && localPages.length > 0) setLandingPages(localPages);
+      const localSettings = getStoredSettings();
+      if (localSettings) setSettings(localSettings);
+    });
+
     const unsubAuth = subscribeAuth((user) => {
       setCurrentUser(user);
       setAuthLoading(false);

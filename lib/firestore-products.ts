@@ -15,6 +15,16 @@ import {
 import { db, auth, googleProvider, handleFirestoreError, OperationType } from './firebase';
 import { Product, Article, SiteSettings, CustomLandingPage, CustomCategory } from './types';
 import { INITIAL_PRODUCTS } from './constants';
+import {
+  getStoredProducts,
+  saveStoredProducts,
+  getStoredArticles,
+  saveStoredArticles,
+  getStoredLandingPages,
+  saveStoredLandingPages,
+  getStoredSettings,
+  saveStoredSettings,
+} from './storage';
 
 export { INITIAL_PRODUCTS, INITIAL_COUPONS } from './constants';
 
@@ -251,8 +261,13 @@ export function subscribeFirestoreProducts(
   const unsubscribe = onSnapshot(
     productsCol,
     (snapshot) => {
-      // If collection is empty, return default products in memory without unauthorized writes
+      // If collection is empty, return stored products or defaults
       if (snapshot.empty) {
+        const local = getStoredProducts();
+        if (local && local.length > 0) {
+          onSuccess(local);
+          return;
+        }
         onSuccess(INITIAL_PRODUCTS);
         return;
       }
@@ -286,11 +301,17 @@ export function subscribeFirestoreProducts(
 
       // Sort by createdAt descending
       list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      saveStoredProducts(list);
       onSuccess(list);
     },
     (error) => {
       console.warn('Leitura do Firestore (usando fallback seguro):', error);
-      onSuccess(INITIAL_PRODUCTS);
+      const local = getStoredProducts();
+      if (local && local.length > 0) {
+        onSuccess(local);
+      } else {
+        onSuccess(INITIAL_PRODUCTS);
+      }
       onError?.(error as Error);
     }
   );
@@ -309,6 +330,11 @@ export function subscribeFirestoreArticles(
     articlesCol,
     (snapshot) => {
       if (snapshot.empty) {
+        const local = getStoredArticles();
+        if (local && local.length > 0) {
+          onSuccess(local);
+          return;
+        }
         onSuccess(INITIAL_ARTICLES);
         return;
       }
@@ -330,11 +356,17 @@ export function subscribeFirestoreArticles(
       });
 
       list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      saveStoredArticles(list);
       onSuccess(list);
     },
     (error) => {
       console.warn('Leitura de artigos do Firestore (fallback):', error);
-      onSuccess(INITIAL_ARTICLES);
+      const local = getStoredArticles();
+      if (local && local.length > 0) {
+        onSuccess(local);
+      } else {
+        onSuccess(INITIAL_ARTICLES);
+      }
       onError?.(error as Error);
     }
   );
@@ -450,7 +482,13 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
       },
       { merge: true }
     );
+    const existing = getStoredProducts();
+    const updated = [product, ...existing.filter((p) => p.id !== product.id)];
+    saveStoredProducts(updated);
   } catch (error) {
+    const existing = getStoredProducts();
+    const updated = [product, ...existing.filter((p) => p.id !== product.id)];
+    saveStoredProducts(updated);
     handleFirestoreError(error, OperationType.WRITE, path);
   }
 }
@@ -469,7 +507,13 @@ export async function saveArticleToFirestore(article: Article): Promise<void> {
       },
       { merge: true }
     );
+    const existing = getStoredArticles();
+    const updated = [article, ...existing.filter((a) => a.id !== article.id)];
+    saveStoredArticles(updated);
   } catch (error) {
+    const existing = getStoredArticles();
+    const updated = [article, ...existing.filter((a) => a.id !== article.id)];
+    saveStoredArticles(updated);
     handleFirestoreError(error, OperationType.WRITE, path);
   }
 }
@@ -487,7 +531,9 @@ export async function saveSettingsToFirestore(settings: SiteSettings): Promise<v
       },
       { merge: true }
     );
+    saveStoredSettings(settings);
   } catch (error) {
+    saveStoredSettings(settings);
     handleFirestoreError(error, OperationType.WRITE, path);
   }
 }
@@ -498,7 +544,11 @@ export async function deleteProductFromFirestore(productId: string): Promise<voi
   try {
     const docRef = doc(db, 'products', productId);
     await deleteDoc(docRef);
+    const existing = getStoredProducts();
+    saveStoredProducts(existing.filter((p) => p.id !== productId));
   } catch (error) {
+    const existing = getStoredProducts();
+    saveStoredProducts(existing.filter((p) => p.id !== productId));
     handleFirestoreError(error, OperationType.DELETE, path);
   }
 }
@@ -514,6 +564,11 @@ export function subscribeFirestoreLandingPages(
     pagesCol,
     (snapshot) => {
       if (snapshot.empty) {
+        const local = getStoredLandingPages();
+        if (local && local.length > 0) {
+          onSuccess(local);
+          return;
+        }
         onSuccess(INITIAL_LANDING_PAGES);
         return;
       }
@@ -550,11 +605,17 @@ export function subscribeFirestoreLandingPages(
       });
 
       list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      saveStoredLandingPages(list);
       onSuccess(list);
     },
     (error) => {
       console.warn('Leitura de páginas do Firestore (fallback):', error);
-      onSuccess(INITIAL_LANDING_PAGES);
+      const local = getStoredLandingPages();
+      if (local && local.length > 0) {
+        onSuccess(local);
+      } else {
+        onSuccess(INITIAL_LANDING_PAGES);
+      }
       onError?.(error as Error);
     }
   );
@@ -576,7 +637,13 @@ export async function saveLandingPageToFirestore(page: CustomLandingPage): Promi
       },
       { merge: true }
     );
+    const existing = getStoredLandingPages();
+    const updated = [page, ...existing.filter((p) => p.id !== page.id)];
+    saveStoredLandingPages(updated);
   } catch (error) {
+    const existing = getStoredLandingPages();
+    const updated = [page, ...existing.filter((p) => p.id !== page.id)];
+    saveStoredLandingPages(updated);
     handleFirestoreError(error, OperationType.WRITE, path);
   }
 }
@@ -587,7 +654,11 @@ export async function deleteLandingPageFromFirestore(pageId: string): Promise<vo
   try {
     const docRef = doc(db, 'pages', pageId);
     await deleteDoc(docRef);
+    const existing = getStoredLandingPages();
+    saveStoredLandingPages(existing.filter((p) => p.id !== pageId));
   } catch (error) {
+    const existing = getStoredLandingPages();
+    saveStoredLandingPages(existing.filter((p) => p.id !== pageId));
     handleFirestoreError(error, OperationType.DELETE, path);
   }
 }

@@ -16,6 +16,12 @@ import {
   INITIAL_SETTINGS,
   INITIAL_LANDING_PAGES,
 } from '@/lib/firestore-products';
+import {
+  getStoredProducts,
+  getStoredArticles,
+  getStoredLandingPages,
+  getStoredSettings,
+} from '@/lib/storage';
 import { testConnection } from '@/lib/firebase';
 import { User } from 'firebase/auth';
 import { Navbar } from '@/components/Navbar';
@@ -50,8 +56,19 @@ export default function HomePage() {
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  // Subscribe to real-time Firestore database & Auth
   useEffect(() => {
+    // Instant local cache restore
+    queueMicrotask(() => {
+      const localProds = getStoredProducts();
+      if (localProds && localProds.length > 0) setProducts(localProds);
+      const localArts = getStoredArticles();
+      if (localArts && localArts.length > 0) setArticles(localArts);
+      const localPages = getStoredLandingPages();
+      if (localPages && localPages.length > 0) setCampaigns(localPages);
+      const localSettings = getStoredSettings();
+      if (localSettings) setSettings(localSettings);
+    });
+
     testConnection();
 
     const unsubscribeProducts = subscribeFirestoreProducts((list) => {
