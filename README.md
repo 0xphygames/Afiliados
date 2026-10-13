@@ -93,8 +93,8 @@ O projeto **Achadinhos & Looks – Tamires Santos** é um hub de alta conversão
 
 ### 2. Clonar o repositório e instalar dependências
 ```bash
-git clone <URL_DO_SEU_REPOSITORIO>
-cd achadinhos-e-looks
+git clone https://github.com/0xphygames/Afiliados.git
+cd Afiliados
 npm install
 ```
 
