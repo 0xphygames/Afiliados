@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { loginWithGoogle, subscribeAuth, isUserAdmin, logoutUser, PRIMARY_ADMIN_EMAIL, ADMIN_EMAIL } from '@/lib/firestore-products';
+import { loginWithPassword, subscribeAuth, isUserAdmin, logoutUser, PRIMARY_ADMIN_EMAIL, ADMIN_EMAIL } from '@/lib/firestore-products';
 import {
   Lock,
   LogIn,
@@ -23,6 +23,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
     const unsub = subscribeAuth(async (user) => {
@@ -46,7 +48,7 @@ export default function LoginPage() {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const user = await loginWithGoogle();
+      const user = await loginWithPassword(email, password);
       if (user) {
         if (isUserAdmin(user)) {
           router.push('/painel');
@@ -59,7 +61,7 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       if (err?.code !== 'auth/popup-closed-by-user') {
-        setErrorMsg('Erro ao conectar com o Google. Verifique sua conexão e tente novamente.');
+        setErrorMsg('E-mail ou senha inválidos. Verifique seus dados e tente novamente.');
       }
     } finally {
       setLoading(false);
@@ -124,9 +126,25 @@ export default function LoginPage() {
 
           {/* Action buttons */}
           <div className="space-y-3 pt-2">
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="E-mail do administrador"
+              className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-stone-500"
+              autoComplete="email"
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Senha"
+              className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none focus:border-stone-500"
+              autoComplete="current-password"
+            />
             <button
               onClick={handleLogin}
-              disabled={loading || checkingAuth}
+              disabled={loading || checkingAuth || !email || !password}
               className="w-full py-3.5 px-6 bg-stone-900 hover:bg-stone-800 active:scale-[0.99] text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2.5 group cursor-pointer disabled:opacity-50"
             >
               <LogIn className="w-4 h-4 text-amber-300 group-hover:scale-110 transition-transform" />
@@ -134,8 +152,8 @@ export default function LoginPage() {
                 {checkingAuth
                   ? 'Verificando acesso...'
                   : loading
-                  ? 'Conectando ao Google...'
-                  : 'Entrar com Conta Google'}
+                  ? 'Entrando...'
+                  : 'Entrar com e-mail e senha'}
               </span>
             </button>
 

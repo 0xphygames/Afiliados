@@ -772,6 +772,12 @@ export async function loginWithGoogle(): Promise<User> {
   }
 }
 
+export async function loginWithPassword(email: string, password: string): Promise<User> {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data.user as unknown as User;
+}
+
 // Logout
 export async function logoutUser(): Promise<void> {
   await supabase.auth.signOut();

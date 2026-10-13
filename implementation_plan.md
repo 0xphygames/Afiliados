@@ -2,12 +2,13 @@
 
 ## Objetivo
 
-Substituir a infraestrutura Firebase usada pelo site por Supabase e preparar o projeto Next.js para execução como aplicativo Node.js na Hostinger.
+Substituir a infraestrutura Firebase e Google Cloud usada pelo site por Supabase e preparar o projeto Next.js para execução como aplicativo Node.js na Hostinger.
 
 ## Diagnóstico atual
 
 - O app é Next.js 15 com React 19 e execução Node (`next start`).
 - Firebase está integrado em `lib/firebase.ts`, `lib/firestore-products.ts`, `lib/AdminContext.tsx`, `components/ImageUploader.tsx` e páginas/componentes que usam autenticação.
+- O login Google foi iniciado via Supabase, mas ainda depende da configuração OAuth do Google Cloud.
 - Os dados atualmente têm fallback/localStorage em `lib/storage.ts`.
 - Existe um schema Drizzle/Postgres em `src/db/schema.ts`, mas ele está descrito como vinculado ao Firebase e não é a camada principal usada pela interface.
 - Há tabelas previstas para usuários, produtos, artigos, cupons e landing pages.
@@ -51,6 +52,13 @@ Substituir a infraestrutura Firebase usada pelo site por Supabase e preparar o p
    - Testar login Google, proteção do painel, leitura pública, upload e links de imagens.
    - Revisar políticas RLS e exposição do Storage antes do deploy.
 
+7. **Remover Firebase e Google Cloud**
+   - Remover dependências e imports do Firebase.
+   - Remover configurações, regras e arquivos exclusivos do Firebase.
+   - Remover o login Google/OAuth e qualquer configuração Google Cloud.
+   - Substituir o login por Supabase Auth com e-mail e senha ou magic link.
+   - Atualizar o painel para aceitar somente os administradores configurados no Supabase.
+
 ## Informações necessárias antes da implementação
 
 - URL do projeto Supabase.
@@ -58,6 +66,7 @@ Substituir a infraestrutura Firebase usada pelo site por Supabase e preparar o p
 - Nome do bucket de imagens desejado (ou autorização para usar `images`).
 - E-mail(s) que devem continuar como administradores.
 - Confirmação se os dados existentes do Firebase precisam ser migrados ou se o Supabase começará vazio.
+- Escolha do novo login do painel: e-mail e senha ou link mágico enviado por e-mail.
 
 ## Critérios de conclusão
 
