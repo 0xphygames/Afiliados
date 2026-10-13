@@ -12,6 +12,7 @@ import {
   User,
   onAuthStateChanged,
 } from 'firebase/auth';
+import { supabase } from './supabase';
 import { db, auth, googleProvider, handleFirestoreError, OperationType } from './firebase';
 import { Product, Article, SiteSettings, CustomLandingPage, CustomCategory } from './types';
 import { INITIAL_PRODUCTS } from './constants';
@@ -31,7 +32,7 @@ export { INITIAL_PRODUCTS, INITIAL_COUPONS } from './constants';
 export const PRIMARY_ADMIN_EMAIL = 'taper.sant@gmail.com';
 export const ALLOWED_ADMIN_EMAILS = [
   'taper.sant@gmail.com',
-  'tappersantcomtemodo@gmail.com',
+  '0xphy.games@gmail.com',
 ];
 
 export const ADMIN_EMAIL = PRIMARY_ADMIN_EMAIL;
@@ -758,8 +759,13 @@ export async function deleteArticleFromFirestore(articleId: string): Promise<voi
 // Login via Google
 export async function loginWithGoogle(): Promise<User> {
   try {
-    const cred = await signInWithPopup(auth, googleProvider);
-    return cred.user;
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined },
+    });
+    if (error) throw error;
+    if (data.url && typeof window !== 'undefined') window.location.assign(data.url);
+    return (await supabase.auth.getUser()).data.user as unknown as User;
   } catch (err) {
     console.error('Erro no login Google:', err);
     throw err;
@@ -768,10 +774,14 @@ export async function loginWithGoogle(): Promise<User> {
 
 // Logout
 export async function logoutUser(): Promise<void> {
-  await signOut(auth);
+  await supabase.auth.signOut();
 }
 
 // Subscribe to auth state changes
 export function subscribeAuth(callback: (user: User | null) => void): () => void {
-  return onAuthStateChanged(auth, callback);
+  void supabase.auth.getUser().then(({ data }) => callback(data.user as unknown as User | null));
+  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    callback(session?.user as unknown as User | null);
+  });
+  return () => data.subscription.unsubscribe();
 }

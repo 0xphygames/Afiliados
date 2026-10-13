@@ -2,8 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import Image from 'next/image';
-import { getDownloadURL, uploadBytesResumable, ref } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
+import { supabase, SUPABASE_STORAGE_BUCKET } from '@/lib/supabase';
 import { optimizeImageFile } from '@/lib/image-compress';
 
 interface ImageUploaderProps {
@@ -32,37 +31,21 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, initialU
       // 1. Optimize image in browser first to prevent oversized uploads
       const optimizedDataUrl = await optimizeImageFile(file, 1200, 0.85);
 
-      // 2. Try Firebase storage if available, fallback to compressed data URL
+      // 2. Upload to Supabase Storage, fallback to the optimized data URL if unavailable
       try {
-        if (!storage) {
-          throw new Error('Firebase Storage not available');
-        }
-        const fileRef = ref(storage, `products/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`);
-        const uploadTask = uploadBytesResumable(fileRef, file);
+        const safeName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+        const path = `products/${Date.now()}_${safeName}`;
+        const { error } = await supabase.storage
+          .from(SUPABASE_STORAGE_BUCKET)
+          .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+        if (error) throw error;
 
-        uploadTask.on(
-          'state_changed',
-          undefined,
-          (storageError) => {
-            console.warn('Firebase Storage indisponível, usando fallback otimizado:', storageError);
-            setPreview(optimizedDataUrl);
-            setUploading(false);
-            onUpload(optimizedDataUrl);
-          },
-          async () => {
-            try {
-              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-              setPreview(downloadURL);
-              setUploading(false);
-              onUpload(downloadURL);
-            } catch (err) {
-              setPreview(optimizedDataUrl);
-              setUploading(false);
-              onUpload(optimizedDataUrl);
-            }
-          }
-        );
-      } catch (storageInitErr) {
+        const { data } = supabase.storage.from(SUPABASE_STORAGE_BUCKET).getPublicUrl(path);
+        setPreview(data.publicUrl);
+        setUploading(false);
+        onUpload(data.publicUrl);
+      } catch (storageError) {
+        console.warn('Supabase Storage indisponível, usando fallback otimizado:', storageError);
         setPreview(optimizedDataUrl);
         setUploading(false);
         onUpload(optimizedDataUrl);
