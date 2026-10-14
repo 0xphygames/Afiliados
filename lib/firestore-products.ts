@@ -272,7 +272,15 @@ export function subscribeFirestoreProducts(
       badge: row.badge || undefined, tamiresTip: row.tamires_tip || undefined,
       isFeatured: Boolean(row.is_featured), createdAt: row.created_at,
     } satisfies Product));
-    const products = list;
+    // Keep the curated legacy catalog in the same public feed as Supabase rows.
+    // Supabase rows with the same id override the legacy version, while newly
+    // created products are appended instead of replacing the catalog.
+    const merged = new Map<string, Product>();
+    INITIAL_PRODUCTS.forEach((product) => merged.set(product.id, product));
+    list.forEach((product) => merged.set(product.id, product));
+    const products = Array.from(merged.values()).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
     saveStoredProducts(products);
     onSuccess(products);
   });
