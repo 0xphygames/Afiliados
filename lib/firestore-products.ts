@@ -17,7 +17,6 @@ import { db, auth, googleProvider, handleFirestoreError, OperationType } from '.
 import { Product, Article, SiteSettings, CustomLandingPage, CustomCategory } from './types';
 import { INITIAL_PRODUCTS } from './constants';
 import {
-  getStoredProducts,
   saveStoredProducts,
   getStoredArticles,
   saveStoredArticles,
@@ -36,6 +35,12 @@ export const ALLOWED_ADMIN_EMAILS = [
 ];
 
 export const ADMIN_EMAIL = PRIMARY_ADMIN_EMAIL;
+
+// Products are requested by several pages (home, catalog, search and admin).
+// Share the in-flight request so navigation does not create one Supabase
+// request per component, while keeping the curated catalog available instantly.
+let productsCache: Product[] | null = null;
+let productsRequest: Promise<Product[]> | null = null;
 
 export const INITIAL_LANDING_PAGES: CustomLandingPage[] = [
   {
@@ -257,34 +262,45 @@ export function subscribeFirestoreProducts(
   onSuccess: (products: Product[]) => void,
   onError?: (err: Error) => void
 ): () => void {
-  void supabase.from('products').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
-    if (error) {
-      onError?.(error);
-      onSuccess([]);
-      return;
-    }
-    const list = (data ?? []).map((row) => ({
-      id: row.id, title: row.title, platform: row.platform, category: row.category,
-      imageUrl: row.image_url, images: Array.isArray(row.images) ? row.images : [row.image_url],
-      affiliateUrl: row.affiliate_url, price: Number(row.price) || 0,
-      originalPrice: row.original_price == null ? undefined : Number(row.original_price),
-      rating: Number(row.rating) || 5, reviewCount: Number(row.review_count) || 1,
-      badge: row.badge || undefined, tamiresTip: row.tamires_tip || undefined,
-      isFeatured: Boolean(row.is_featured), createdAt: row.created_at,
-    } satisfies Product));
-    // Keep the curated legacy catalog in the same public feed as Supabase rows.
-    // Supabase rows with the same id override the legacy version, while newly
-    // created products are appended instead of replacing the catalog.
-    const merged = new Map<string, Product>();
-    INITIAL_PRODUCTS.forEach((product) => merged.set(product.id, product));
-    list.forEach((product) => merged.set(product.id, product));
-    const products = Array.from(merged.values()).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-    saveStoredProducts(products);
-    onSuccess(products);
+  if (productsCache) onSuccess(productsCache);
+  else onSuccess(INITIAL_PRODUCTS);
+
+  if (!productsRequest) {
+    productsRequest = Promise.resolve(
+      supabase.from('products').select('*').order('created_at', { ascending: false })
+    ).then(({ data, error }) => {
+      if (error) throw error;
+      const list = (data ?? []).map((row) => ({
+        id: row.id, title: row.title, platform: row.platform, category: row.category,
+        imageUrl: row.image_url, images: Array.isArray(row.images) ? row.images : [row.image_url],
+        affiliateUrl: row.affiliate_url, price: Number(row.price) || 0,
+        originalPrice: row.original_price == null ? undefined : Number(row.original_price),
+        rating: Number(row.rating) || 5, reviewCount: Number(row.review_count) || 1,
+        badge: row.badge || undefined, tamiresTip: row.tamires_tip || undefined,
+        isFeatured: Boolean(row.is_featured), createdAt: row.created_at,
+      } satisfies Product));
+      const merged = new Map<string, Product>();
+      INITIAL_PRODUCTS.forEach((product) => merged.set(product.id, product));
+      list.forEach((product) => merged.set(product.id, product));
+      productsCache = Array.from(merged.values()).sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+      saveStoredProducts(productsCache);
+      return productsCache;
+    });
+  }
+
+  const request = productsRequest;
+  void request.then(onSuccess).catch((error: Error) => {
+    productsRequest = null;
+    onError?.(error);
   });
   return () => undefined;
+}
+
+function invalidateProductsCache() {
+  productsCache = null;
+  productsRequest = null;
 }
 
 // Subscribe to real-time articles collection in Firestore
@@ -400,6 +416,7 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
     created_at: product.createdAt || new Date().toISOString(),
   });
   if (error) throw error;
+  invalidateProductsCache();
 }
 
 // Add or update article in Firestore
@@ -437,6 +454,7 @@ export async function saveSettingsToFirestore(settings: SiteSettings): Promise<v
 export async function deleteProductFromFirestore(productId: string): Promise<void> {
   const { error } = await supabase.from('products').delete().eq('id', productId);
   if (error) throw error;
+  invalidateProductsCache();
 }
 
 // Subscribe to landing pages collection in Firestore
