@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { PlatformId, Product, SortOption, CustomCategory } from '@/lib/types';
-import { PLATFORMS, INITIAL_PRODUCTS } from '@/lib/constants';
+import { PLATFORMS } from '@/lib/constants';
 import {
   subscribeFirestoreProducts,
   subscribeFirestoreCategories,
@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 
 export default function AchadinhosPage() {
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<CustomCategory[]>(INITIAL_CUSTOM_CATEGORIES);
 
   const [activePlatform, setActivePlatform] = useState<PlatformId | 'all'>('all');

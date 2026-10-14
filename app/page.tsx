@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Product, Article, Coupon, SiteSettings, CustomLandingPage } from '@/lib/types';
-import { INITIAL_PRODUCTS, INITIAL_COUPONS, PLATFORMS } from '@/lib/constants';
+import { INITIAL_COUPONS, PLATFORMS } from '@/lib/constants';
 import {
   subscribeFirestoreProducts,
   subscribeFirestoreArticles,
@@ -17,7 +17,6 @@ import {
   INITIAL_LANDING_PAGES,
 } from '@/lib/firestore-products';
 import {
-  getStoredProducts,
   getStoredArticles,
   getStoredLandingPages,
   getStoredSettings,
@@ -44,7 +43,7 @@ import {
 } from 'lucide-react';
 
 export default function HomePage() {
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
   const [coupons] = useState<Coupon[]>(INITIAL_COUPONS);
   const [campaigns, setCampaigns] = useState<CustomLandingPage[]>(INITIAL_LANDING_PAGES);
@@ -59,8 +58,6 @@ export default function HomePage() {
   useEffect(() => {
     // Instant local cache restore
     queueMicrotask(() => {
-      const localProds = getStoredProducts();
-      if (localProds && localProds.length > 0) setProducts(localProds);
       const localArts = getStoredArticles();
       if (localArts && localArts.length > 0) setArticles(localArts);
       const localPages = getStoredLandingPages();

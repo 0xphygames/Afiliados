@@ -10,7 +10,7 @@ import { ProductCard } from '@/components/ProductCard';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { ArticleDetailModal } from '@/components/ArticleDetailModal';
 import { Product, Article, Coupon } from '@/lib/types';
-import { INITIAL_PRODUCTS, INITIAL_COUPONS, PLATFORMS } from '@/lib/constants';
+import { INITIAL_COUPONS, PLATFORMS } from '@/lib/constants';
 import {
   subscribeFirestoreProducts,
   subscribeFirestoreArticles,
@@ -40,7 +40,7 @@ function SearchContent() {
   const setQuery = (newVal: string) => setUserQuery(newVal);
 
   const [activeTab, setActiveTab] = useState<'all' | 'products' | 'articles' | 'coupons'>('all');
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
   const [coupons] = useState<Coupon[]>(INITIAL_COUPONS);
 

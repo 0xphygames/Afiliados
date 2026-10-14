@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Script from 'next/script';
 import { useParams } from 'next/navigation';
 import { CustomLandingPage, Product, SiteSettings, PlatformId } from '@/lib/types';
-import { PLATFORMS, INITIAL_PRODUCTS } from '@/lib/constants';
+import { PLATFORMS } from '@/lib/constants';
 import {
   subscribeFirestoreLandingPages,
   subscribeFirestoreProducts,
@@ -43,7 +43,7 @@ export default function PublicCampaignPage() {
   const slug = decodeURIComponent(String(rawSlug || ''));
 
   const [pages, setPages] = useState<CustomLandingPage[]>(INITIAL_LANDING_PAGES);
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);

@@ -21,7 +21,6 @@ import {
   deleteArticleFromFirestore,
   saveSettingsToFirestore,
   logoutUser,
-  INITIAL_PRODUCTS,
   INITIAL_ARTICLES,
   INITIAL_SETTINGS,
   INITIAL_LANDING_PAGES,
@@ -29,7 +28,6 @@ import {
 } from './firestore-products';
 
 import {
-  getStoredProducts,
   getStoredArticles,
   getStoredLandingPages,
   getStoredSettings,
@@ -62,7 +60,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
   const [landingPages, setLandingPages] = useState<CustomLandingPage[]>(INITIAL_LANDING_PAGES);
@@ -71,8 +69,6 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Instant hydration from local cache
     queueMicrotask(() => {
-      const localProds = getStoredProducts();
-      if (localProds && localProds.length > 0) setProducts(localProds);
       const localArts = getStoredArticles();
       if (localArts && localArts.length > 0) setArticles(localArts);
       const localPages = getStoredLandingPages();
