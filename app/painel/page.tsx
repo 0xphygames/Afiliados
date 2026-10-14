@@ -110,7 +110,7 @@ export default function PainelOverviewPage() {
             </span>
             <ShoppingBag className="w-4 h-4 text-amber-600" />
           </div>
-          <span className="text-[10px] text-emerald-600 font-semibold block">100% no Firestore</span>
+          <span className="text-[10px] text-emerald-600 font-semibold block">100% no Supabase</span>
         </div>
 
         {/* Shopee */}

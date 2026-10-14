@@ -280,7 +280,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
             <div className="pt-2 flex items-center gap-1.5 text-[11px] text-emerald-400 font-medium">
               <Database className="w-3 h-3 text-emerald-400" />
-              <span>Firestore Conectado</span>
+              <span>Supabase Conectado</span>
             </div>
           </div>
 
