@@ -260,7 +260,7 @@ export function subscribeFirestoreProducts(
   void supabase.from('products').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
     if (error) {
       onError?.(error);
-      onSuccess(getStoredProducts().length ? getStoredProducts() : INITIAL_PRODUCTS);
+      onSuccess([]);
       return;
     }
     const list = (data ?? []).map((row) => ({
@@ -272,7 +272,7 @@ export function subscribeFirestoreProducts(
       badge: row.badge || undefined, tamiresTip: row.tamires_tip || undefined,
       isFeatured: Boolean(row.is_featured), createdAt: row.created_at,
     } satisfies Product));
-    const products = list.length ? list : INITIAL_PRODUCTS;
+    const products = list;
     saveStoredProducts(products);
     onSuccess(products);
   });
