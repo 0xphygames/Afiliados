@@ -204,15 +204,15 @@ export default function NovoAchadinhoPage() {
               parsed.error.includes('Missing or insufficient permissions')
             ) {
               message =
-                'Permissão de gravação negada no Firestore. Verifique se você está conectada com o e-mail de administradora (taper.sant@gmail.com).';
+                'Permissão de gravação negada no Supabase. Verifique se o login é de administradora (taper.sant@gmail.com ou 0xphy.games@gmail.com).';
             } else if (
               parsed.error.includes('maximum allowed size') ||
               parsed.error.includes('exceeds')
             ) {
               message =
-                'O tamanho das imagens anexadas excedeu o limite do Firestore (1MB). Tente remover fotos ou usar imagens mais leves.';
+                'Não foi possível salvar a imagem no Supabase Storage. Verifique o bucket images e as políticas de Storage.';
             } else {
-              message = `Erro no Firestore: ${parsed.error}`;
+          message = `Erro no Supabase: ${parsed.error}`;
             }
           }
         } catch {
