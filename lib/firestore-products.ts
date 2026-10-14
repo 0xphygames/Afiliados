@@ -257,78 +257,26 @@ export function subscribeFirestoreProducts(
   onSuccess: (products: Product[]) => void,
   onError?: (err: Error) => void
 ): () => void {
-  // Immediately provide cached/initial products (all 55) so there is zero flash of missing products
-  const initial = getStoredProducts();
-  if (initial && initial.length > 0) {
-    onSuccess(initial);
-  }
-
-  const productsCol = collection(db, 'products');
-
-  const unsubscribe = onSnapshot(
-    productsCol,
-    (snapshot) => {
-      // If collection is empty, return stored products or defaults
-      if (snapshot.empty) {
-        const local = getStoredProducts();
-        if (local && local.length > 0) {
-          onSuccess(local);
-          return;
-        }
-        onSuccess(INITIAL_PRODUCTS);
-        return;
-      }
-
-      const list: Product[] = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const primaryImg = data.imageUrl || '';
-        const imagesList = Array.isArray(data.images) && data.images.length > 0
-          ? data.images.filter(Boolean)
-          : (primaryImg ? [primaryImg] : []);
-
-        list.push({
-          id: docSnap.id,
-          title: data.title || '',
-          platform: data.platform || 'shopee',
-          category: data.category || 'Geral',
-          imageUrl: primaryImg || (imagesList[0] || ''),
-          images: imagesList,
-          affiliateUrl: data.affiliateUrl || '',
-          price: Number(data.price) || 0,
-          originalPrice: data.originalPrice ? Number(data.originalPrice) : undefined,
-          rating: Number(data.rating) || 5.0,
-          reviewCount: Number(data.reviewCount) || 1,
-          badge: data.badge || undefined,
-          tamiresTip: data.tamiresTip || undefined,
-          isFeatured: Boolean(data.isFeatured),
-          createdAt: data.createdAt || new Date().toISOString(),
-        });
-      });
-
-      // Merge with INITIAL_PRODUCTS to guarantee full 55-item catalog + user additions
-      const mergedMap = new Map<string, Product>();
-      INITIAL_PRODUCTS.forEach((p) => mergedMap.set(p.id, p));
-      list.forEach((p) => mergedMap.set(p.id, p));
-      const fullList = Array.from(mergedMap.values());
-      fullList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-      saveStoredProducts(fullList);
-      onSuccess(fullList);
-    },
-    (error) => {
-      console.warn('Leitura do Firestore (usando fallback seguro):', error);
-      const local = getStoredProducts();
-      if (local && local.length > 0) {
-        onSuccess(local);
-      } else {
-        onSuccess(INITIAL_PRODUCTS);
-      }
-      onError?.(error as Error);
+  void supabase.from('products').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
+    if (error) {
+      onError?.(error);
+      onSuccess(getStoredProducts().length ? getStoredProducts() : INITIAL_PRODUCTS);
+      return;
     }
-  );
-
-  return unsubscribe;
+    const list = (data ?? []).map((row) => ({
+      id: row.id, title: row.title, platform: row.platform, category: row.category,
+      imageUrl: row.image_url, images: Array.isArray(row.images) ? row.images : [row.image_url],
+      affiliateUrl: row.affiliate_url, price: Number(row.price) || 0,
+      originalPrice: row.original_price == null ? undefined : Number(row.original_price),
+      rating: Number(row.rating) || 5, reviewCount: Number(row.review_count) || 1,
+      badge: row.badge || undefined, tamiresTip: row.tamires_tip || undefined,
+      isFeatured: Boolean(row.is_featured), createdAt: row.created_at,
+    } satisfies Product));
+    const products = list.length ? list : INITIAL_PRODUCTS;
+    saveStoredProducts(products);
+    onSuccess(products);
+  });
+  return () => undefined;
 }
 
 // Subscribe to real-time articles collection in Firestore
@@ -336,54 +284,18 @@ export function subscribeFirestoreArticles(
   onSuccess: (articles: Article[]) => void,
   onError?: (err: Error) => void
 ): () => void {
-  const articlesCol = collection(db, 'articles');
-
-  const unsubscribe = onSnapshot(
-    articlesCol,
-    (snapshot) => {
-      if (snapshot.empty) {
-        const local = getStoredArticles();
-        if (local && local.length > 0) {
-          onSuccess(local);
-          return;
-        }
-        onSuccess(INITIAL_ARTICLES);
-        return;
-      }
-
-      const list: Article[] = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        list.push({
-          id: docSnap.id,
-          title: data.title || '',
-          category: data.category || 'Geral',
-          summary: data.summary || '',
-          content: data.content || '',
-          coverImageUrl: data.coverImageUrl || '',
-          author: data.author || 'Tamires Santos',
-          featured: Boolean(data.featured),
-          createdAt: data.createdAt || new Date().toISOString(),
-        });
-      });
-
-      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      saveStoredArticles(list);
-      onSuccess(list);
-    },
-    (error) => {
-      console.warn('Leitura de artigos do Firestore (fallback):', error);
-      const local = getStoredArticles();
-      if (local && local.length > 0) {
-        onSuccess(local);
-      } else {
-        onSuccess(INITIAL_ARTICLES);
-      }
-      onError?.(error as Error);
-    }
-  );
-
-  return unsubscribe;
+  void supabase.from('articles').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
+    if (error) { onError?.(error); onSuccess(getStoredArticles().length ? getStoredArticles() : INITIAL_ARTICLES); return; }
+    const list = (data ?? []).map((row) => ({
+      id: row.id, title: row.title, category: row.category, summary: row.summary,
+      content: row.content, coverImageUrl: row.cover_image_url || '',
+      author: row.author || 'Tamires Santos', featured: Boolean(row.featured), createdAt: row.created_at,
+    } satisfies Article));
+    const articles = list.length ? list : INITIAL_ARTICLES;
+    saveStoredArticles(articles);
+    onSuccess(articles);
+  });
+  return () => undefined;
 }
 
 // Subscribe to site settings in Firestore
@@ -484,27 +396,13 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
 
 // Add or update article in Firestore
 export async function saveArticleToFirestore(article: Article): Promise<void> {
-  const path = `articles/${article.id}`;
-  try {
-    const docRef = doc(db, 'articles', article.id);
-    await setDoc(
-      docRef,
-      {
-        ...article,
-        authorEmail: auth.currentUser?.email || ADMIN_EMAIL,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
-    const existing = getStoredArticles();
-    const updated = [article, ...existing.filter((a) => a.id !== article.id)];
-    saveStoredArticles(updated);
-  } catch (error) {
-    const existing = getStoredArticles();
-    const updated = [article, ...existing.filter((a) => a.id !== article.id)];
-    saveStoredArticles(updated);
-    handleFirestoreError(error, OperationType.WRITE, path);
-  }
+  const { error } = await supabase.from('articles').upsert({
+    id: article.id, title: article.title.trim(), category: article.category.trim(),
+    summary: article.summary.trim(), content: article.content, cover_image_url: article.coverImageUrl || null,
+    author: article.author || 'Tamires Santos', featured: Boolean(article.featured),
+    created_at: article.createdAt || new Date().toISOString(),
+  });
+  if (error) throw error;
 }
 
 // Save site settings in Firestore
@@ -529,17 +427,8 @@ export async function saveSettingsToFirestore(settings: SiteSettings): Promise<v
 
 // Delete product from Firestore
 export async function deleteProductFromFirestore(productId: string): Promise<void> {
-  const path = `products/${productId}`;
-  try {
-    const docRef = doc(db, 'products', productId);
-    await deleteDoc(docRef);
-    const existing = getStoredProducts();
-    saveStoredProducts(existing.filter((p) => p.id !== productId));
-  } catch (error) {
-    const existing = getStoredProducts();
-    saveStoredProducts(existing.filter((p) => p.id !== productId));
-    handleFirestoreError(error, OperationType.DELETE, path);
-  }
+  const { error } = await supabase.from('products').delete().eq('id', productId);
+  if (error) throw error;
 }
 
 // Subscribe to landing pages collection in Firestore
@@ -724,13 +613,8 @@ export async function deleteCategoryFromFirestore(categoryId: string): Promise<v
 
 // Delete article from Firestore
 export async function deleteArticleFromFirestore(articleId: string): Promise<void> {
-  const path = `articles/${articleId}`;
-  try {
-    const docRef = doc(db, 'articles', articleId);
-    await deleteDoc(docRef);
-  } catch (error) {
-    handleFirestoreError(error, OperationType.DELETE, path);
-  }
+  const { error } = await supabase.from('articles').delete().eq('id', articleId);
+  if (error) throw error;
 }
 
 // Login via Google
