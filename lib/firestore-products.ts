@@ -461,48 +461,25 @@ export async function seedInitialDataToFirestore(): Promise<void> {
 
 // Add or update product in Firestore
 export async function saveProductToFirestore(product: Product): Promise<void> {
-  const path = `products/${product.id}`;
-  try {
-    const docRef = doc(db, 'products', product.id);
-    const imagesList = Array.isArray(product.images) && product.images.length > 0
-      ? product.images.filter(Boolean)
-      : (product.imageUrl ? [product.imageUrl] : []);
-
-    const cleanedImages = imagesList.map((img) => img.trim()).filter(Boolean);
-    const primaryImage = (product.imageUrl || cleanedImages[0] || '').trim();
-
-    await setDoc(
-      docRef,
-      {
-        id: product.id,
-        title: product.title.trim(),
-        platform: product.platform,
-        category: (product.category || 'Geral').trim(),
-        imageUrl: primaryImage,
-        images: cleanedImages.length > 0 ? cleanedImages : [primaryImage],
-        affiliateUrl: product.affiliateUrl.trim(),
-        price: Math.max(0, Number(product.price) || 0),
-        originalPrice: product.originalPrice ? Math.max(0, Number(product.originalPrice)) : null,
-        rating: Number(product.rating || 5.0),
-        reviewCount: Math.max(1, Number(product.reviewCount || 10)),
-        badge: product.badge?.trim() || null,
-        tamiresTip: product.tamiresTip?.trim() || null,
-        isFeatured: Boolean(product.isFeatured),
-        createdAt: product.createdAt || new Date().toISOString(),
-        authorEmail: auth.currentUser?.email || ADMIN_EMAIL,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
-    const existing = getStoredProducts();
-    const updated = [product, ...existing.filter((p) => p.id !== product.id)];
-    saveStoredProducts(updated);
-  } catch (error) {
-    const existing = getStoredProducts();
-    const updated = [product, ...existing.filter((p) => p.id !== product.id)];
-    saveStoredProducts(updated);
-    handleFirestoreError(error, OperationType.WRITE, path);
-  }
+  const images = (product.images?.filter(Boolean) || [product.imageUrl]).map((image) => image.trim()).filter(Boolean);
+  const { error } = await supabase.from('products').upsert({
+    id: product.id,
+    title: product.title.trim(),
+    platform: product.platform,
+    category: (product.category || 'Geral').trim(),
+    image_url: (product.imageUrl || images[0] || '').trim(),
+    images,
+    affiliate_url: product.affiliateUrl.trim(),
+    price: Math.max(0, Number(product.price) || 0),
+    original_price: product.originalPrice ?? null,
+    rating: Number(product.rating) || 5,
+    review_count: Math.max(1, Number(product.reviewCount) || 1),
+    badge: product.badge?.trim() || null,
+    tamires_tip: product.tamiresTip?.trim() || null,
+    is_featured: Boolean(product.isFeatured),
+    created_at: product.createdAt || new Date().toISOString(),
+  });
+  if (error) throw error;
 }
 
 // Add or update article in Firestore
