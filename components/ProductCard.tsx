@@ -30,6 +30,7 @@ interface ProductCardProps {
 export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCardProps) {
   const [copied, setCopied] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [imageIndex, setImageIndex] = useState(0);
   const [liked, setLiked] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
@@ -62,10 +63,11 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
       }).format(product.originalPrice)
     : null;
 
-  const isUnoptimizedImage =
-    product.imageUrl.startsWith('data:') ||
-    product.imageUrl.startsWith('http://') ||
-    product.imageUrl.startsWith('https://');
+  const imageCandidates = Array.from(
+    new Set([...(product.images || []), product.imageUrl].filter(Boolean)),
+  );
+  const currentImage = imageCandidates[imageIndex] || product.imageUrl;
+  const isUnoptimizedImage = /^(data:|blob:|https?:\/\/)/i.test(currentImage);
 
   // Bottom of funnel keywords (fundo de funil)
   const defaultFunnelKeywords = [
@@ -84,17 +86,20 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
     >
       {/* Top Media Container: Balanced height container matching catalog proportions */}
       <div className="relative h-52 sm:h-60 w-full bg-stone-50/70 overflow-hidden border-b border-stone-100 flex items-center justify-center p-3">
-        {!imgError && product.imageUrl ? (
+        {!imgError && currentImage ? (
           <div className="relative w-full h-full flex items-center justify-center">
             <Image
-              src={product.imageUrl}
+              src={currentImage}
               alt={product.title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-contain transition-transform duration-300 group-hover:scale-102"
               referrerPolicy="no-referrer"
               unoptimized={isUnoptimizedImage}
-              onError={() => setImgError(true)}
+              onError={() => {
+                if (imageIndex < imageCandidates.length - 1) setImageIndex((index) => index + 1);
+                else setImgError(true);
+              }}
             />
           </div>
         ) : (
