@@ -17,6 +17,7 @@ import { db, auth, googleProvider, handleFirestoreError, OperationType } from '.
 import { Product, Article, SiteSettings, CustomLandingPage, CustomCategory } from './types';
 import { INITIAL_PRODUCTS } from './constants';
 import {
+  getStoredProducts,
   saveStoredProducts,
   getStoredArticles,
   saveStoredArticles,
@@ -281,6 +282,9 @@ export function subscribeFirestoreProducts(
       } satisfies Product));
       const merged = new Map<string, Product>();
       INITIAL_PRODUCTS.forEach((product) => merged.set(product.id, product));
+      // Preserve products created in this browser if the API is temporarily
+      // unavailable or the deployed project is pointing at an empty database.
+      getStoredProducts().forEach((product) => merged.set(product.id, product));
       list.forEach((product) => merged.set(product.id, product));
       productsCache = Array.from(merged.values()).sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
@@ -294,6 +298,7 @@ export function subscribeFirestoreProducts(
   void request.then(onSuccess).catch((error: Error) => {
     productsRequest = null;
     onError?.(error);
+    onSuccess(getStoredProducts());
   });
   return () => undefined;
 }
