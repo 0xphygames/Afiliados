@@ -268,10 +268,23 @@ export function subscribeFirestoreProducts(
   if (productsCache) onSuccess(productsCache);
 
   if (!productsRequest) {
-    productsRequest = Promise.resolve(
-      supabase.from('products').select('*').order('created_at', { ascending: false })
-    ).then(({ data, error }) => {
-      if (error) throw error;
+    productsRequest = (async () => {
+      // Product images are currently stored as Base64 in older rows. Fetching
+      // all 149 rows in one response can exceed the Data API/proxy payload
+      // limit, so page the catalog into smaller responses.
+      const pageSize = 20;
+      const rows: any[] = [];
+      for (let from = 0; ; from += pageSize) {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        rows.push(...(data ?? []));
+        if (!data || data.length < pageSize) break;
+      }
+
       const normalizeImageUrl = (value: unknown): string => {
         const raw = typeof value === 'string' ? value.trim() : '';
         if (!raw) return '';
@@ -279,7 +292,7 @@ export function subscribeFirestoreProducts(
         return supabase.storage.from(SUPABASE_STORAGE_BUCKET).getPublicUrl(raw).data.publicUrl;
       };
 
-      const list = (data ?? []).map((row) => {
+      const list = rows.map((row) => {
         const rowImages = Array.isArray(row.images) ? row.images : [];
         const images = rowImages.map(normalizeImageUrl).filter(Boolean);
         const imageUrl = normalizeImageUrl(row.image_url) || images[0] || '';
@@ -304,7 +317,7 @@ export function subscribeFirestoreProducts(
       );
       saveStoredProducts(productsCache);
       return productsCache;
-    });
+    })();
   }
 
   const request = productsRequest;
