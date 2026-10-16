@@ -12,7 +12,7 @@ import {
   User,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { supabase } from './supabase';
+import { supabase, SUPABASE_STORAGE_BUCKET } from './supabase';
 import { db, auth, googleProvider, handleFirestoreError, OperationType } from './firebase';
 import { Product, Article, SiteSettings, CustomLandingPage, CustomCategory } from './types';
 import { INITIAL_PRODUCTS } from './constants';
@@ -263,23 +263,36 @@ export function subscribeFirestoreProducts(
   onSuccess: (products: Product[]) => void,
   onError?: (err: Error) => void
 ): () => void {
+  // Do not paint the bundled/template catalog before Supabase responds. That
+  // caused the public page to flash the old catalog and then replace it.
   if (productsCache) onSuccess(productsCache);
-  else onSuccess(INITIAL_PRODUCTS);
 
   if (!productsRequest) {
     productsRequest = Promise.resolve(
       supabase.from('products').select('*').order('created_at', { ascending: false })
     ).then(({ data, error }) => {
       if (error) throw error;
-      const list = (data ?? []).map((row) => ({
+      const normalizeImageUrl = (value: unknown): string => {
+        const raw = typeof value === 'string' ? value.trim() : '';
+        if (!raw) return '';
+        if (/^(https?:|data:|blob:|\/)/i.test(raw)) return raw;
+        return supabase.storage.from(SUPABASE_STORAGE_BUCKET).getPublicUrl(raw).data.publicUrl;
+      };
+
+      const list = (data ?? []).map((row) => {
+        const rowImages = Array.isArray(row.images) ? row.images : [];
+        const images = rowImages.map(normalizeImageUrl).filter(Boolean);
+        const imageUrl = normalizeImageUrl(row.image_url) || images[0] || '';
+        return ({
         id: row.id, title: row.title, platform: row.platform, category: row.category,
-        imageUrl: row.image_url, images: Array.isArray(row.images) ? row.images : [row.image_url],
+        imageUrl, images: images.length ? images : imageUrl ? [imageUrl] : [],
         affiliateUrl: row.affiliate_url, price: Number(row.price) || 0,
         originalPrice: row.original_price == null ? undefined : Number(row.original_price),
         rating: Number(row.rating) || 5, reviewCount: Number(row.review_count) || 1,
         badge: row.badge || undefined, tamiresTip: row.tamires_tip || undefined,
         isFeatured: Boolean(row.is_featured), createdAt: row.created_at,
-      } satisfies Product));
+        } satisfies Product);
+      });
       const merged = new Map<string, Product>();
       INITIAL_PRODUCTS.forEach((product) => merged.set(product.id, product));
       // Preserve products created in this browser if the API is temporarily
