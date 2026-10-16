@@ -17,7 +17,6 @@ import { db, auth, googleProvider, handleFirestoreError, OperationType } from '.
 import { Product, Article, SiteSettings, CustomLandingPage, CustomCategory } from './types';
 import { INITIAL_PRODUCTS } from './constants';
 import {
-  getStoredProducts,
   saveStoredProducts,
   getStoredArticles,
   saveStoredArticles,
