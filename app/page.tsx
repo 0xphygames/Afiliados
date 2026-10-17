@@ -8,6 +8,7 @@ import { INITIAL_COUPONS, PLATFORMS } from '@/lib/constants';
 import {
   subscribeFirestoreProducts,
   subscribeFirestoreArticles,
+  subscribeFirestoreCoupons,
   subscribeFirestoreSettings,
   subscribeFirestoreLandingPages,
   subscribeAuth,
@@ -44,7 +45,8 @@ import {
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
-  const [coupons] = useState<Coupon[]>(INITIAL_COUPONS);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  useEffect(() => subscribeFirestoreCoupons((list) => setCoupons(list)), []);
   const [campaigns, setCampaigns] = useState<CustomLandingPage[]>([]);
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
   const [currentUser, setCurrentUser] = useState<User | null>(null);

@@ -23,6 +23,7 @@ import { PLATFORMS, INITIAL_PRODUCTS, INITIAL_COUPONS } from '@/lib/constants';
 import {
   subscribeFirestoreProducts,
   subscribeFirestoreArticles,
+  subscribeFirestoreCoupons,
   INITIAL_ARTICLES,
 } from '@/lib/firestore-products';
 import { rankProducts, rankArticles, rankCoupons } from '@/lib/search-ranking';
@@ -45,7 +46,8 @@ export function OmniSearch({
 
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [articles, setArticles] = useState<Article[]>([]);
-  const [coupons] = useState<Coupon[]>(INITIAL_COUPONS);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  useEffect(() => subscribeFirestoreCoupons((list) => setCoupons(list)), []);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);

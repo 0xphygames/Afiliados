@@ -2,13 +2,16 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User } from '@/lib/firestore-products';
-import { Product, Article, SiteSettings, CustomLandingPage, CustomCategory } from './types';
+import { Product, Article, SiteSettings, CustomLandingPage, CustomCategory, Coupon } from './types';
 import {
   subscribeFirestoreProducts,
   subscribeFirestoreArticles,
   subscribeFirestoreSettings,
   subscribeFirestoreLandingPages,
   subscribeFirestoreCategories,
+  subscribeFirestoreCoupons,
+  saveCouponToFirestore,
+  deleteCouponFromFirestore,
   subscribeAuth,
   isUserAdmin,
   saveProductToFirestore,
@@ -42,6 +45,9 @@ interface AdminContextType {
   settings: SiteSettings;
   landingPages: CustomLandingPage[];
   categories: CustomCategory[];
+  coupons: Coupon[];
+  handleSaveCoupon: (coupon: Coupon) => Promise<void>;
+  handleDeleteCoupon: (id: string) => Promise<void>;
   handleSaveProduct: (product: Product) => Promise<void>;
   handleDeleteProduct: (id: string) => Promise<void>;
   handleSaveCategory: (category: CustomCategory) => Promise<void>;
@@ -65,6 +71,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
   const [landingPages, setLandingPages] = useState<CustomLandingPage[]>(INITIAL_LANDING_PAGES);
   const [categories, setCategories] = useState<CustomCategory[]>(INITIAL_CUSTOM_CATEGORIES);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
 
   useEffect(() => {
     // Instant hydration from local cache
@@ -102,7 +109,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       if (list && list.length > 0) setCategories(list);
     });
 
+    const unsubCoupons = subscribeFirestoreCoupons((list) => setCoupons(list));
+
     return () => {
+      unsubCoupons();
       unsubAuth();
       unsubProducts();
       unsubArticles();
@@ -126,6 +136,14 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const handleDeleteCategory = async (id: string) => {
     await deleteCategoryFromFirestore(id);
+  };
+
+  const handleSaveCoupon = async (coupon: Coupon) => {
+    await saveCouponToFirestore(coupon);
+  };
+
+  const handleDeleteCoupon = async (id: string) => {
+    await deleteCouponFromFirestore(id);
   };
 
   const handleSaveLandingPage = async (page: CustomLandingPage) => {
@@ -163,6 +181,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         settings,
         landingPages,
         categories,
+        coupons,
+        handleSaveCoupon,
+        handleDeleteCoupon,
         handleSaveProduct,
         handleDeleteProduct,
         handleSaveCategory,

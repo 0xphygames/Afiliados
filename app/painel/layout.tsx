@@ -61,6 +61,11 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       icon: Layers,
     },
     {
+      label: 'Cupons',
+      href: '/painel/cupons',
+      icon: Tag,
+    },
+    {
       label: 'Blog & Posts',
       href: '/painel/artigos',
       icon: BookOpen,

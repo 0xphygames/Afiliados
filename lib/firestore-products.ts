@@ -1,7 +1,7 @@
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase, SUPABASE_STORAGE_BUCKET } from './supabase';
-import { Product, Article, SiteSettings, CustomLandingPage, CustomCategory } from './types';
-import { INITIAL_PRODUCTS } from './constants';
+import { Product, Article, SiteSettings, CustomLandingPage, CustomCategory, Coupon } from './types';
+import { INITIAL_PRODUCTS, INITIAL_COUPONS } from './constants';
 import {
   getStoredProducts,
   saveStoredProducts,
@@ -666,4 +666,66 @@ export function subscribeAuth(callback: (user: User | null) => void): () => void
     callback(toAppUser(session?.user));
   });
   return () => data.subscription.unsubscribe();
+}
+
+// Coupons live in Supabase `coupons`; the bundled list is only used if the request fails
+const couponFromRow = (row: any): Coupon => ({
+  id: row.id,
+  code: row.code || '',
+  title: row.title || '',
+  discount: row.discount || '',
+  platform: row.platform,
+  description: row.description || '',
+  minSpend: row.min_spend || undefined,
+  expirationDate: row.expiration_date || undefined,
+  affiliateUrl: row.affiliate_url || '',
+  isVerified: row.is_verified !== false,
+  category: row.category || 'Geral',
+});
+
+export function subscribeFirestoreCoupons(
+  onSuccess: (coupons: Coupon[]) => void,
+  onError?: (err: Error) => void
+): () => void {
+  void supabase
+    .from('coupons')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .then(({ data, error }) => {
+      if (error) {
+        console.warn('Leitura de cupons (fallback):', error);
+        onSuccess(INITIAL_COUPONS);
+        onError?.(error as unknown as Error);
+        return;
+      }
+      onSuccess((data ?? []).map(couponFromRow));
+    });
+  return () => undefined;
+}
+
+export async function saveCouponToFirestore(coupon: Coupon): Promise<void> {
+  const { error } = await supabase.from('coupons').upsert({
+    id: coupon.id,
+    code: coupon.code.trim(),
+    title: coupon.title.trim(),
+    discount: coupon.discount.trim(),
+    platform: coupon.platform,
+    description: coupon.description.trim(),
+    min_spend: coupon.minSpend?.trim() || null,
+    expiration_date: coupon.expirationDate?.trim() || null,
+    affiliate_url: coupon.affiliateUrl.trim(),
+    is_verified: coupon.isVerified,
+    category: coupon.category || 'Geral',
+  });
+  if (error) throw error;
+}
+
+export async function deleteCouponFromFirestore(couponId: string): Promise<void> {
+  const { error } = await supabase.from('coupons').delete().eq('id', couponId);
+  if (error) throw error;
+}
+
+// Copy the bundled example coupons into Supabase (manual admin action)
+export async function seedInitialCoupons(): Promise<void> {
+  for (const coupon of INITIAL_COUPONS) await saveCouponToFirestore(coupon);
 }
