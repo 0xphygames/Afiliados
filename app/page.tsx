@@ -21,8 +21,7 @@ import {
   getStoredLandingPages,
   getStoredSettings,
 } from '@/lib/storage';
-import { testConnection } from '@/lib/firebase';
-import { User } from 'firebase/auth';
+import type { User } from '@/lib/firestore-products';
 import { Navbar } from '@/components/Navbar';
 import { HeroBanner } from '@/components/HeroBanner';
 import { ProductCard } from '@/components/ProductCard';
@@ -66,7 +65,6 @@ export default function HomePage() {
       if (localSettings) setSettings(localSettings);
     });
 
-    testConnection();
 
     const unsubscribeProducts = subscribeFirestoreProducts((list) => {
       if (list && list.length > 0) {

@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { PlatformId } from '@/lib/types';
 import { ShieldCheck, Heart, Lock, KeyRound, LogOut, CheckCircle2 } from 'lucide-react';
-import { User } from 'firebase/auth';
+import type { User } from '@/lib/firestore-products';
 
 interface FooterProps {
   onSelectPlatform?: (platform: PlatformId | 'all') => void;

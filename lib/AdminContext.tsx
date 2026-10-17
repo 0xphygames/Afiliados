@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from 'firebase/auth';
+import type { User } from '@/lib/firestore-products';
 import { Product, Article, SiteSettings, CustomLandingPage, CustomCategory } from './types';
 import {
   subscribeFirestoreProducts,

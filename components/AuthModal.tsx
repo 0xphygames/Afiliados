@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { User } from 'firebase/auth';
+import type { User } from '@/lib/firestore-products';
 import { loginWithGoogle, logoutUser, ADMIN_EMAIL, isUserAdmin } from '@/lib/firestore-products';
 import {
   X,
