@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-import { INITIAL_COUPONS, PLATFORMS } from '@/lib/constants';
+import { PLATFORMS } from '@/lib/constants';
+import { subscribeFirestoreCoupons } from '@/lib/firestore-products';
 import { PlatformId, Coupon } from '@/lib/types';
 import {
   Tag,
@@ -22,7 +23,8 @@ export default function CuponsPage() {
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformId | 'all'>('all');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  const coupons: Coupon[] = INITIAL_COUPONS;
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  useEffect(() => subscribeFirestoreCoupons((list) => setCoupons(list)), []);
 
   const filteredCoupons = selectedPlatform === 'all'
     ? coupons

@@ -14,6 +14,7 @@ import { INITIAL_COUPONS, PLATFORMS } from '@/lib/constants';
 import {
   subscribeFirestoreProducts,
   subscribeFirestoreArticles,
+  subscribeFirestoreCoupons,
   INITIAL_ARTICLES,
 } from '@/lib/firestore-products';
 import { rankProducts, rankArticles, rankCoupons } from '@/lib/search-ranking';
@@ -42,7 +43,8 @@ function SearchContent() {
   const [activeTab, setActiveTab] = useState<'all' | 'products' | 'articles' | 'coupons'>('all');
   const [products, setProducts] = useState<Product[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
-  const [coupons] = useState<Coupon[]>(INITIAL_COUPONS);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  useEffect(() => subscribeFirestoreCoupons((list) => setCoupons(list)), []);
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
