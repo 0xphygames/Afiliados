@@ -271,7 +271,7 @@ export function subscribeFirestoreProducts(
       // Product images are currently stored as Base64 in older rows. Fetching
       // all 149 rows in one response can exceed the Data API/proxy payload
       // limit, so page the catalog into smaller responses.
-      const pageSize = 20;
+      const pageSize = 100;
       const fetchPage = async (from: number, size: number) => {
         const { data, error } = await supabase
           .from('products')
