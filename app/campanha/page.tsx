@@ -31,14 +31,16 @@ import {
 } from 'lucide-react';
 
 export default function CampanhasCatalogPage() {
-  const [pages, setPages] = useState<CustomLandingPage[]>(INITIAL_LANDING_PAGES);
+  const [pages, setPages] = useState<CustomLandingPage[]>([]);
+  const [pagesLoaded, setPagesLoaded] = useState(false);
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformId | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const unsubPages = subscribeFirestoreLandingPages((list) => {
-      if (list && list.length > 0) setPages(list);
+      setPages(list ?? []);
+      setPagesLoaded(true);
     });
     const unsubSettings = subscribeFirestoreSettings((cfg) => {
       if (cfg) setSettings(cfg);
@@ -309,6 +311,8 @@ export default function CampanhasCatalogPage() {
                 );
               })}
             </div>
+          ) : !pagesLoaded ? (
+            <p className="text-center py-16 text-sm text-stone-500">Carregando campanhas...</p>
           ) : (
             <div className="text-center py-16 px-4 bg-white rounded-3xl border border-stone-200 max-w-md mx-auto space-y-3">
               <ShoppingBag className="w-10 h-10 text-stone-300 mx-auto" />

@@ -45,7 +45,7 @@ export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [coupons] = useState<Coupon[]>(INITIAL_COUPONS);
-  const [campaigns, setCampaigns] = useState<CustomLandingPage[]>(INITIAL_LANDING_PAGES);
+  const [campaigns, setCampaigns] = useState<CustomLandingPage[]>([]);
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 

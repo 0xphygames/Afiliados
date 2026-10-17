@@ -23,7 +23,7 @@ import {
 
 export default function AchadinhosPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<CustomCategory[]>(INITIAL_CUSTOM_CATEGORIES);
+  const [categories, setCategories] = useState<CustomCategory[]>([]);
 
   const [activePlatform, setActivePlatform] = useState<PlatformId | 'all'>('all');
   const [activeCategory, setActiveCategory] = useState<string>('Todos os Setores');
