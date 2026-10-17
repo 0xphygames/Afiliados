@@ -7,7 +7,7 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { ArticleDetailModal } from '@/components/ArticleDetailModal';
 import { Article } from '@/lib/types';
-import { INITIAL_ARTICLES, subscribeFirestoreArticles } from '@/lib/firestore-products';
+import { subscribeFirestoreArticles } from '@/lib/firestore-products';
 import {
   BookOpen,
   ArrowLeft,
@@ -20,16 +20,17 @@ import {
 import { SocialShare } from '@/components/SocialShare';
 
 export default function BlogPage() {
-  const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [articlesLoaded, setArticlesLoaded] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('Todas as Categorias');
 
   useEffect(() => {
+    // Wait for Supabase before rendering, so the bundled placeholder article never flashes
     const unsub = subscribeFirestoreArticles((list) => {
-      if (list && list.length > 0) {
-        setArticles(list);
-      }
+      setArticles(list ?? []);
+      setArticlesLoaded(true);
     });
     return () => unsub();
   }, []);
@@ -269,6 +270,8 @@ export default function BlogPage() {
                 </Link>
               ))}
             </div>
+          ) : !articlesLoaded ? (
+            <p className="text-center py-16 text-sm text-stone-500">Carregando artigos...</p>
           ) : (
             <div className="text-center py-16 bg-white rounded-3xl border border-stone-200 max-w-md mx-auto p-6 space-y-3">
               <BookOpen className="w-10 h-10 text-stone-300 mx-auto" />
