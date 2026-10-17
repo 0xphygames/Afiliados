@@ -273,16 +273,35 @@ export function subscribeFirestoreProducts(
       // all 149 rows in one response can exceed the Data API/proxy payload
       // limit, so page the catalog into smaller responses.
       const pageSize = 20;
-      const rows: any[] = [];
-      for (let from = 0; ; from += pageSize) {
+      const fetchPage = async (from: number, size: number) => {
         const { data, error } = await supabase
           .from('products')
           .select('*')
+          // id as a tie-breaker keeps pages stable when rows share created_at
           .order('created_at', { ascending: false })
-          .range(from, from + pageSize - 1);
+          .order('id', { ascending: true })
+          .range(from, from + size - 1);
         if (error) throw error;
-        rows.push(...(data ?? []));
-        if (!data || data.length < pageSize) break;
+        return data ?? [];
+      };
+      const rows: any[] = [];
+      let from = 0;
+      for (;;) {
+        // If a page is too large for the proxy (Base64 images), halve it and retry.
+        let size = pageSize;
+        let data: any[] = [];
+        for (;;) {
+          try {
+            data = await fetchPage(from, size);
+            break;
+          } catch (error) {
+            if (size <= 1) throw error;
+            size = Math.max(1, Math.floor(size / 2));
+          }
+        }
+        rows.push(...data);
+        if (data.length < size) break;
+        from += data.length;
       }
 
       const normalizeImageUrl = (value: unknown): string => {
@@ -322,6 +341,7 @@ export function subscribeFirestoreProducts(
 
   const request = productsRequest;
   void request.then(onSuccess).catch((error: Error) => {
+    console.error('Falha ao carregar produtos do Supabase:', error);
     productsRequest = null;
     onError?.(error);
     onSuccess(getStoredProducts());
