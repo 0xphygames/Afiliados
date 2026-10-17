@@ -365,7 +365,7 @@ export function subscribeFirestoreArticles(
       content: row.content, coverImageUrl: row.cover_image_url || '',
       author: row.author || 'Tamires Santos', featured: Boolean(row.featured), createdAt: row.created_at,
     } satisfies Article));
-    const articles = list.length ? list : INITIAL_ARTICLES;
+    const articles = list;
     saveStoredArticles(articles);
     onSuccess(articles);
   });
@@ -519,7 +519,7 @@ export function subscribeFirestoreLandingPages(
         return;
       }
       if (!data || data.length === 0) {
-        fallback();
+        onSuccess([]);
         return;
       }
       const list = data.map(landingPageFromRow);
@@ -590,7 +590,7 @@ export function subscribeFirestoreCategories(
         return;
       }
       if (!data || data.length === 0) {
-        onSuccess(INITIAL_CUSTOM_CATEGORIES);
+        onSuccess([]);
         return;
       }
       onSuccess(

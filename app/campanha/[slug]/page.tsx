@@ -42,7 +42,8 @@ export default function PublicCampaignPage() {
   const rawSlug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug;
   const slug = decodeURIComponent(String(rawSlug || ''));
 
-  const [pages, setPages] = useState<CustomLandingPage[]>(INITIAL_LANDING_PAGES);
+  const [pages, setPages] = useState<CustomLandingPage[]>([]);
+  const [pagesLoaded, setPagesLoaded] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,7 +61,8 @@ export default function PublicCampaignPage() {
 
   useEffect(() => {
     const unsubPages = subscribeFirestoreLandingPages((list) => {
-      if (list && list.length > 0) setPages(list);
+      setPages(list ?? []);
+      setPagesLoaded(true);
     });
     const unsubProds = subscribeFirestoreProducts((list) => {
       if (list && list.length > 0) setProducts(list);
@@ -382,6 +384,8 @@ export default function PublicCampaignPage() {
               )}
             </div>
           </section>
+        ) : !pagesLoaded ? (
+          <p className="text-center py-16 text-sm text-stone-500">Carregando campanha...</p>
         ) : (
           <div className="max-w-2xl mx-auto p-12 text-center space-y-3">
             <ShoppingBag className="w-12 h-12 text-stone-300 mx-auto" />
