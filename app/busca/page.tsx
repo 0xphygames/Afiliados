@@ -41,7 +41,7 @@ function SearchContent() {
 
   const [activeTab, setActiveTab] = useState<'all' | 'products' | 'articles' | 'coupons'>('all');
   const [products, setProducts] = useState<Product[]>([]);
-  const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [coupons] = useState<Coupon[]>(INITIAL_COUPONS);
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);

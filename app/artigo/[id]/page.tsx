@@ -28,13 +28,15 @@ export default function PublicArticlePage() {
   const rawId = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const articleId = String(rawId || '');
 
-  const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [articlesLoaded, setArticlesLoaded] = useState(false);
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const unsubArt = subscribeFirestoreArticles((list) => {
-      if (list && list.length > 0) setArticles(list);
+      setArticles(list ?? []);
+      setArticlesLoaded(true);
     });
     const unsubSet = subscribeFirestoreSettings((cfg) => {
       if (cfg) setSettings(cfg);
@@ -144,6 +146,8 @@ export default function PublicArticlePage() {
                 <BlogContentRenderer content={article.content} className="text-base sm:text-lg leading-relaxed space-y-4" />
               </div>
             </article>
+          ) : !articlesLoaded ? (
+            <p className="text-center py-16 text-sm text-stone-500">Carregando artigo...</p>
           ) : (
             <div className="text-center py-16 space-y-3">
               <BookOpen className="w-10 h-10 text-stone-300 mx-auto" />
