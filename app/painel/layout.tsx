@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { AdminProvider, useAdmin } from '@/lib/AdminContext';
 import { PRIMARY_ADMIN_EMAIL } from '@/lib/firestore-products';
+import { MenuItem, MENU_ICONS, subscribeMenuItems } from '@/lib/menu';
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -33,55 +34,16 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const { currentUser, isAdmin, authLoading, handleLogout } = useAdmin();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navItems = [
-    {
-      label: 'Visão Geral',
-      href: '/painel',
-      icon: LayoutDashboard,
-      exact: true,
-    },
-    {
-      label: 'Achadinhos & Produtos',
-      href: '/painel/produtos',
-      icon: ShoppingBag,
-    },
-    {
-      label: 'Novo Achadinho',
-      href: '/painel/produtos/novo',
-      icon: PlusCircle,
-      badge: 'Adicionar',
-    },
-    {
-      label: 'Categorias & Setores',
-      href: '/painel/categorias',
-      icon: Tag,
-    },
-    {
-      label: 'Páginas & Campanhas',
-      href: '/painel/campanhas',
-      icon: Layers,
-    },
-    {
-      label: 'Cupons',
-      href: '/painel/cupons',
-      icon: Tag,
-    },
-    {
-      label: 'Páginas do Site',
-      href: '/painel/paginas',
-      icon: FileText,
-    },
-    {
-      label: 'Blog & Posts',
-      href: '/painel/artigos',
-      icon: BookOpen,
-    },
-    {
-      label: 'Textos & Configurações',
-      href: '/painel/configuracoes',
-      icon: Settings,
-    },
-  ];
+  const [adminMenu, setAdminMenu] = useState<MenuItem[]>([]);
+  useEffect(() => subscribeMenuItems('admin', (list) => setAdminMenu(list.filter((i) => i.isVisible))), []);
+
+  const navItems = adminMenu.map((item) => ({
+    label: item.label,
+    href: item.href,
+    icon: MENU_ICONS[item.icon] ?? Tag,
+    exact: item.exact,
+    badge: undefined as string | undefined,
+  }));
 
   const isActive = (itemHref: string, exact?: boolean) => {
     if (exact) return pathname === itemHref;

@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlatformId } from '@/lib/types';
+import { MenuItem, MENU_ICONS, subscribeMenuItems } from '@/lib/menu';
 import { ShieldCheck, Tag, BookOpen, ShoppingBag, Home, Flame } from 'lucide-react';
 import { OmniSearch } from './OmniSearch';
 
@@ -24,6 +25,9 @@ export function Navbar({
   productCount,
   bannerNotice,
 }: NavbarProps) {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  useEffect(() => subscribeMenuItems('public', (list) => setMenuItems(list.filter((i) => i.isVisible))), []);
+
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200 transition-all">
       {/* Slim trust banner */}
@@ -51,41 +55,19 @@ export function Navbar({
 
         {/* Navigation links with real routes */}
         <nav className="hidden lg:flex items-center gap-1 bg-stone-100 p-1 rounded-xl border border-stone-200 shadow-2xs">
-          <Link
-            href="/"
-            className="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 text-stone-700 hover:text-stone-950 hover:bg-stone-200/60 flex items-center gap-1.5"
-          >
-            <Home className="w-3.5 h-3.5 text-stone-500" />
-            <span>Home</span>
-          </Link>
-          <Link
-            href="/achadinhos"
-            className="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 text-stone-700 hover:text-stone-950 hover:bg-stone-200/60 flex items-center gap-1.5"
-          >
-            <ShoppingBag className="w-3.5 h-3.5 text-[#EE4D2D]" />
-            <span>Achadinhos</span>
-          </Link>
-          <Link
-            href="/blog"
-            className="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 text-stone-700 hover:text-stone-950 hover:bg-stone-200/60 flex items-center gap-1.5"
-          >
-            <BookOpen className="w-3.5 h-3.5 text-amber-600" />
-            <span>Blog</span>
-          </Link>
-          <Link
-            href="/cupons"
-            className="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 text-stone-700 hover:text-stone-950 hover:bg-stone-200/60 flex items-center gap-1.5"
-          >
-            <Tag className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Cupons</span>
-          </Link>
-          <Link
-            href="/campanha"
-            className="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 text-stone-700 hover:text-stone-950 hover:bg-stone-200/60 flex items-center gap-1.5"
-          >
-            <Flame className="w-3.5 h-3.5 text-rose-500 fill-rose-500/20" />
-            <span>Campanhas</span>
-          </Link>
+          {menuItems.map((item) => {
+            const Icon = MENU_ICONS[item.icon] ?? Tag;
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 text-stone-700 hover:text-stone-950 hover:bg-stone-200/60 flex items-center gap-1.5"
+              >
+                <Icon className={`w-3.5 h-3.5 ${item.colorClass}`} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Fast OmniSearch with Elasticsearch-like multi-entity search */}
