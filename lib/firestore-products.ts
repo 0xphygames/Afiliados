@@ -276,7 +276,7 @@ export function subscribeFirestoreProducts(
       const fetchPage = async (from: number, size: number) => {
         const { data, error } = await supabase
           .from('products')
-          .select('*')
+          .select('id,title,platform,category,image_url,images,affiliate_url,price,original_price,rating,review_count,badge,tamires_tip,is_featured,created_at')
           // id as a tie-breaker keeps pages stable when rows share created_at
           .order('created_at', { ascending: false })
           .order('id', { ascending: true })
