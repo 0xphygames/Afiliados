@@ -44,7 +44,7 @@ export function OmniSearch({
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
-  const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [coupons] = useState<Coupon[]>(INITIAL_COUPONS);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
