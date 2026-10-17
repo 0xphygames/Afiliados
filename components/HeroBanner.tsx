@@ -99,16 +99,6 @@ export function HeroBanner({
       <div className="max-w-7xl mx-auto px-6 py-8 sm:py-12 lg:py-14 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
         {/* Left Column: Editorial Information */}
         <div className="flex-1 space-y-4 sm:space-y-5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-stone-50 rounded-full text-xs font-semibold text-stone-700 border border-stone-200">
-            <span
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: details.accentColor }}
-            />
-            <span>{details.tag}</span>
-            <span className="text-stone-300">·</span>
-            <span className="text-stone-500 font-normal">{details.badgeText}</span>
-          </div>
-
           <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-stone-900 leading-tight text-balance">
             {details.title}
           </h1>
