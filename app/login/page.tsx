@@ -15,7 +15,7 @@ import {
   Sparkles,
   ShieldAlert,
 } from 'lucide-react';
-import { User } from 'firebase/auth';
+import type { User } from '@/lib/firestore-products';
 
 export default function LoginPage() {
   const router = useRouter();

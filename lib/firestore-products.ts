@@ -1,19 +1,5 @@
-import {
-  collection,
-  doc,
-  setDoc,
-  deleteDoc,
-  onSnapshot,
-  writeBatch,
-} from 'firebase/firestore';
-import {
-  signInWithPopup,
-  signOut,
-  User,
-  onAuthStateChanged,
-} from 'firebase/auth';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase, SUPABASE_STORAGE_BUCKET } from './supabase';
-import { db, auth, googleProvider, handleFirestoreError, OperationType } from './firebase';
 import { Product, Article, SiteSettings, CustomLandingPage, CustomCategory } from './types';
 import { INITIAL_PRODUCTS } from './constants';
 import {
@@ -36,6 +22,19 @@ export const ALLOWED_ADMIN_EMAILS = [
 ];
 
 export const ADMIN_EMAIL = PRIMARY_ADMIN_EMAIL;
+
+// User shape used by the UI; name and avatar come from the Google profile metadata
+export type User = SupabaseUser & { displayName?: string | null; photoURL?: string | null };
+
+const toAppUser = (user: SupabaseUser | null | undefined): User | null => {
+  if (!user) return null;
+  const meta = (user.user_metadata ?? {}) as Record<string, string | undefined>;
+  return {
+    ...user,
+    displayName: meta.full_name || meta.name || null,
+    photoURL: meta.avatar_url || meta.picture || null,
+  };
+};
 
 // Products are requested by several pages (home, catalog, search and admin).
 // Share the in-flight request so navigation does not create one Supabase
@@ -268,10 +267,42 @@ export function subscribeFirestoreProducts(
   if (productsCache) onSuccess(productsCache);
 
   if (!productsRequest) {
-    productsRequest = Promise.resolve(
-      supabase.from('products').select('*').order('created_at', { ascending: false })
-    ).then(({ data, error }) => {
-      if (error) throw error;
+    productsRequest = (async () => {
+      // Product images are currently stored as Base64 in older rows. Fetching
+      // all 149 rows in one response can exceed the Data API/proxy payload
+      // limit, so page the catalog into smaller responses.
+      const pageSize = 20;
+      const fetchPage = async (from: number, size: number) => {
+        const { data, error } = await supabase
+          .from('products')
+          .select('id,title,platform,category,image_url,images,affiliate_url,price,original_price,rating,review_count,badge,tamires_tip,is_featured,created_at')
+          // id as a tie-breaker keeps pages stable when rows share created_at
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: true })
+          .range(from, from + size - 1);
+        if (error) throw error;
+        return data ?? [];
+      };
+      const rows: any[] = [];
+      let from = 0;
+      for (;;) {
+        // If a page is too large for the proxy (Base64 images), halve it and retry.
+        let size = pageSize;
+        let data: any[] = [];
+        for (;;) {
+          try {
+            data = await fetchPage(from, size);
+            break;
+          } catch (error) {
+            if (size <= 1) throw error;
+            size = Math.max(1, Math.floor(size / 2));
+          }
+        }
+        rows.push(...data);
+        if (data.length < size) break;
+        from += data.length;
+      }
+
       const normalizeImageUrl = (value: unknown): string => {
         const raw = typeof value === 'string' ? value.trim() : '';
         if (!raw) return '';
@@ -279,7 +310,7 @@ export function subscribeFirestoreProducts(
         return supabase.storage.from(SUPABASE_STORAGE_BUCKET).getPublicUrl(raw).data.publicUrl;
       };
 
-      const list = (data ?? []).map((row) => {
+      const list = rows.map((row) => {
         const rowImages = Array.isArray(row.images) ? row.images : [];
         const images = rowImages.map(normalizeImageUrl).filter(Boolean);
         const imageUrl = normalizeImageUrl(row.image_url) || images[0] || '';
@@ -304,11 +335,12 @@ export function subscribeFirestoreProducts(
       );
       saveStoredProducts(productsCache);
       return productsCache;
-    });
+    })();
   }
 
   const request = productsRequest;
   void request.then(onSuccess).catch((error: Error) => {
+    console.error('Falha ao carregar produtos do Supabase:', error);
     productsRequest = null;
     onError?.(error);
     onSuccess(getStoredProducts());
@@ -340,77 +372,42 @@ export function subscribeFirestoreArticles(
   return () => undefined;
 }
 
-// Subscribe to site settings in Firestore
+// Load site settings (single row, id 'main') from Supabase
 export function subscribeFirestoreSettings(
   onSuccess: (settings: SiteSettings) => void,
   onError?: (err: Error) => void
 ): () => void {
-  const settingsDoc = doc(db, 'settings', 'main');
-
-  const unsubscribe = onSnapshot(
-    settingsDoc,
-    (docSnap) => {
-      if (!docSnap.exists()) {
+  void supabase
+    .from('site_settings')
+    .select('*')
+    .eq('id', 'main')
+    .maybeSingle()
+    .then(({ data, error }) => {
+      if (error) {
+        console.warn('Leitura de configurações (fallback):', error);
+        onSuccess(INITIAL_SETTINGS);
+        onError?.(error as unknown as Error);
+        return;
+      }
+      if (!data) {
         onSuccess(INITIAL_SETTINGS);
         return;
       }
-      const data = docSnap.data();
       onSuccess({
-        heroHeadline: data.heroHeadline || INITIAL_SETTINGS.heroHeadline,
-        heroSubheading: data.heroSubheading || INITIAL_SETTINGS.heroSubheading,
-        topBannerNotice: data.topBannerNotice || INITIAL_SETTINGS.topBannerNotice,
-        whatsappUrl: data.whatsappUrl || INITIAL_SETTINGS.whatsappUrl,
-        updatedAt: data.updatedAt,
+        heroHeadline: data.hero_headline || INITIAL_SETTINGS.heroHeadline,
+        heroSubheading: data.hero_subheading || INITIAL_SETTINGS.heroSubheading,
+        topBannerNotice: data.top_banner_notice || INITIAL_SETTINGS.topBannerNotice,
+        whatsappUrl: data.whatsapp_url || INITIAL_SETTINGS.whatsappUrl,
+        updatedAt: data.updated_at,
       });
-    },
-    (error) => {
-      console.warn('Leitura de configurações do Firestore (fallback):', error);
-      onSuccess(INITIAL_SETTINGS);
-      onError?.(error as Error);
-    }
-  );
-
-  return unsubscribe;
-}
-
-// Seed default products to Firestore
-export async function seedDefaultProducts(): Promise<void> {
-  const batch = writeBatch(db);
-  for (const item of INITIAL_PRODUCTS) {
-    const docRef = doc(db, 'products', item.id);
-    batch.set(docRef, {
-      ...item,
-      updatedAt: new Date().toISOString(),
     });
-  }
-  try {
-    await batch.commit();
-  } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, 'products');
-  }
+  return () => undefined;
 }
 
-// Seed default articles to Firestore
-export async function seedDefaultArticles(): Promise<void> {
-  const batch = writeBatch(db);
-  for (const item of INITIAL_ARTICLES) {
-    const docRef = doc(db, 'articles', item.id);
-    batch.set(docRef, {
-      ...item,
-      updatedAt: new Date().toISOString(),
-    });
-  }
-  try {
-    await batch.commit();
-  } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, 'articles');
-  }
-}
-
-// Seed all initial data to Firestore
+// Seed the bundled products and articles into Supabase (manual admin action)
 export async function seedInitialDataToFirestore(): Promise<void> {
-  await seedDefaultProducts();
-  await seedDefaultArticles();
+  for (const item of INITIAL_PRODUCTS) await saveProductToFirestore(item);
+  for (const item of INITIAL_ARTICLES) await saveArticleToFirestore(item);
 }
 
 // Add or update product in Firestore
@@ -450,22 +447,16 @@ export async function saveArticleToFirestore(article: Article): Promise<void> {
 
 // Save site settings in Firestore
 export async function saveSettingsToFirestore(settings: SiteSettings): Promise<void> {
-  const path = 'settings/main';
-  try {
-    const docRef = doc(db, 'settings', 'main');
-    await setDoc(
-      docRef,
-      {
-        ...settings,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
-    saveStoredSettings(settings);
-  } catch (error) {
-    saveStoredSettings(settings);
-    handleFirestoreError(error, OperationType.WRITE, path);
-  }
+  saveStoredSettings(settings);
+  const { error } = await supabase.from('site_settings').upsert({
+    id: 'main',
+    hero_headline: settings.heroHeadline,
+    hero_subheading: settings.heroSubheading,
+    top_banner_notice: settings.topBannerNotice,
+    whatsapp_url: settings.whatsappUrl,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) throw error;
 }
 
 // Delete product from Firestore
@@ -475,184 +466,164 @@ export async function deleteProductFromFirestore(productId: string): Promise<voi
   invalidateProductsCache();
 }
 
-// Subscribe to landing pages collection in Firestore
+// Campaign fields that are not real columns live in the `content` jsonb column
+const landingPageFromRow = (row: any): CustomLandingPage => {
+  const c = row.content && typeof row.content === 'object' ? row.content : {};
+  return {
+    id: row.id,
+    title: row.title || '',
+    slug: row.slug || row.id,
+    headline: row.headline || '',
+    subheading: row.subheading || '',
+    platform: row.platform || 'all',
+    category: row.category || '',
+    badge: row.badge || '',
+    bannerImageUrl: row.banner_image_url || '',
+    isActive: row.is_active !== false,
+    createdAt: row.created_at || new Date().toISOString(),
+    countdownActive: Boolean(c.countdownActive),
+    countdownEnd: c.countdownEnd || '',
+    scarcityText: c.scarcityText || '',
+    guaranteeText: c.guaranteeText || '',
+    ratingScore: typeof c.ratingScore === 'number' ? c.ratingScore : 4.9,
+    testimonials: Array.isArray(c.testimonials) ? c.testimonials : [],
+    faqs: Array.isArray(c.faqs) ? c.faqs : [],
+    stickyMobileCta: Boolean(c.stickyMobileCta),
+    ctaText: c.ctaText || '',
+    ctaUrl: c.ctaUrl || '',
+    facebookPixelId: c.facebookPixelId || '',
+    googleAnalyticsId: c.googleAnalyticsId || '',
+    customTrackingCode: c.customTrackingCode || '',
+  };
+};
+
+// Load campaign pages from Supabase (public sees only active ones; admins see all)
 export function subscribeFirestoreLandingPages(
   onSuccess: (pages: CustomLandingPage[]) => void,
   onError?: (err: Error) => void
 ): () => void {
-  const pagesCol = collection(db, 'pages');
+  const fallback = () => {
+    const local = getStoredLandingPages();
+    onSuccess(local && local.length > 0 ? local : INITIAL_LANDING_PAGES);
+  };
 
-  const unsubscribe = onSnapshot(
-    pagesCol,
-    (snapshot) => {
-      if (snapshot.empty) {
-        const local = getStoredLandingPages();
-        if (local && local.length > 0) {
-          onSuccess(local);
-          return;
-        }
-        onSuccess(INITIAL_LANDING_PAGES);
+  void supabase
+    .from('landing_pages')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .then(({ data, error }) => {
+      if (error) {
+        console.warn('Leitura de páginas (fallback):', error);
+        fallback();
+        onError?.(error as unknown as Error);
         return;
       }
-
-      const list: CustomLandingPage[] = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        list.push({
-          id: docSnap.id,
-          title: data.title || '',
-          slug: data.slug || docSnap.id,
-          headline: data.headline || '',
-          subheading: data.subheading || '',
-          platform: data.platform || 'all',
-          category: data.category || '',
-          badge: data.badge || '',
-          bannerImageUrl: data.bannerImageUrl || '',
-          isActive: data.isActive !== false,
-          createdAt: data.createdAt || new Date().toISOString(),
-          countdownActive: Boolean(data.countdownActive),
-          countdownEnd: data.countdownEnd || '',
-          scarcityText: data.scarcityText || '',
-          guaranteeText: data.guaranteeText || '',
-          ratingScore: typeof data.ratingScore === 'number' ? data.ratingScore : 4.9,
-          testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
-          faqs: Array.isArray(data.faqs) ? data.faqs : [],
-          stickyMobileCta: Boolean(data.stickyMobileCta),
-          ctaText: data.ctaText || '',
-          ctaUrl: data.ctaUrl || '',
-          facebookPixelId: data.facebookPixelId || '',
-          googleAnalyticsId: data.googleAnalyticsId || '',
-          customTrackingCode: data.customTrackingCode || '',
-        });
-      });
-
-      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      if (!data || data.length === 0) {
+        fallback();
+        return;
+      }
+      const list = data.map(landingPageFromRow);
       saveStoredLandingPages(list);
       onSuccess(list);
-    },
-    (error) => {
-      console.warn('Leitura de páginas do Firestore (fallback):', error);
-      const local = getStoredLandingPages();
-      if (local && local.length > 0) {
-        onSuccess(local);
-      } else {
-        onSuccess(INITIAL_LANDING_PAGES);
-      }
-      onError?.(error as Error);
-    }
-  );
-
-  return unsubscribe;
+    });
+  return () => undefined;
 }
 
 // Save or update custom landing page
 export async function saveLandingPageToFirestore(page: CustomLandingPage): Promise<void> {
-  const path = `pages/${page.id}`;
-  try {
-    const docRef = doc(db, 'pages', page.id);
-    await setDoc(
-      docRef,
-      {
-        ...page,
-        authorEmail: auth.currentUser?.email || ADMIN_EMAIL,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
-    const existing = getStoredLandingPages();
-    const updated = [page, ...existing.filter((p) => p.id !== page.id)];
-    saveStoredLandingPages(updated);
-  } catch (error) {
-    const existing = getStoredLandingPages();
-    const updated = [page, ...existing.filter((p) => p.id !== page.id)];
-    saveStoredLandingPages(updated);
-    handleFirestoreError(error, OperationType.WRITE, path);
-  }
+  const existing = getStoredLandingPages();
+  saveStoredLandingPages([page, ...existing.filter((p) => p.id !== page.id)]);
+  const { error } = await supabase.from('landing_pages').upsert({
+    id: page.id,
+    title: page.title,
+    slug: page.slug,
+    headline: page.headline,
+    subheading: page.subheading,
+    platform: page.platform || 'all',
+    category: page.category || null,
+    badge: page.badge || null,
+    banner_image_url: page.bannerImageUrl || null,
+    is_active: page.isActive !== false,
+    content: {
+      countdownActive: page.countdownActive,
+      countdownEnd: page.countdownEnd,
+      scarcityText: page.scarcityText,
+      guaranteeText: page.guaranteeText,
+      ratingScore: page.ratingScore,
+      testimonials: page.testimonials,
+      faqs: page.faqs,
+      stickyMobileCta: page.stickyMobileCta,
+      ctaText: page.ctaText,
+      ctaUrl: page.ctaUrl,
+      facebookPixelId: page.facebookPixelId,
+      googleAnalyticsId: page.googleAnalyticsId,
+      customTrackingCode: page.customTrackingCode,
+    },
+    created_at: page.createdAt || new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+  if (error) throw error;
 }
 
 // Delete custom landing page
 export async function deleteLandingPageFromFirestore(pageId: string): Promise<void> {
-  const path = `pages/${pageId}`;
-  try {
-    const docRef = doc(db, 'pages', pageId);
-    await deleteDoc(docRef);
-    const existing = getStoredLandingPages();
-    saveStoredLandingPages(existing.filter((p) => p.id !== pageId));
-  } catch (error) {
-    const existing = getStoredLandingPages();
-    saveStoredLandingPages(existing.filter((p) => p.id !== pageId));
-    handleFirestoreError(error, OperationType.DELETE, path);
-  }
+  const existing = getStoredLandingPages();
+  saveStoredLandingPages(existing.filter((p) => p.id !== pageId));
+  const { error } = await supabase.from('landing_pages').delete().eq('id', pageId);
+  if (error) throw error;
 }
 
-// Subscribe to custom categories in Firestore
+// Load custom categories from Supabase
 export function subscribeFirestoreCategories(
   onSuccess: (cats: CustomCategory[]) => void,
   onError?: (err: Error) => void
 ): () => void {
-  const catsCol = collection(db, 'categories');
-
-  const unsubscribe = onSnapshot(
-    catsCol,
-    (snapshot) => {
-      if (snapshot.empty) {
+  void supabase
+    .from('categories')
+    .select('*')
+    .order('created_at', { ascending: true })
+    .then(({ data, error }) => {
+      if (error) {
+        console.warn('Leitura de categorias (fallback):', error);
+        onSuccess(INITIAL_CUSTOM_CATEGORIES);
+        onError?.(error as unknown as Error);
+        return;
+      }
+      if (!data || data.length === 0) {
         onSuccess(INITIAL_CUSTOM_CATEGORIES);
         return;
       }
-
-      const list: CustomCategory[] = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        list.push({
-          id: docSnap.id,
-          name: data.name || '',
-          platform: data.platform || 'all',
-          icon: data.icon || 'Tag',
-          color: data.color || '',
-          createdAt: data.createdAt || new Date().toISOString(),
-        });
-      });
-
-      onSuccess(list);
-    },
-    (error) => {
-      console.warn('Leitura de categorias do Firestore (fallback):', error);
-      onSuccess(INITIAL_CUSTOM_CATEGORIES);
-      onError?.(error as Error);
-    }
-  );
-
-  return unsubscribe;
+      onSuccess(
+        data.map((row) => ({
+          id: row.id,
+          name: row.name || '',
+          platform: row.platform || 'all',
+          icon: row.icon || 'Tag',
+          color: row.color || '',
+          createdAt: row.created_at || new Date().toISOString(),
+        })),
+      );
+    });
+  return () => undefined;
 }
 
 // Save or update category
 export async function saveCategoryToFirestore(category: CustomCategory): Promise<void> {
-  const path = `categories/${category.id}`;
-  try {
-    const docRef = doc(db, 'categories', category.id);
-    await setDoc(
-      docRef,
-      {
-        ...category,
-        authorEmail: auth.currentUser?.email || ADMIN_EMAIL,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
-  } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, path);
-  }
+  const { error } = await supabase.from('categories').upsert({
+    id: category.id,
+    name: category.name.trim(),
+    platform: category.platform || 'all',
+    icon: category.icon || 'Tag',
+    color: category.color || null,
+    created_at: category.createdAt || new Date().toISOString(),
+  });
+  if (error) throw error;
 }
 
 // Delete category
 export async function deleteCategoryFromFirestore(categoryId: string): Promise<void> {
-  const path = `categories/${categoryId}`;
-  try {
-    const docRef = doc(db, 'categories', categoryId);
-    await deleteDoc(docRef);
-  } catch (error) {
-    handleFirestoreError(error, OperationType.DELETE, path);
-  }
+  const { error } = await supabase.from('categories').delete().eq('id', categoryId);
+  if (error) throw error;
 }
 
 // Delete article from Firestore
@@ -670,7 +641,7 @@ export async function loginWithGoogle(): Promise<User> {
     });
     if (error) throw error;
     if (data.url && typeof window !== 'undefined') window.location.assign(data.url);
-    return (await supabase.auth.getUser()).data.user as unknown as User;
+    return toAppUser((await supabase.auth.getUser()).data.user) as User;
   } catch (err) {
     console.error('Erro no login Google:', err);
     throw err;
@@ -680,7 +651,7 @@ export async function loginWithGoogle(): Promise<User> {
 export async function loginWithPassword(email: string, password: string): Promise<User> {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
-  return data.user as unknown as User;
+  return toAppUser(data.user) as User;
 }
 
 // Logout
@@ -690,9 +661,9 @@ export async function logoutUser(): Promise<void> {
 
 // Subscribe to auth state changes
 export function subscribeAuth(callback: (user: User | null) => void): () => void {
-  void supabase.auth.getUser().then(({ data }) => callback(data.user as unknown as User | null));
+  void supabase.auth.getUser().then(({ data }) => callback(toAppUser(data.user)));
   const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-    callback(session?.user as unknown as User | null);
+    callback(toAppUser(session?.user));
   });
   return () => data.subscription.unsubscribe();
 }

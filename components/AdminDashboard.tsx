@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useMemo } from 'react';
 import Image from 'next/image';
-import { User } from 'firebase/auth';
+import type { User } from '@/lib/firestore-products';
 import { Product, Article, SiteSettings, PlatformId, CustomLandingPage, CustomCategory } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
 import { exportProductsJson } from '@/lib/storage';
@@ -16,8 +16,7 @@ import {
   deleteLandingPageFromFirestore,
   saveCategoryToFirestore,
   deleteCategoryFromFirestore,
-  seedDefaultProducts,
-  seedDefaultArticles,
+  seedInitialDataToFirestore,
   loginWithGoogle,
   logoutUser,
 } from '@/lib/firestore-products';
@@ -2430,8 +2429,7 @@ export function AdminDashboard({
                       onClick={async () => {
                         if (confirm('Deseja sincronizar o catálogo padrão completo de achadinhos no seu banco Firestore?')) {
                           try {
-                            await seedDefaultProducts();
-                            await seedDefaultArticles();
+                            await seedInitialDataToFirestore();
                             showToast('Catálogo sincronizado com sucesso no banco em nuvem!');
                           } catch (e) {
                             showToast('Erro ao sincronizar.', 'error');

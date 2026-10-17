@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Product, PlatformId } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
 import { exportProductsJson } from '@/lib/storage';
-import { User } from 'firebase/auth';
+import type { User } from '@/lib/firestore-products';
 import {
   X,
   Plus,
