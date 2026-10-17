@@ -24,6 +24,7 @@ import {
   LogIn,
   ChevronRight,
   Database,
+  FileText,
 } from 'lucide-react';
 
 function AdminShell({ children }: { children: React.ReactNode }) {
@@ -64,6 +65,11 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       label: 'Cupons',
       href: '/painel/cupons',
       icon: Tag,
+    },
+    {
+      label: 'Páginas do Site',
+      href: '/painel/paginas',
+      icon: FileText,
     },
     {
       label: 'Blog & Posts',

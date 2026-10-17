@@ -119,3 +119,14 @@ export interface Coupon {
 }
 
 export type SortOption = 'recent' | 'price-asc' | 'price-desc' | 'discount' | 'rating';
+
+export interface SitePage {
+  id: string;
+  slug: string;
+  title: string;
+  body: string;
+  parentId?: string | null;
+  showInMenu: boolean;
+  isActive: boolean;
+  createdAt: string;
+}

@@ -1,6 +1,6 @@
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase, SUPABASE_STORAGE_BUCKET } from './supabase';
-import { Product, Article, SiteSettings, CustomLandingPage, CustomCategory, Coupon } from './types';
+import { Product, Article, SiteSettings, CustomLandingPage, CustomCategory, Coupon, SitePage } from './types';
 import { INITIAL_PRODUCTS, INITIAL_COUPONS } from './constants';
 import {
   getStoredProducts,
@@ -583,4 +583,63 @@ export async function deleteCouponFromFirestore(couponId: string): Promise<void>
 // Copy the bundled example coupons into Supabase (manual admin action)
 export async function seedInitialCoupons(): Promise<void> {
   for (const coupon of INITIAL_COUPONS) await saveCouponToFirestore(coupon);
+}
+
+// Pages created in the admin, served at /<slug>. Subpages use parentId.
+const sitePageFromRow = (row: any): SitePage => ({
+  id: row.id,
+  slug: row.slug || '',
+  title: row.title || '',
+  body: row.body || '',
+  parentId: row.parent_id || null,
+  showInMenu: Boolean(row.show_in_menu),
+  isActive: row.is_active !== false,
+  createdAt: row.created_at || new Date().toISOString(),
+});
+
+export function subscribeSitePages(
+  onSuccess: (pages: SitePage[]) => void,
+  onError?: (err: Error) => void
+): () => void {
+  void supabase
+    .from('site_pages')
+    .select('*')
+    .order('created_at', { ascending: true })
+    .then(({ data, error }) => {
+      if (error) {
+        console.warn('Leitura de páginas do site (fallback):', error);
+        onSuccess([]);
+        onError?.(error as unknown as Error);
+        return;
+      }
+      onSuccess((data ?? []).map(sitePageFromRow));
+    });
+  return () => undefined;
+}
+
+export async function fetchSitePageBySlug(slug: string): Promise<SitePage | null> {
+  const { data, error } = await supabase.from('site_pages').select('*').eq('slug', slug).maybeSingle();
+  if (error) throw error;
+  return data ? sitePageFromRow(data) : null;
+}
+
+export async function saveSitePage(page: SitePage): Promise<void> {
+  const { error } = await supabase.from('site_pages').upsert({
+    id: page.id,
+    slug: page.slug.trim().toLowerCase(),
+    title: page.title.trim(),
+    body: page.body,
+    parent_id: page.parentId || null,
+    show_in_menu: page.showInMenu,
+    is_active: page.isActive,
+    created_at: page.createdAt || new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+  if (error) throw error;
+}
+
+// Deleting a page also deletes its subpages (foreign key on delete cascade)
+export async function deleteSitePage(pageId: string): Promise<void> {
+  const { error } = await supabase.from('site_pages').delete().eq('id', pageId);
+  if (error) throw error;
 }
