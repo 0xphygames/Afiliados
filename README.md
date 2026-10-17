@@ -1,6 +1,6 @@
 # Achadinhos & Looks – Tamires Santos
 
-> Plataforma completa de curadoria e afiliação de produtos da Shopee, Shein, Mercado Livre e Amazon, desenvolvida com Next.js 15 App Router, React 19, Tailwind CSS v4 e Firebase Firestore & Authentication.
+> Plataforma completa de curadoria e afiliação de produtos da Shopee, Shein, Mercado Livre e Amazon, desenvolvida com Next.js 15 App Router, React 19, Tailwind CSS v4 e Supabase (Postgres, Auth e Storage).
 
 ---
 
@@ -19,8 +19,8 @@ O projeto **Achadinhos & Looks – Tamires Santos** é um hub de alta conversão
   - Criação e gerenciamento de campanhas sazonais e artigos de blog.
   - Configurações globais do site (título, subtítulo, link de WhatsApp).
 - **Arquitetura Resiliente de Dados:**
-  - Sincronização em tempo real com **Firebase Firestore**.
-  - Cache local multicamada com **IndexedDB** e **localStorage**, garantindo que o catálogo nunca fique em branco ou perca produtos caso a cota do plano gratuito do Firestore seja atingida.
+  - Dados armazenados no **Supabase (Postgres)**.
+  - Cache local multicamada com **IndexedDB** e **localStorage**, garantindo que o catálogo nunca fique em branco ou perca produtos caso a conexão com o Supabase falhe.
 
 ---
 
@@ -32,7 +32,7 @@ O projeto **Achadinhos & Looks – Tamires Santos** é um hub de alta conversão
 - **Estilização:** [Tailwind CSS v4](https://tailwindcss.com/) com PostCSS
 - **Ícones:** [lucide-react](https://lucide.dev/)
 - **Animações:** [motion](https://motion.dev/) (motion/react)
-- **Banco de Dados & Autenticação:** [Firebase Firestore & Firebase Auth](https://firebase.google.com/)
+- **Banco de Dados & Autenticação:** [Supabase](https://supabase.com/)
 - **Persistência Offline:** IndexedDB nativo + LocalStorage com fallback de sanitização
 
 ---
@@ -70,15 +70,12 @@ O projeto **Achadinhos & Looks – Tamires Santos** é um hub de alta conversão
 ├── lib/                      # Utilitários e integrações
 │   ├── constants.ts          # Catálogo inicial (55 itens), lojas e cupons
 │   ├── types.ts              # Definições de tipos TypeScript
-│   ├── firebase.ts           # Inicialização do Firebase App, Firestore e Auth
 │   ├── firestore-products.ts # Camada de dados e assinaturas em tempo real
 │   ├── storage.ts            # Camada de cache resiliente (IndexedDB/LocalStorage)
 │   ├── AdminContext.tsx      # Contexto React com estado administrativo
 │   └── image-compress.ts     # Compactação de imagens antes de salvar
 ├── public/                   # Arquivos públicos e imagens estáticas
 │   └── images/               # Fotos oficiais de produtos e hero
-├── firebase-applet-config.json # Configuração pública do Firebase
-├── firestore.rules           # Regras de segurança do Firestore
 ├── package.json              # Dependências e scripts
 └── tsconfig.json             # Configuração TypeScript
 ```
@@ -120,7 +117,7 @@ npm run start
 
 ## 🔒 Segurança e Regras de Negócio
 
-- As regras do Firestore (`firestore.rules`) garantem que apenas a administradora com e-mail autorizado (`taper.sant@gmail.com`) consiga criar, atualizar ou excluir produtos, campanhas e configurações.
+- As regras de acesso do Supabase (RLS, em `supabase/migrations`) garantem que apenas a administradora com e-mail autorizado (`taper.sant@gmail.com`) consiga criar, atualizar ou excluir produtos, campanhas e configurações.
 - Visitantes têm permissão estrita de **leitura pública** de produtos, artigos e cupons.
 - Todas as requisições de persistência contam com sanitização para impedir estouro de cota de armazenamento no navegador.
 
