@@ -24,6 +24,7 @@ import {
 export default function AchadinhosPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<CustomCategory[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 
   const [activePlatform, setActivePlatform] = useState<PlatformId | 'all'>('all');
   const [activeCategory, setActiveCategory] = useState<string>('Todos os Setores');
@@ -33,7 +34,10 @@ export default function AchadinhosPage() {
 
   useEffect(() => {
     const unsubProds = subscribeFirestoreProducts((list) => {
-      if (list && list.length > 0) setProducts(list);
+      setProducts(list || []);
+      setIsLoadingProducts(false);
+    }, () => {
+      setIsLoadingProducts(false);
     });
     const unsubCats = subscribeFirestoreCategories((catList) => {
       if (catList && catList.length > 0) setCategories(catList);
@@ -214,7 +218,13 @@ export default function AchadinhosPage() {
             />
 
             <div className="flex-1 min-w-0 w-full">
-              {filteredProducts.length > 0 ? (
+              {isLoadingProducts ? (
+                <div className="text-center py-16 px-4 bg-white rounded-3xl border border-stone-200 max-w-md mx-auto space-y-3">
+                  <div className="w-10 h-10 mx-auto rounded-full border-4 border-stone-200 border-t-amber-500 animate-spin" />
+                  <h3 className="font-serif text-lg font-bold text-stone-900">Carregando achadinhos...</h3>
+                  <p className="text-xs text-stone-500">Buscando o catálogo atualizado.</p>
+                </div>
+              ) : filteredProducts.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
                   {filteredProducts.map((product) => (
                     <ProductCard
