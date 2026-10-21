@@ -297,7 +297,7 @@ export default function PainelProdutosPage() {
                     <button
                       onClick={async () => {
                         if (confirm(`Deseja remover "${product.title}" permanentemente do banco de dados?`)) {
-                          await handleDeleteProduct(product.id);
+                          try { await handleDeleteProduct(product.id); } catch (err) { alert(err instanceof Error ? err.message : 'Não foi possível excluir o achadinho.'); }
                         }
                       }}
                       className="p-2 rounded-lg border border-rose-200 text-rose-600 hover:text-rose-800 hover:bg-rose-50 transition-colors"
