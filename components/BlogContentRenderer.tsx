@@ -3,6 +3,57 @@
 import React from 'react';
 import { ExternalLink, Sparkles } from 'lucide-react';
 
+// Product card written on one line as:
+// [[produto|Nome|Preço|Preço original|Nota|Link da oferta|URL da imagem|Destaque]]
+function ProductCard({
+  name,
+  price,
+  originalPrice,
+  rating,
+  url,
+  image,
+  badge,
+}: {
+  name: string;
+  price: string;
+  originalPrice: string;
+  rating: string;
+  url: string;
+  image: string;
+  badge: string;
+}) {
+  return (
+    <div className="my-5 flex flex-col sm:flex-row gap-4 rounded-2xl border border-stone-200 bg-white p-4 shadow-2xs">
+      {image && (
+        <img src={image} alt={name} loading="lazy" className="w-full sm:w-40 h-40 object-contain rounded-xl bg-stone-50 shrink-0" />
+      )}
+      <div className="flex-1 min-w-0 space-y-2">
+        {badge && (
+          <span className="inline-block text-[11px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">
+            {badge}
+          </span>
+        )}
+        <p className="font-serif text-lg font-bold text-stone-900">{name}</p>
+        {rating && <p className="text-sm text-amber-600 font-semibold">★ {rating}</p>}
+        <div className="flex items-baseline gap-2">
+          {price && <span className="text-xl font-bold text-stone-900">{price}</span>}
+          {originalPrice && <span className="text-sm text-stone-400 line-through">{originalPrice}</span>}
+        </div>
+        {url && (
+          <a
+            href={url}
+            target="_blank"
+            rel="sponsored noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 text-white text-sm font-bold hover:bg-stone-700 transition-colors"
+          >
+            Ver oferta <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 interface BlogContentRendererProps {
   content: string;
   className?: string;
@@ -117,6 +168,28 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
     // Empty line
     if (!trimmed) {
       flushList();
+      return;
+    }
+
+    // Product card: [[produto|Nome|Preço|Preço original|Nota|Link|Imagem|Destaque]]
+    if (trimmed.startsWith('[[produto|') && trimmed.endsWith(']]')) {
+      flushList();
+      const [name = '', price = '', originalPrice = '', rating = '', url = '', image = '', badge = ''] = trimmed
+        .slice(10, -2)
+        .split('|')
+        .map((field) => field.trim());
+      renderedElements.push(
+        <ProductCard
+          key={`product-${index}`}
+          name={name}
+          price={price}
+          originalPrice={originalPrice}
+          rating={rating}
+          url={url}
+          image={image}
+          badge={badge}
+        />
+      );
       return;
     }
 

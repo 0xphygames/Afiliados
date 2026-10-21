@@ -44,7 +44,7 @@ const PRESET_ARTICLE_COVERS = [
 ];
 
 export default function PainelArtigosPage() {
-  const { articles, handleSaveArticle, handleDeleteArticle } = useAdmin();
+  const { articles, products, handleSaveArticle, handleDeleteArticle } = useAdmin();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -322,6 +322,7 @@ export default function PainelArtigosPage() {
               </span>
             </div>
             <BlogContentEditor
+              products={products}
               value={content}
               onChange={setContent}
               rows={10}
