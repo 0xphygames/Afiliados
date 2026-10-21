@@ -179,13 +179,9 @@ export function subscribeFirestoreProducts(
         isFeatured: Boolean(row.is_featured), createdAt: row.created_at,
         } satisfies Product);
       });
-      const merged = new Map<string, Product>();
-      INITIAL_PRODUCTS.forEach((product) => merged.set(product.id, product));
-      // Preserve products created in this browser if the API is temporarily
-      // unavailable or the deployed project is pointing at an empty database.
-      getStoredProducts().forEach((product) => merged.set(product.id, product));
-      list.forEach((product) => merged.set(product.id, product));
-      productsCache = Array.from(merged.values()).sort(
+      // Supabase is the source of truth. Merging the bundled and browser-cached products
+      // here made deleted products come back on the next load.
+      productsCache = list.sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
       saveStoredProducts(productsCache);
@@ -320,7 +316,10 @@ export async function deleteProductFromFirestore(productId: string): Promise<voi
   const { data, error } = await supabase.from('products').delete().eq('id', productId).select('id');
   if (error) throw error;
   if (!data || data.length === 0) throw new Error('O achadinho não foi excluído. Verifique as permissões de exclusão no banco.');
+  // Drop it from the browser copy too, so the offline fallback cannot bring it back
+  const cached = getStoredProducts().filter((product) => product.id !== productId);
   invalidateProductsCache();
+  saveStoredProducts(cached);
 }
 
 // Campaign fields that are not real columns live in the `content` jsonb column
