@@ -413,7 +413,7 @@ export default function PainelArtigosPage() {
                 <button
                   onClick={async () => {
                     if (confirm(`Excluir artigo "${art.title}"?`)) {
-                      await handleDeleteArticle(art.id);
+                      try { await handleDeleteArticle(art.id); } catch (err) { alert(err instanceof Error ? err.message : 'Não foi possível excluir o artigo.'); }
                     }
                   }}
                   className="p-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors"
