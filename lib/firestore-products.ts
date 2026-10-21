@@ -316,8 +316,10 @@ export async function saveSettingsToFirestore(settings: SiteSettings): Promise<v
 
 // Delete product from Firestore
 export async function deleteProductFromFirestore(productId: string): Promise<void> {
-  const { error } = await supabase.from('products').delete().eq('id', productId);
+  // Without a delete policy, Supabase answers success with 0 rows; report that instead of hiding it
+  const { data, error } = await supabase.from('products').delete().eq('id', productId).select('id');
   if (error) throw error;
+  if (!data || data.length === 0) throw new Error('O achadinho não foi excluído. Verifique as permissões de exclusão no banco.');
   invalidateProductsCache();
 }
 
@@ -483,8 +485,9 @@ export async function deleteCategoryFromFirestore(categoryId: string): Promise<v
 
 // Delete article from Firestore
 export async function deleteArticleFromFirestore(articleId: string): Promise<void> {
-  const { error } = await supabase.from('articles').delete().eq('id', articleId);
+  const { data, error } = await supabase.from('articles').delete().eq('id', articleId).select('id');
   if (error) throw error;
+  if (!data || data.length === 0) throw new Error('O artigo não foi excluído. Verifique as permissões de exclusão no banco.');
 }
 
 // Login via Google
