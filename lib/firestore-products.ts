@@ -239,6 +239,8 @@ export function subscribeFirestoreArticles(
       content: row.content, coverImageUrl: row.cover_image_url || '',
       author: row.author || 'Tamires Santos', featured: Boolean(row.featured), createdAt: row.created_at,
       platform: (row.platform as Article["platform"]) || null,
+      department: row.department || undefined,
+      subcategory: row.subcategory || undefined,
     } satisfies Article));
     const articles = list;
     saveStoredArticles(articles);
@@ -318,6 +320,8 @@ export async function saveArticleToFirestore(article: Article): Promise<void> {
     summary: article.summary.trim(), content: article.content, cover_image_url: article.coverImageUrl || null,
     author: article.author || 'Tamires Santos', featured: Boolean(article.featured),
     platform: article.platform || null,
+    department: article.department || null,
+    subcategory: article.subcategory || null,
     created_at: article.createdAt || new Date().toISOString(),
   }).select('id').single();
   if (error) throw error;
