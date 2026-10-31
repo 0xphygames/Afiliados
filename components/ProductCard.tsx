@@ -271,7 +271,7 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
             rel="noopener noreferrer sponsored"
             onClick={(e) => {
               e.stopPropagation();
-              trackAffiliateClick(product.platform, product.affiliateUrl);
+              trackAffiliateClick(product.platform, product.id, product.title);
             }}
             style={{
               backgroundColor: platform.color,
