@@ -1,6 +1,6 @@
 'use client';
 
-import { departmentOptions } from '@/lib/departments';
+import { TAXONOMY } from '@/lib/taxonomy';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -56,6 +56,8 @@ function EditProductForm({
   const [title, setTitle] = useState(product.title || '');
   const [platform, setPlatform] = useState<PlatformId>(product.platform || 'shopee');
   const [category, setCategory] = useState(product.category || 'Geral');
+  const [department, setDepartment] = useState(product.department || TAXONOMY[0].name);
+  const [subcategory, setSubcategory] = useState(product.subcategory || TAXONOMY[0].subcategories[0].name);
   const [price, setPrice] = useState(product.price ? String(product.price) : '');
   const [originalPrice, setOriginalPrice] = useState(
     product.originalPrice ? String(product.originalPrice) : ''
@@ -186,7 +188,9 @@ function EditProductForm({
         id: product.id,
         title: title.trim(),
         platform,
-        category: category.trim() || 'Geral',
+        category: category.trim() || subcategory || 'Geral',
+        department,
+        subcategory,
         price: numPrice,
         originalPrice: numOrigPrice > numPrice ? numOrigPrice : undefined,
         affiliateUrl: affiliateUrl.trim(),
@@ -317,18 +321,19 @@ function EditProductForm({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-900">
-                Categoria / Setor
-              </label>
+              <label className="text-xs font-bold text-stone-900">Macro categoria</label>
               <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                value={department}
+                onChange={(e) => { setDepartment(e.target.value); setSubcategory(TAXONOMY.find((d) => d.name === e.target.value)?.subcategories[0]?.name ?? ''); }}
                 className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900"
               >
-                <option value="">Escolha um setor</option>
-                {departmentOptions(categories.map((c) => c.name), category).map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
+                {TAXONOMY.map((d) => <option key={d.name} value={d.name}>{d.name}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-stone-900">Micro categoria</label>
+              <select value={subcategory} onChange={(e) => setSubcategory(e.target.value)} className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl text-stone-900">
+                {(TAXONOMY.find((d) => d.name === department)?.subcategories ?? []).map((s) => <option key={s.name} value={s.name}>{s.name}</option>)}
               </select>
             </div>
           </div>
