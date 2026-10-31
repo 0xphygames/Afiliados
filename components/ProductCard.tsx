@@ -20,6 +20,7 @@ import {
   Flame,
 } from 'lucide-react';
 import { SocialShare } from './SocialShare';
+import { trackAffiliateClick } from '@/lib/analytics';
 
 interface ProductCardProps {
   product: Product;
@@ -268,7 +269,10 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
             href={product.affiliateUrl || '#'}
             target="_blank"
             rel="noopener noreferrer sponsored"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              trackAffiliateClick(product.platform, product.affiliateUrl);
+            }}
             style={{
               backgroundColor: platform.color,
             }}
