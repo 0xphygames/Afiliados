@@ -18,6 +18,8 @@ export interface Product {
   title: string;
   platform: PlatformId;
   category: string;
+  department?: string;
+  subcategory?: string;
   imageUrl: string;
   images?: string[];
   affiliateUrl: string;
