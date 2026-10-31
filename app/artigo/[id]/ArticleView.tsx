@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { Article, SiteSettings } from '@/lib/types';
+import { Article, PlatformId, SiteSettings } from '@/lib/types';
+import { PLATFORMS } from '@/lib/constants';
 import {
   subscribeFirestoreArticles,
   subscribeFirestoreSettings,
@@ -33,6 +34,8 @@ export function ArticleView({ initialArticle }: { initialArticle?: Article | nul
   const [articlesLoaded, setArticlesLoaded] = useState(Boolean(initialArticle));
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
   const [copied, setCopied] = useState(false);
+  const [activePlatform, setActivePlatform] = useState<PlatformId | 'all'>('all');
+  const [activeCategory, setActiveCategory] = useState('Todos os Departamentos');
 
   useEffect(() => {
     const unsubArt = subscribeFirestoreArticles((list) => {
@@ -64,6 +67,30 @@ export function ArticleView({ initialArticle }: { initialArticle?: Article | nul
         month: 'long',
         year: 'numeric',
       })
+    : '';
+
+  const productLines = article?.content.split('\n').filter((line) => line.trim().startsWith('[[produto|') && line.trim().endsWith(']]')) ?? [];
+  const articleProducts = productLines.map((line) => {
+    const fields = line.trim().slice(10, -2).split('|').map((field) => field.trim());
+    const url = fields[4] || '';
+    const highlights = fields[10] || '';
+    return {
+      platform: (url.includes('amazon') || url.includes('amzn') ? 'amazon' : url.includes('shein') ? 'shein' : url.includes('mercadolivre') || url.includes('mercadolibre') || url.includes('meli.la') ? 'mercadolivre' : 'shopee') as PlatformId,
+      category: highlights.match(/(?:^|;\s*)Categoria:\s*([^;]+)/i)?.[1]?.trim() || 'Outros',
+    };
+  });
+  const articleCategories = Array.from(new Set(articleProducts.map((product) => product.category))).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const filteredContent = article
+    ? article.content.split('\n').filter((line) => {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('[[produto|') || !trimmed.endsWith(']]')) return true;
+        const fields = trimmed.slice(10, -2).split('|').map((field) => field.trim());
+        const url = fields[4] || '';
+        const highlights = fields[10] || '';
+        const platform = url.includes('amazon') || url.includes('amzn') ? 'amazon' : url.includes('shein') ? 'shein' : url.includes('mercadolivre') || url.includes('mercadolibre') || url.includes('meli.la') ? 'mercadolivre' : 'shopee';
+        const category = highlights.match(/(?:^|;\s*)Categoria:\s*([^;]+)/i)?.[1]?.trim() || 'Outros';
+        return (activePlatform === 'all' || platform === activePlatform) && (activeCategory === 'Todos os Departamentos' || category === activeCategory);
+      }).join('\n')
     : '';
 
   return (
@@ -144,7 +171,26 @@ export function ArticleView({ initialArticle }: { initialArticle?: Article | nul
 
               {/* Article Content with rich hyperlinks and markdown formatting */}
               <div className="pt-6 border-t border-stone-100 max-w-none">
-                <BlogContentRenderer content={article.content} className="text-base sm:text-lg leading-relaxed space-y-4" />
+                <div className="mb-6 flex flex-wrap gap-2">
+                  {(['all', 'shopee', 'shein', 'mercadolivre', 'amazon'] as const).map((platform) => (
+                    <button key={platform} onClick={() => setActivePlatform(platform)} className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold ${activePlatform === platform ? 'bg-stone-900 text-white' : 'border border-stone-200 bg-stone-50 text-stone-700'}`}>
+                      {platform === 'all' ? '✨ Todos' : PLATFORMS[platform].name}
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+                  <aside className="h-fit rounded-2xl border border-stone-200 bg-white p-4 lg:sticky lg:top-4">
+                    <p className="mb-3 text-xs font-bold uppercase tracking-wide text-stone-700">Setores & Categorias</p>
+                    <button onClick={() => setActiveCategory('Todos os Departamentos')} className={`mb-2 flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold ${activeCategory === 'Todos os Departamentos' ? 'bg-stone-900 text-white' : 'bg-stone-50 text-stone-700'}`}>
+                      <span>Todos os Departamentos</span><span>{articleProducts.length}</span>
+                    </button>
+                    {articleCategories.map((category) => {
+                      const count = articleProducts.filter((product) => product.category === category && (activePlatform === 'all' || product.platform === activePlatform)).length;
+                      return <button key={category} onClick={() => setActiveCategory(category)} className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs ${activeCategory === category ? 'bg-stone-100 font-bold text-stone-900' : 'text-stone-600'}`}><span>{category}</span><span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-800">{count}</span></button>;
+                    })}
+                  </aside>
+                  <BlogContentRenderer content={filteredContent} className="text-base sm:text-lg leading-relaxed space-y-4" />
+                </div>
               </div>
             </article>
           ) : !articlesLoaded ? (
