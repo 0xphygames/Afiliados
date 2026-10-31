@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { PlatformId, Product, CustomCategory } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
+import { TAXONOMY, LEGACY_MAP } from '@/lib/taxonomy';
 import {
   Tag,
   Shirt,
@@ -95,45 +96,27 @@ export function CategorySidebar({
       ? products
       : products.filter((p) => p.platform === activePlatform);
 
-  // Discover all potential category names
-  const productCategories = Array.from(new Set(storeProducts.map((p) => p.category.trim())));
-  const customNames = customCategories ? customCategories.map((c) => c.name.trim()) : [];
-  const defaultList =
-    activePlatform !== 'all' && PLATFORMS[activePlatform]
-      ? PLATFORMS[activePlatform].defaultCategories.filter((c) => c !== 'Todos os Setores')
-      : [
-          'Vestuário',
-          'Suplementos',
-          'Musculação',
-          'Natal',
-          'Dia das Crianças',
-          'Guloseimas',
-          'Casa & Decoração',
-          'Beleza & Skincare',
-        ];
-
-  const allCandidateCategories = Array.from(
-    new Set([...productCategories, ...customNames, ...defaultList])
-  );
-
-  // REQUISITO CRÍTICO DO USUÁRIO:
-  // "so mostrar o setor que tiver alguma coisa correlacionada, oque tiver sem nada com 0 oculta"
-  // Calculate counts for each category and strictly filter out any with count === 0
-  const activeSectorsWithCount: { name: string; count: number }[] = [];
-
-  allCandidateCategories.forEach((catName) => {
-    const count = storeProducts.filter(
-      (p) => p.category.trim().toLowerCase() === catName.toLowerCase()
-    ).length;
-    // Inclui todos os setores padrão da loja ou com contagem > 0
-    activeSectorsWithCount.push({ name: catName, count });
-  });
-
-  // Sort sectors: ones with count > 0 first, then alphabetically
-  activeSectorsWithCount.sort((a, b) => {
-    if (b.count !== a.count) return b.count - a.count;
-    return a.name.localeCompare(b.name);
-  });
+  const classify = (p: Product) => {
+    const mapped = LEGACY_MAP[p.category];
+    return { department: p.department || mapped?.[0] || p.category, subcategory: p.subcategory || mapped?.[1] || p.category };
+  };
+  const activeDepartments = TAXONOMY.map((department) => ({
+    ...department,
+    count: storeProducts.filter((p) => classify(p).department === department.name).length,
+    subcategories: department.subcategories.map((subcategory) => ({
+      ...subcategory,
+      count: storeProducts.filter((p) => {
+        const classified = classify(p);
+        return classified.department === department.name && classified.subcategory === subcategory.name;
+      }).length,
+    })).filter((subcategory) => subcategory.count > 0),
+  })).filter((department) => department.count > 0);
+  // Flat rendering keeps the existing responsive component stable while exposing
+  // the macro first and its populated microcategories immediately below it.
+  const activeSectorsWithCount = activeDepartments.flatMap((department) => [
+    { name: department.name, count: department.count },
+    ...department.subcategories.map((subcategory) => ({ name: subcategory.name, count: subcategory.count })),
+  ]);
 
   const platformName =
     activePlatform === 'all' ? 'Todas as Lojas' : PLATFORMS[activePlatform]?.name || 'Loja';
