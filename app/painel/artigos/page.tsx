@@ -51,6 +51,7 @@ export default function PainelArtigosPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Guia de Compras');
+  const [platform, setPlatform] = useState<string>('');
   const [summary, setSummary] = useState('');
   const [content, setContent] = useState('');
   const [coverImageUrl, setCoverImageUrl] = useState('/images/hero_achadinhos_looks_1791404026649.jpg');
@@ -97,6 +98,7 @@ export default function PainelArtigosPage() {
     setEditingId(art.id);
     setTitle(art.title);
     setCategory(art.category);
+    setPlatform(art.platform || '');
     setSummary(art.summary);
     setContent(art.content);
     setCoverImageUrl(art.coverImageUrl || '/images/hero_achadinhos_looks_1791404026649.jpg');
@@ -117,6 +119,7 @@ export default function PainelArtigosPage() {
       coverImageUrl: coverImageUrl.trim() || '/images/hero_achadinhos_looks_1791404026649.jpg',
       author: 'Tamires Santos',
       featured: true,
+      platform: (platform || null) as Article['platform'],
       createdAt: editingId
         ? articles.find((a) => a.id === editingId)?.createdAt || new Date().toISOString()
         : new Date().toISOString(),
@@ -190,6 +193,21 @@ export default function PainelArtigosPage() {
                 placeholder="Ex: Top 5 Achadinhos da Shopee que valem cada centavo"
                 className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900"
               />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-stone-900">Loja</label>
+              <select
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
+                className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900"
+              >
+                <option value="">Nenhuma loja específica</option>
+                <option value="shopee">Shopee</option>
+                <option value="shein">Shein</option>
+                <option value="mercadolivre">Mercado Livre</option>
+                <option value="amazon">Amazon</option>
+              </select>
             </div>
 
             <div className="space-y-1.5">
