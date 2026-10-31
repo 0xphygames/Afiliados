@@ -109,9 +109,9 @@ export default function BlogPage() {
             </div>
 
             {/* Filter and Search Bar */}
-            <div className="pt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+            <div className="pt-8 flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-4">
               {/* Store and sector filters, same as the Achadinhos page */}
-              <div className="flex flex-col gap-2 min-w-0">
+              <div className="flex flex-col gap-2 min-w-0 flex-1">
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                   {(['all', 'shopee', 'shein', 'mercadolivre', 'amazon'] as const).map((p) => (
                     <button
@@ -145,7 +145,7 @@ export default function BlogPage() {
               </div>
 
               {/* Search in blog */}
-              <div className="relative w-full sm:w-64">
+              <div className="relative w-full lg:w-64 lg:shrink-0">
                 <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
