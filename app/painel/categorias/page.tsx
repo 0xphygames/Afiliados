@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAdmin } from '@/lib/AdminContext';
 import { CustomCategory, PlatformId } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
+import { DEPARTMENTS } from '@/lib/departments';
 import {
   Tag,
   PlusCircle,
@@ -53,6 +54,13 @@ export default function PainelCategoriasPage() {
   const getProductCount = (catName: string) => {
     return products.filter((p) => p.category.toLowerCase() === catName.toLowerCase()).length;
   };
+
+  const activeCategories = [
+    ...DEPARTMENTS.map((name) => ({ id: `preset-${name}`, name, platform: 'all' as const, preset: true })),
+    ...categories
+      .filter((cat) => !DEPARTMENTS.some((department) => department.toLowerCase() === cat.name.trim().toLowerCase()))
+      .map((cat) => ({ ...cat, preset: false })),
+  ];
 
   return (
     <div className="space-y-6">
@@ -129,7 +137,7 @@ export default function PainelCategoriasPage() {
           <div className="flex items-center justify-between pb-2 border-b border-stone-100">
             <div>
               <h2 className="font-serif font-bold text-base text-stone-900">
-                Categorias Ativas ({categories.length})
+                Categorias Ativas ({activeCategories.length})
               </h2>
               <p className="text-[11px] text-stone-500">
                 Sincronizadas com o banco de dados e exibidas na vitrine.
@@ -138,7 +146,7 @@ export default function PainelCategoriasPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {categories.map((cat) => {
+            {activeCategories.map((cat) => {
               const count = getProductCount(cat.name);
               const storeConfig =
                 cat.platform && cat.platform !== 'all' ? PLATFORMS[cat.platform] : null;
@@ -171,17 +179,21 @@ export default function PainelCategoriasPage() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={async () => {
-                      if (confirm(`Remover categoria "${cat.name}"?`)) {
-                        await handleDeleteCategory(cat.id);
-                      }
-                    }}
-                    className="p-1.5 rounded-lg border border-stone-200 hover:border-rose-200 text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                    title="Excluir categoria"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  {cat.preset ? (
+                    <span className="text-[10px] font-semibold text-stone-400">Padrão</span>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        if (confirm(`Remover categoria "${cat.name}"?`)) {
+                          await handleDeleteCategory(cat.id);
+                        }
+                      }}
+                      className="p-1.5 rounded-lg border border-stone-200 hover:border-rose-200 text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                      title="Excluir categoria"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               );
             })}

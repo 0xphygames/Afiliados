@@ -5,6 +5,7 @@ import Image from 'next/image';
 import type { User } from '@/lib/firestore-products';
 import { Product, Article, SiteSettings, PlatformId, CustomLandingPage, CustomCategory } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
+import { DEPARTMENTS } from '@/lib/departments';
 import { exportProductsJson } from '@/lib/storage';
 import {
   saveProductToFirestore,
@@ -76,19 +77,7 @@ interface AdminDashboardProps {
   onSuccessSave?: () => void;
 }
 
-const DEFAULT_CATEGORIES = [
-  'Vestuário',
-  'Suplementos',
-  'Musculação',
-  'Natal',
-  'Dia das Crianças',
-  'Guloseimas',
-  'Casa & Decoração',
-  'Beleza & Skincare',
-  'Calçados & Bolsas',
-  'Acessórios & Bijoux',
-  'Eletrônicos & Casa',
-];
+const DEFAULT_CATEGORIES = DEPARTMENTS;
 
 const PRESET_IMAGES = [
   { label: 'Look Elegante / Vestuário', url: '/images/product_vestuario_conjunto_1791404036584.jpg' },
