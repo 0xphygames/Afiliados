@@ -89,6 +89,24 @@ export default function PublicArticlePage() {
 
           {article ? (
             <article className="space-y-6">
+              <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                    '@context': 'https://schema.org',
+                    '@type': 'Article',
+                    headline: article.title,
+                    description: article.summary,
+                    image: article.coverImageUrl ? [article.coverImageUrl] : undefined,
+                    author: { '@type': 'Person', name: article.author || 'Tamires Santos' },
+                    publisher: { '@type': 'Organization', name: 'Achadinhos & Looks' },
+                    datePublished: article.createdAt,
+                    dateModified: article.createdAt,
+                    mainEntityOfPage: `https://achadinhoselooks.com.br/artigo/${encodeURIComponent(article.id)}`,
+                    inLanguage: 'pt-BR',
+                  }).replace(/</g, '\\u003c'),
+                }}
+              />
               {/* Header */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
