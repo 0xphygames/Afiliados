@@ -4,7 +4,9 @@ import React from 'react';
 import { PlatformId, Product } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
 import { TAXONOMY } from '@/lib/taxonomy';
+import { TaxMacro, subscribeTaxonomy } from '@/lib/taxonomy-db';
 import { ChevronDown, ChevronRight, Layers, Tag, LayoutGrid } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface TaxonomySidebarProps {
   activePlatform: PlatformId | 'all';
@@ -19,6 +21,13 @@ const ALL = 'Todos os Setores';
 // Macro categories with their micro categories. Clicking a macro filters the whole department;
 // clicking a micro filters only that subcategory. The active macro opens its micros.
 export function TaxonomySidebar({ activePlatform, activeCategory, onSelectCategory, products, className = '' }: TaxonomySidebarProps) {
+  // The tree comes from the database (editable in Categorias & Setores); the code tree is the fallback
+  const [tree, setTree] = useState<TaxMacro[]>([]);
+  useEffect(() => subscribeTaxonomy((t) => setTree(t)), []);
+  const macros = tree.length
+    ? tree.map((m) => ({ name: m.node.name, subcategories: m.micros.map((x) => ({ name: x.name })) }))
+    : TAXONOMY;
+
   const inStore = activePlatform === 'all' ? products : products.filter((p) => p.platform === activePlatform);
 
   const countDepartment = (name: string) => inStore.filter((p) => p.department === name).length;
@@ -60,7 +69,7 @@ export function TaxonomySidebar({ activePlatform, activeCategory, onSelectCatego
           {badge(inStore.length, activeCategory === ALL)}
         </button>
 
-        {TAXONOMY.map((dep) => {
+        {macros.map((dep) => {
           const depActive = activeCategory === dep.name;
           const open = depActive || dep.subcategories.some((s) => s.name === activeCategory);
           const total = countDepartment(dep.name);

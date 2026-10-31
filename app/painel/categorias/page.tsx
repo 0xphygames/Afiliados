@@ -1,182 +1,175 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAdmin } from '@/lib/AdminContext';
-import { CustomCategory, PlatformId } from '@/lib/types';
-import { PLATFORMS } from '@/lib/constants';
-import { TAXONOMY, LEGACY_MAP } from '@/lib/taxonomy';
+import { Layers, PlusCircle, Pencil, Trash2, Tag } from 'lucide-react';
 import {
-  Tag,
-  PlusCircle,
-  Trash2,
-  ShoppingBag,
-  Sparkles,
-  Layers,
-  Shirt,
-  Pill,
-  Dumbbell,
-  TreePine,
-  Baby,
-  Cookie,
-  Home,
-} from 'lucide-react';
+  TaxMacro,
+  TaxNode,
+  subscribeTaxonomy,
+  addMacro,
+  addMicro,
+  renameNode,
+  deleteNode,
+} from '@/lib/taxonomy-db';
 
+// Macros e micros são editadas aqui. Os produtos são contados pelo nome de cada item.
 export default function PainelCategoriasPage() {
-  const { categories, products, handleSaveCategory, handleDeleteCategory } = useAdmin();
-  const [newCatName, setNewCatName] = useState('');
-  const [newCatPlatform, setNewCatPlatform] = useState<PlatformId | 'all'>('all');
-  const [saving, setSaving] = useState(false);
+  const { products } = useAdmin();
+  const [tree, setTree] = useState<TaxMacro[]>([]);
+  const [macroName, setMacroName] = useState('');
+  const [microName, setMicroName] = useState('');
+  const [microParent, setMicroParent] = useState('');
+  const [message, setMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const handleAddCategory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCatName.trim()) return;
+  const reload = () => {
+    subscribeTaxonomy((t) => {
+      setTree(t);
+      if (!microParent && t[0]) setMicroParent(t[0].node.id);
+    });
+  };
 
-    setSaving(true);
-    const catId = `cat-${Date.now()}`;
-    const newCategory: CustomCategory = {
-      id: catId,
-      name: newCatName.trim(),
-      platform: newCatPlatform,
-      icon: 'Tag',
-      createdAt: new Date().toISOString(),
-    };
+  useEffect(() => subscribeTaxonomy((t) => setTree(t)), []);
 
+  const run = async (action: () => Promise<void>, ok: string) => {
+    setBusy(true);
+    setMessage(null);
     try {
-      await handleSaveCategory(newCategory);
-      setNewCatName('');
+      await action();
+      setMessage(ok);
+      reload();
     } catch (err) {
-      console.error(err);
+      setMessage(err instanceof Error ? err.message : 'Não foi possível concluir a ação.');
     } finally {
-      setSaving(false);
+      setBusy(false);
     }
   };
 
-  const classified = products.map((product) => {
-    const mapped = LEGACY_MAP[product.category];
-    return {
-      department: product.department || mapped?.[0] || 'Outros',
-      subcategory: product.subcategory || mapped?.[1] || product.category,
-    };
-  });
-  const countFor = (department: string, subcategory?: string) => classified.filter((item) =>
-    item.department === department && (!subcategory || item.subcategory === subcategory)
-  ).length;
+  const countOf = (node: TaxNode) =>
+    node.kind === 'macro'
+      ? products.filter((p) => p.department === node.name).length
+      : products.filter((p) => p.subcategory === node.name).length;
+
+  const handleAddMacro = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!macroName.trim()) return;
+    run(async () => {
+      await addMacro(macroName, tree.length + 1);
+      setMacroName('');
+    }, 'Macro criada.');
+  };
+
+  const handleAddMicro = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!microName.trim() || !microParent) return;
+    const parent = tree.find((m) => m.node.id === microParent);
+    run(async () => {
+      await addMicro(microParent, microName, (parent?.micros.length ?? 0) + 1);
+      setMicroName('');
+    }, 'Micro criada.');
+  };
+
+  const handleRename = (node: TaxNode) => {
+    const next = window.prompt(`Novo nome para "${node.name}":`, node.name);
+    if (!next || next.trim() === node.name) return;
+    run(() => renameNode(node, next), 'Renomeado. Os produtos foram atualizados.');
+  };
+
+  const handleDelete = (node: TaxNode, siblings: number) => {
+    if (!window.confirm(`Excluir "${node.name}"?`)) return;
+    run(() => deleteNode(node, siblings), 'Excluído.');
+  };
+
+  const inputClass =
+    'w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white text-stone-900';
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-sm">
         <div className="flex items-center gap-2 mb-1">
           <Tag className="w-5 h-5 text-amber-600" />
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-stone-900">
-            Categorias & Setores
-          </h1>
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-stone-900">Categorias & Setores</h1>
         </div>
         <p className="text-xs text-stone-500 max-w-xl">
-          Crie novas categorias para organizar seus achadinhos. Elas aparecem na barra de navegação da vitrine para facilitar as compras das suas seguidoras.
+          Macros e micros usadas nos achadinhos, nos artigos e na lateral da vitrine. Renomear atualiza os produtos; excluir só é
+          permitido quando nenhum produto usa o nome.
         </p>
       </div>
 
-      {/* 2-Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Form: Add Category */}
-        <form
-          onSubmit={handleAddCategory}
-          className="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-7 border border-stone-200 shadow-sm space-y-4"
-        >
-          <div className="flex items-center gap-2 pb-2 border-b border-stone-100">
-            <PlusCircle className="w-4 h-4 text-amber-600" />
-            <h2 className="font-serif font-bold text-base text-stone-900">
-              Nova Categoria
+      {message && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-2xl px-4 py-3">{message}</div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="lg:col-span-5 space-y-6">
+          <form onSubmit={handleAddMacro} className="bg-white rounded-3xl p-5 border border-stone-200 shadow-sm space-y-3">
+            <h2 className="font-serif text-lg font-bold text-stone-900 flex items-center gap-2">
+              <PlusCircle className="w-4 h-4 text-amber-600" /> Nova macro
             </h2>
-          </div>
+            <input className={inputClass} value={macroName} onChange={(e) => setMacroName(e.target.value)} placeholder="Ex: Acessórios de treino" />
+            <button type="submit" disabled={busy} className="w-full py-2.5 rounded-2xl bg-stone-900 text-white text-sm font-bold disabled:opacity-60">
+              Criar macro
+            </button>
+          </form>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-stone-900">
-              Nome da Categoria
-            </label>
-            <input
-              type="text"
-              required
-              value={newCatName}
-              onChange={(e) => setNewCatName(e.target.value)}
-              placeholder="Ex: Vestuário, Moda Praia, Calçados..."
-              className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-stone-900">
-              Vincular à Loja
-            </label>
-            <select
-              value={newCatPlatform}
-              onChange={(e) => setNewCatPlatform(e.target.value as PlatformId | 'all')}
-              className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900 font-medium"
-            >
-              <option value="all">✨ Todas as Lojas</option>
-              <option value="shopee">🧡 Shopee</option>
-              <option value="shein">🖤 Shein</option>
-              <option value="mercadolivre">💛 Mercado Livre</option>
-              <option value="amazon">📦 Amazon Prime</option>
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full py-2.5 px-4 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-          >
-            <PlusCircle className="w-4 h-4 text-amber-300" />
-            <span>{saving ? 'Adicionando...' : 'Adicionar Categoria'}</span>
-          </button>
-        </form>
-
-        {/* Categories List */}
-        <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-7 border border-stone-200 shadow-sm space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-stone-100">
-            <div>
-              <h2 className="font-serif font-bold text-base text-stone-900">
-                Categorias Ativas ({TAXONOMY.length} macrodepartamentos)
-              </h2>
-              <p className="text-[11px] text-stone-500">
-                Sincronizadas com o banco de dados e exibidas na vitrine.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {TAXONOMY.map((department) => (
-                <div
-                  key={department.name}
-                  className="p-4 rounded-2xl border border-stone-200 bg-stone-50/60 space-y-3"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <Layers className="w-4 h-4 text-amber-600" />
-                      <span className="font-bold text-sm text-stone-900">{department.name}</span>
-                    </div>
-                    <span className="text-[10px] bg-white px-2 py-0.5 rounded-md border border-stone-200 font-semibold tabular-nums">
-                      {countFor(department.name)} produtos
-                    </span>
-                  </div>
-                  <div className="space-y-1.5 pl-6">
-                    {department.subcategories.map((subcategory) => (
-                      <div key={subcategory.name} className="flex items-center justify-between gap-2 text-xs text-stone-600">
-                        <span>{subcategory.name}</span>
-                        <span className="text-[10px] text-stone-400">{countFor(department.name, subcategory.name)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+          <form onSubmit={handleAddMicro} className="bg-white rounded-3xl p-5 border border-stone-200 shadow-sm space-y-3">
+            <h2 className="font-serif text-lg font-bold text-stone-900 flex items-center gap-2">
+              <PlusCircle className="w-4 h-4 text-amber-600" /> Nova micro
+            </h2>
+            <select className={inputClass} value={microParent} onChange={(e) => setMicroParent(e.target.value)}>
+              {tree.map((m) => (
+                <option key={m.node.id} value={m.node.id}>
+                  {m.node.name}
+                </option>
               ))}
-            {categories.filter((cat) => !TAXONOMY.some((department) => department.name.toLowerCase() === cat.name.trim().toLowerCase())).map((cat) => (
-              <div key={cat.id} className="p-3.5 rounded-2xl border border-stone-200 bg-white flex items-center justify-between gap-3">
-                <span className="font-bold text-xs text-stone-900">{cat.name}</span>
-                <button onClick={() => handleDeleteCategory(cat.id)} className="p-1.5 text-rose-600" title="Excluir categoria"><Trash2 className="w-3.5 h-3.5" /></button>
+            </select>
+            <input className={inputClass} value={microName} onChange={(e) => setMicroName(e.target.value)} placeholder="Ex: Caneleiras" />
+            <button type="submit" disabled={busy || tree.length === 0} className="w-full py-2.5 rounded-2xl bg-stone-900 text-white text-sm font-bold disabled:opacity-60">
+              Criar micro
+            </button>
+          </form>
+        </div>
+
+        <div className="lg:col-span-7 bg-white rounded-3xl p-5 sm:p-6 border border-stone-200 shadow-sm space-y-5">
+          <h2 className="font-serif text-lg font-bold text-stone-900">Árvore ({tree.length} macros)</h2>
+          {tree.map((m) => (
+            <div key={m.node.id} className="rounded-2xl border border-stone-200 p-4 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Layers className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span className="font-bold text-stone-900 truncate">{m.node.name}</span>
+                  <span className="text-[11px] font-semibold text-stone-500">{countOf(m.node)} produtos</span>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button type="button" onClick={() => handleRename(m.node)} className="p-2 rounded-xl text-stone-600 hover:bg-stone-100" aria-label={`Renomear ${m.node.name}`}>
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button type="button" onClick={() => handleDelete(m.node, m.micros.length)} className="p-2 rounded-xl text-rose-600 hover:bg-rose-50" aria-label={`Excluir ${m.node.name}`}>
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            ))}
-          </div>
+
+              <ul className="ml-6 space-y-1.5">
+                {m.micros.map((mi) => (
+                  <li key={mi.id} className="flex items-center justify-between gap-2 text-sm text-stone-700">
+                    <span className="truncate">
+                      {mi.name} <span className="text-[11px] text-stone-500">({countOf(mi)})</span>
+                    </span>
+                    <span className="flex items-center gap-1 shrink-0">
+                      <button type="button" onClick={() => handleRename(mi)} className="p-1.5 rounded-lg text-stone-600 hover:bg-stone-100" aria-label={`Renomear ${mi.name}`}>
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button type="button" onClick={() => handleDelete(mi, 0)} className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50" aria-label={`Excluir ${mi.name}`}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
     </div>
