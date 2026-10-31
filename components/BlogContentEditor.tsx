@@ -56,6 +56,8 @@ export function BlogContentEditor({
   const [productForm, setProductForm] = useState(emptyProduct);
   const [pickedProductId, setPickedProductId] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Keep the insertion point while focus moves into the portal modal.
+  const selectionRef = useRef({ start: 0, end: 0 });
 
   const setProductField = (key: keyof typeof emptyProduct, value: string) =>
     setProductForm((prev) => ({ ...prev, [key]: value }));
@@ -111,6 +113,7 @@ export function BlogContentEditor({
   const handleOpenLinkModal = () => {
     const textarea = textareaRef.current;
     if (textarea) {
+      selectionRef.current = { start: textarea.selectionStart, end: textarea.selectionEnd };
       const selected = textarea.value.substring(textarea.selectionStart, textarea.selectionEnd);
       if (selected.trim()) {
         setLinkText(selected.trim());
@@ -123,9 +126,7 @@ export function BlogContentEditor({
   };
 
   // Insert markdown hyperlink [text](url) into textarea
-  const handleInsertLink = (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleInsertLink = () => {
     if (!linkUrl.trim()) return;
 
     let cleanUrl = linkUrl.trim();
@@ -142,26 +143,27 @@ export function BlogContentEditor({
     setLinkUrl('');
   };
 
-  const insertAtCursor = (textToInsert: string) => {
+  const insertAtCursor = (textToInsert: string, range = selectionRef.current) => {
     const textarea = textareaRef.current;
     if (!textarea) {
       onChange(value + (value ? '\n' : '') + textToInsert);
       return;
     }
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
+    const start = Math.max(0, Math.min(range.start, value.length));
+    const end = Math.max(start, Math.min(range.end, value.length));
     const textBefore = value.substring(0, start);
     const textAfter = value.substring(end);
 
     const newValue = textBefore + textToInsert + textAfter;
     onChange(newValue);
+    const newCursorPos = start + textToInsert.length;
 
     setTimeout(() => {
       textarea.focus();
-      const newCursorPos = start + textToInsert.length;
       textarea.setSelectionRange(newCursorPos, newCursorPos);
     }, 50);
+    selectionRef.current = { start: newCursorPos, end: newCursorPos };
   };
 
   // Quick insertion helpers
@@ -516,7 +518,7 @@ export function BlogContentEditor({
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleInsertLink({ preventDefault: () => undefined } as React.FormEvent)}
+                  onClick={handleInsertLink}
                   className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5"
                 >
                   <Check className="w-3.5 h-3.5 text-amber-300" />
