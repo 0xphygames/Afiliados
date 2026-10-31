@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAdmin } from '@/lib/AdminContext';
 import { PLATFORMS } from '@/lib/constants';
 import { PlatformId } from '@/lib/types';
+import { TAXONOMY, LEGACY_MAP } from '@/lib/taxonomy';
+import { subscribeTaxonomy, TaxMacro } from '@/lib/taxonomy-db';
 import {
   PlusCircle,
   Search,
@@ -25,16 +27,18 @@ export default function PainelProdutosPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [platformFilter, setPlatformFilter] = useState<PlatformId | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const categoryOptions = useMemo(
-    () => Array.from(new Set(products.map((p) => p.subcategory || p.category).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'pt-BR')),
-    [products],
-  );
+  const [tree, setTree] = useState<TaxMacro[]>([]);
+  useEffect(() => subscribeTaxonomy((t) => setTree(t)), []);
+  const categoryOptions = useMemo(() => TAXONOMY.flatMap((d) => [
+    { value: d.name, label: d.name },
+    ...d.subcategories.map((s) => ({ value: s.name, label: `${d.name} › ${s.name}` })),
+  ]), []);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       if (platformFilter !== 'all' && p.platform !== platformFilter) return false;
-      if (categoryFilter !== 'all' && (p.subcategory || p.category) !== categoryFilter) return false;
+      if (categoryFilter !== 'all' && p.department !== categoryFilter && p.subcategory !== categoryFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const mTitle = p.title.toLowerCase().includes(q);
@@ -112,9 +116,16 @@ export default function PainelProdutosPage() {
             onChange={(e) => setCategoryFilter(e.target.value)}
             className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-stone-200 bg-white text-stone-700"
           >
-            <option value="all">Todos os setores</option>
-            {categoryOptions.map((c) => (
-              <option key={c} value={c}>{c} ({products.filter((p) => (p.subcategory || p.category) === c).length})</option>
+            <option value="all">Todos os setores ({products.length})</option>
+            {tree.map((m) => (
+              <optgroup key={m.node.id} label={`${m.node.name} (${products.filter((p) => p.department === m.node.name).length})`}>
+                <option value={m.node.name}>Toda a macro: {m.node.name}</option>
+                {m.micros.map((mi) => (
+                  <option key={mi.id} value={mi.name}>
+                    {mi.name} ({products.filter((p) => p.subcategory === mi.name).length})
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
           <button
