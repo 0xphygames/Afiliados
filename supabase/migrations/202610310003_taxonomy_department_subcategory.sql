@@ -2,6 +2,8 @@
 -- A coluna category continua existindo para rollback; nada é apagado.
 alter table public.products add column if not exists department text;
 alter table public.products add column if not exists subcategory text;
+alter table public.articles add column if not exists department text;
+alter table public.articles add column if not exists subcategory text;
 
 -- Preenche a partir da categoria atual
 update public.products set department = 'Moda Fitness', subcategory = 'Calça comum' where category = 'Calça';
