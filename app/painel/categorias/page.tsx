@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useAdmin } from '@/lib/AdminContext';
 import { CustomCategory, PlatformId } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
-import { DEPARTMENTS } from '@/lib/departments';
+import { TAXONOMY, LEGACY_MAP } from '@/lib/taxonomy';
 import {
   Tag,
   PlusCircle,
@@ -51,16 +51,16 @@ export default function PainelCategoriasPage() {
     }
   };
 
-  const getProductCount = (catName: string) => {
-    return products.filter((p) => p.category.toLowerCase() === catName.toLowerCase()).length;
-  };
-
-  const activeCategories = [
-    ...DEPARTMENTS.map((name) => ({ id: `preset-${name}`, name, platform: 'all' as const, preset: true })),
-    ...categories
-      .filter((cat) => !DEPARTMENTS.some((department) => department.toLowerCase() === cat.name.trim().toLowerCase()))
-      .map((cat) => ({ ...cat, preset: false })),
-  ];
+  const classified = products.map((product) => {
+    const mapped = LEGACY_MAP[product.category];
+    return {
+      department: product.department || mapped?.[0] || 'Outros',
+      subcategory: product.subcategory || mapped?.[1] || product.category,
+    };
+  });
+  const countFor = (department: string, subcategory?: string) => classified.filter((item) =>
+    item.department === department && (!subcategory || item.subcategory === subcategory)
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -137,7 +137,7 @@ export default function PainelCategoriasPage() {
           <div className="flex items-center justify-between pb-2 border-b border-stone-100">
             <div>
               <h2 className="font-serif font-bold text-base text-stone-900">
-                Categorias Ativas ({activeCategories.length})
+                Categorias Ativas ({TAXONOMY.length} macrodepartamentos)
               </h2>
               <p className="text-[11px] text-stone-500">
                 Sincronizadas com o banco de dados e exibidas na vitrine.
@@ -146,57 +146,36 @@ export default function PainelCategoriasPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {activeCategories.map((cat) => {
-              const count = getProductCount(cat.name);
-              const storeConfig =
-                cat.platform && cat.platform !== 'all' ? PLATFORMS[cat.platform] : null;
-
-              return (
+            {TAXONOMY.map((department) => (
                 <div
-                  key={cat.id}
-                  className="p-3.5 rounded-2xl border border-stone-200 bg-stone-50/60 flex items-center justify-between gap-3 hover:bg-white hover:shadow-2xs transition-all"
+                  key={department.name}
+                  className="p-4 rounded-2xl border border-stone-200 bg-stone-50/60 space-y-3"
                 >
-                  <div className="min-w-0 space-y-1">
+                  <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <Tag className="w-3.5 h-3.5 text-stone-500" />
-                      <span className="font-bold text-xs text-stone-900 truncate">
-                        {cat.name}
-                      </span>
+                      <Layers className="w-4 h-4 text-amber-600" />
+                      <span className="font-bold text-sm text-stone-900">{department.name}</span>
                     </div>
-
-                    <div className="flex items-center gap-2 text-[10px] text-stone-500">
-                      <span className="bg-white px-2 py-0.5 rounded-md border border-stone-200 font-semibold tabular-nums">
-                        {count} {count === 1 ? 'produto' : 'produtos'}
-                      </span>
-                      {storeConfig && (
-                        <span
-                          style={{ color: storeConfig.color }}
-                          className="font-bold"
-                        >
-                          {storeConfig.name}
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-[10px] bg-white px-2 py-0.5 rounded-md border border-stone-200 font-semibold tabular-nums">
+                      {countFor(department.name)} produtos
+                    </span>
                   </div>
-
-                  {cat.preset ? (
-                    <span className="text-[10px] font-semibold text-stone-400">Padrão</span>
-                  ) : (
-                    <button
-                      onClick={async () => {
-                        if (confirm(`Remover categoria "${cat.name}"?`)) {
-                          await handleDeleteCategory(cat.id);
-                        }
-                      }}
-                      className="p-1.5 rounded-lg border border-stone-200 hover:border-rose-200 text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                      title="Excluir categoria"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                  <div className="space-y-1.5 pl-6">
+                    {department.subcategories.map((subcategory) => (
+                      <div key={subcategory.name} className="flex items-center justify-between gap-2 text-xs text-stone-600">
+                        <span>{subcategory.name}</span>
+                        <span className="text-[10px] text-stone-400">{countFor(department.name, subcategory.name)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              );
-            })}
+              ))}
+            {categories.filter((cat) => !TAXONOMY.some((department) => department.name.toLowerCase() === cat.name.trim().toLowerCase())).map((cat) => (
+              <div key={cat.id} className="p-3.5 rounded-2xl border border-stone-200 bg-white flex items-center justify-between gap-3">
+                <span className="font-bold text-xs text-stone-900">{cat.name}</span>
+                <button onClick={() => handleDeleteCategory(cat.id)} className="p-1.5 text-rose-600" title="Excluir categoria"><Trash2 className="w-3.5 h-3.5" /></button>
+              </div>
+            ))}
           </div>
         </div>
       </div>

@@ -179,6 +179,7 @@ export function subscribeFirestoreProducts(
         const imageUrl = normalizeImageUrl(row.image_url) || images[0] || '';
         return ({
         id: row.id, title: row.title, platform: row.platform, category: row.category,
+        department: row.department || undefined, subcategory: row.subcategory || undefined,
         imageUrl, images: images.length ? images : imageUrl ? [imageUrl] : [],
         affiliateUrl: row.affiliate_url, price: Number(row.price) || 0,
         originalPrice: row.original_price == null ? undefined : Number(row.original_price),
@@ -292,6 +293,8 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
     title: product.title.trim(),
     platform: product.platform,
     category: (product.category || 'Geral').trim(),
+    department: product.department?.trim() || null,
+    subcategory: product.subcategory?.trim() || null,
     image_url: (product.imageUrl || images[0] || '').trim(),
     images,
     affiliate_url: product.affiliateUrl.trim(),
