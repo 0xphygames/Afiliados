@@ -6,7 +6,8 @@ import Image from 'next/image';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { ArticleDetailModal } from '@/components/ArticleDetailModal';
-import { Article, CustomCategory, PlatformId } from '@/lib/types';
+import { CategorySidebar } from '@/components/CategorySidebar';
+import { Article, CustomCategory, PlatformId, Product } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
 import { subscribeFirestoreArticles, subscribeFirestoreCategories } from '@/lib/firestore-products';
 import {
@@ -69,6 +70,14 @@ export default function BlogPage() {
 
   const featuredArticle = articles[0] || null;
 
+  // The Achadinhos sidebar counts products by store and sector; articles use the same fields
+  const articlesAsProducts = useMemo(
+    () => articles.map((a) => ({ id: a.id, title: a.title, platform: a.platform || '', category: a.category }) as unknown as Product),
+    [articles],
+  );
+  const storeCount = (p: 'all' | PlatformId) =>
+    p === 'all' ? articles.length : articles.filter((a) => a.platform === p).length;
+
   return (
     <div className="min-h-screen flex flex-col bg-white text-stone-900 selection:bg-stone-900 selection:text-white">
       <Navbar />
@@ -110,40 +119,6 @@ export default function BlogPage() {
 
             {/* Filter and Search Bar */}
             <div className="pt-8 flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-4">
-              {/* Store and sector filters, same as the Achadinhos page */}
-              <div className="flex flex-col gap-2 min-w-0 flex-1">
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                  {(['all', 'shopee', 'shein', 'mercadolivre', 'amazon'] as const).map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setActivePlatform(p)}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                        activePlatform === p
-                          ? 'bg-stone-900 text-white shadow-xs'
-                          : 'bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-200'
-                      }`}
-                    >
-                      {p === 'all' ? '✨ Todas as Lojas' : PLATFORMS[p].name}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setActiveCategory(cat)}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                        activeCategory === cat
-                          ? 'bg-stone-900 text-white shadow-xs'
-                          : 'bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-200'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Search in blog */}
               <div className="relative w-full lg:w-64 lg:shrink-0">
                 <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -159,9 +134,39 @@ export default function BlogPage() {
           </div>
         </section>
 
+        {/* Store bar, same as the Achadinhos page */}
+        <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+          <div className="flex flex-wrap items-center gap-2">
+            {(['all', 'shopee', 'shein', 'mercadolivre', 'amazon'] as const).map((p) => (
+              <button
+                key={p}
+                onClick={() => setActivePlatform(p)}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
+                  activePlatform === p
+                    ? 'bg-stone-900 text-white border-stone-900 shadow-xs'
+                    : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
+                }`}
+              >
+                {p === 'all' ? '✨ Todos' : PLATFORMS[p].name} ({storeCount(p)})
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row items-start gap-6 lg:gap-8">
+            <CategorySidebar
+              activePlatform={activePlatform}
+              activeCategory={activeCategory}
+              onSelectCategory={setActiveCategory}
+              products={articlesAsProducts}
+              customCategories={customCats}
+            />
+
+            <div className="flex-1 min-w-0 w-full">
         {/* Featured Article Hero (When no search active) */}
         {!searchQuery && activeCategory === 'Todos os Setores' && featuredArticle && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+          <section className="pt-0">
             <Link
               href={`/artigo/${featuredArticle.id}`}
               className="group block bg-white rounded-3xl border border-stone-200 overflow-hidden shadow-sm hover:shadow-lg transition-all"
@@ -230,7 +235,7 @@ export default function BlogPage() {
         )}
 
         {/* All Articles Grid */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <section className="pt-0">
           <div className="flex items-center justify-between pb-4 mb-6 border-b border-stone-200">
             <h3 className="font-serif text-xl font-bold text-stone-900">
               Todos os Artigos ({filteredArticles.length})
@@ -319,6 +324,9 @@ export default function BlogPage() {
               </button>
             </div>
           )}
+        </section>
+            </div>
+          </div>
         </section>
       </main>
 
