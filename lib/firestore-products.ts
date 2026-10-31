@@ -210,7 +210,13 @@ export function subscribeFirestoreArticles(
   onError?: (err: Error) => void
 ): () => void {
   void supabase.from('articles').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
-    if (error) { onError?.(error); onSuccess(getStoredArticles().length ? getStoredArticles() : INITIAL_ARTICLES); return; }
+    if (error) {
+      onError?.(error as unknown as Error);
+      // Do not silently replace the live catalog with the bundled template.
+      // That makes a Supabase outage look like products/articles disappeared.
+      onSuccess([]);
+      return;
+    }
     const list = (data ?? []).map((row) => ({
       id: row.id, title: row.title, category: row.category, summary: row.summary,
       content: row.content, coverImageUrl: row.cover_image_url || '',
@@ -287,13 +293,14 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
 
 // Add or update article in Firestore
 export async function saveArticleToFirestore(article: Article): Promise<void> {
-  const { error } = await supabase.from('articles').upsert({
+  const { data, error } = await supabase.from('articles').upsert({
     id: article.id, title: article.title.trim(), category: article.category.trim(),
     summary: article.summary.trim(), content: article.content, cover_image_url: article.coverImageUrl || null,
     author: article.author || 'Tamires Santos', featured: Boolean(article.featured),
     created_at: article.createdAt || new Date().toISOString(),
-  });
+  }).select('id').single();
   if (error) throw error;
+  if (!data?.id) throw new Error('O Supabase não confirmou a gravação do artigo. Verifique a sessão do administrador e as políticas RLS.');
 }
 
 // Save site settings in Firestore

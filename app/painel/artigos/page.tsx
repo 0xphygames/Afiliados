@@ -127,6 +127,10 @@ export default function PainelArtigosPage() {
       setIsEditing(false);
     } catch (err) {
       console.error(err);
+      alert(
+        'Não foi possível publicar o artigo. ' +
+          (err instanceof Error ? err.message : 'Verifique as permissões de escrita no banco (migração 202610140002).')
+      );
     } finally {
       setSaving(false);
     }
