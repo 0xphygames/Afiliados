@@ -34,6 +34,7 @@ import {
   getStoredArticles,
   getStoredLandingPages,
   getStoredSettings,
+  saveStoredArticles,
 } from './storage';
 
 interface AdminContextType {
@@ -156,6 +157,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const handleSaveArticle = async (article: Article) => {
     await saveArticleToFirestore(article);
+    setArticles((current) => {
+      const next = [article, ...current.filter((item) => item.id !== article.id)];
+      saveStoredArticles(next);
+      return next;
+    });
   };
 
   const handleDeleteArticle = async (id: string) => {
