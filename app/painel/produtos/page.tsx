@@ -38,7 +38,10 @@ export default function PainelProdutosPage() {
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       if (platformFilter !== 'all' && p.platform !== platformFilter) return false;
-      if (categoryFilter !== 'all' && p.department !== categoryFilter && p.subcategory !== categoryFilter) return false;
+      const mapped = LEGACY_MAP[p.category];
+      const department = p.department || mapped?.[0];
+      const subcategory = p.subcategory || mapped?.[1];
+      if (categoryFilter !== 'all' && department !== categoryFilter && subcategory !== categoryFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const mTitle = p.title.toLowerCase().includes(q);
@@ -118,11 +121,11 @@ export default function PainelProdutosPage() {
           >
             <option value="all">Todos os setores ({products.length})</option>
             {tree.map((m) => (
-              <optgroup key={m.node.id} label={`${m.node.name} (${products.filter((p) => p.department === m.node.name).length})`}>
+              <optgroup key={m.node.id} label={`${m.node.name} (${products.filter((p) => (p.department || LEGACY_MAP[p.category]?.[0]) === m.node.name).length})`}>
                 <option value={m.node.name}>Toda a macro: {m.node.name}</option>
                 {m.micros.map((mi) => (
                   <option key={mi.id} value={mi.name}>
-                    {mi.name} ({products.filter((p) => p.subcategory === mi.name).length})
+                    {mi.name} ({products.filter((p) => (p.subcategory || LEGACY_MAP[p.category]?.[1]) === mi.name).length})
                   </option>
                 ))}
               </optgroup>
@@ -240,7 +243,8 @@ export default function PainelProdutosPage() {
                           {platform.name}
                         </span>
                         <span className="text-xs font-semibold text-stone-600">
-                          {product.category}
+                          {product.department || LEGACY_MAP[product.category]?.[0] || product.category}
+                          {(product.subcategory || LEGACY_MAP[product.category]?.[1]) && ` › ${product.subcategory || LEGACY_MAP[product.category]?.[1]}`}
                         </span>
                         {product.badge && (
                           <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md border border-amber-200">
