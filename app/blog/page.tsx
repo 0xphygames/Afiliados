@@ -78,6 +78,23 @@ export default function BlogPage() {
     });
   }, [articles, meta, activePlatform, activeCategory, searchQuery]);
 
+  const articleCategoryCounts = useMemo(() => {
+    const departments: Record<string, number> = {};
+    const subcategories: Record<string, number> = {};
+    const visible = articles.filter((article) => {
+      if (activePlatform === 'all') return true;
+      return meta.get(article.id)?.stores.has(activePlatform);
+    });
+    visible.forEach((article) => {
+      meta.get(article.id)?.departments.forEach((name) => {
+        const isMacro = ['Moda Fitness', 'Suplementos', 'Equipamentos', 'Acessórios'].includes(name);
+        const target = isMacro ? departments : subcategories;
+        target[name] = (target[name] ?? 0) + 1;
+      });
+    });
+    return { departments, subcategories, total: visible.length };
+  }, [articles, meta, activePlatform]);
+
   const featuredArticle = articles[0] || null;
 
   const storeCount = (p: 'all' | PlatformId) =>
@@ -165,6 +182,7 @@ export default function BlogPage() {
               activeCategory={activeCategory}
               onSelectCategory={setActiveCategory}
               products={products}
+              categoryCounts={articleCategoryCounts}
             />
 
             <div className="flex-1 min-w-0 w-full">
