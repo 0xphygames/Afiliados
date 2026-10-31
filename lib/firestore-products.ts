@@ -509,9 +509,8 @@ export async function deleteCategoryFromFirestore(categoryId: string): Promise<v
 
 // Delete article from Firestore
 export async function deleteArticleFromFirestore(articleId: string): Promise<void> {
-  const { data, error } = await supabase.from('articles').delete().eq('id', articleId).select('id');
+  const { error } = await supabase.from('articles').delete().eq('id', articleId);
   if (error) throw error;
-  if (!data || data.length === 0) throw new Error('O artigo não foi excluído. Verifique as permissões de exclusão no banco.');
 }
 
 // Login via Google

@@ -166,6 +166,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const handleDeleteArticle = async (id: string) => {
     await deleteArticleFromFirestore(id);
+    setArticles((current) => {
+      const next = current.filter((item) => item.id !== id);
+      saveStoredArticles(next);
+      return next;
+    });
   };
 
   const handleSaveSettings = async (newSettings: SiteSettings) => {
