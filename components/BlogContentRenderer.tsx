@@ -4,16 +4,9 @@ import React from 'react';
 import { ExternalLink, Sparkles } from 'lucide-react';
 
 // Product card written on one line as:
-// [[produto|Nome|Preço|Preço original|Nota|Link da oferta|URL da imagem|Destaque]]
-function ProductCard({
-  name,
-  price,
-  originalPrice,
-  rating,
-  url,
-  image,
-  badge,
-}: {
+// [[produto|Nome|Preço|Preço original|Nota|Link da oferta|URL da imagem|Destaque|Posição|Para quem é|Destaques]]
+// Affiliate disclosure box, on its own line: [[aviso]]
+interface ProductCardProps {
   name: string;
   price: string;
   originalPrice: string;
@@ -21,35 +14,64 @@ function ProductCard({
   url: string;
   image: string;
   badge: string;
-}) {
+  position: string;
+  forWho: string;
+  highlights: string;
+}
+
+function ProductCard({ name, price, originalPrice, rating, url, image, badge, position, forWho, highlights }: ProductCardProps) {
   return (
-    <div className="my-5 flex flex-col sm:flex-row gap-4 rounded-2xl border border-stone-200 bg-white p-4 shadow-2xs">
-      {image && (
-        <img src={image} alt={name} loading="lazy" className="w-full sm:w-40 h-40 object-contain rounded-xl bg-stone-50 shrink-0" />
+    <div className="my-6 rounded-2xl border border-stone-200 bg-white p-4 sm:p-5 shadow-2xs">
+      {badge && (
+        <span className="inline-block mb-2 text-[11px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">
+          {badge}
+        </span>
       )}
-      <div className="flex-1 min-w-0 space-y-2">
-        {badge && (
-          <span className="inline-block text-[11px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">
-            {badge}
-          </span>
+      <h3 className="font-serif text-lg sm:text-xl font-bold text-stone-900 leading-snug">
+        {position && <span className="text-amber-600 mr-1.5">{position}.</span>}
+        {name}
+      </h3>
+      <div className="mt-3 flex flex-col sm:flex-row gap-4">
+        {image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={image} alt={name} loading="lazy" className="w-full sm:w-44 h-44 object-contain rounded-xl bg-stone-50 shrink-0" />
         )}
-        <p className="font-serif text-lg font-bold text-stone-900">{name}</p>
-        {rating && <p className="text-sm text-amber-600 font-semibold">★ {rating}</p>}
-        <div className="flex items-baseline gap-2">
-          {price && <span className="text-xl font-bold text-stone-900">{price}</span>}
-          {originalPrice && <span className="text-sm text-stone-400 line-through">{originalPrice}</span>}
+        <div className="flex-1 min-w-0 space-y-2 text-sm text-stone-800">
+          {rating && <p className="text-amber-600 font-semibold">★ {rating}</p>}
+          {forWho && (
+            <p>
+              <strong className="text-stone-900">Para quem é:</strong> {forWho}
+            </p>
+          )}
+          {highlights && (
+            <p>
+              <strong className="text-stone-900">Destaques:</strong> {highlights}
+            </p>
+          )}
+          <div className="flex items-baseline gap-2 pt-1">
+            {price && <span className="text-xl font-bold text-stone-900">{price}</span>}
+            {originalPrice && <span className="text-sm text-stone-400 line-through">{originalPrice}</span>}
+          </div>
+          {url && (
+            <a
+              href={url}
+              target="_blank"
+              rel="sponsored noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-stone-900 text-white text-sm font-bold hover:bg-stone-700 transition-colors"
+            >
+              Ver oferta <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
         </div>
-        {url && (
-          <a
-            href={url}
-            target="_blank"
-            rel="sponsored noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 text-white text-sm font-bold hover:bg-stone-700 transition-colors"
-          >
-            Ver oferta <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        )}
       </div>
+    </div>
+  );
+}
+
+function AffiliateDisclosure() {
+  return (
+    <div className="my-4 rounded-xl border border-stone-200 bg-stone-50 p-4 text-xs text-stone-600">
+      Este artigo contém links de afiliado. Se você comprar pelos nossos links, recebemos uma comissão sem custo adicional para você.
     </div>
   );
 }
@@ -171,13 +193,28 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
       return;
     }
 
-    // Product card: [[produto|Nome|Preço|Preço original|Nota|Link|Imagem|Destaque]]
+    // Affiliate disclosure: [[aviso]]
+    if (trimmed === '[[aviso]]') {
+      flushList();
+      renderedElements.push(<AffiliateDisclosure key={`aviso-${index}`} />);
+      return;
+    }
+
+    // Product card: [[produto|Nome|Preço|Preço original|Nota|Link|Imagem|Destaque|Posição|Para quem é|Destaques]]
     if (trimmed.startsWith('[[produto|') && trimmed.endsWith(']]')) {
       flushList();
-      const [name = '', price = '', originalPrice = '', rating = '', url = '', image = '', badge = ''] = trimmed
-        .slice(10, -2)
-        .split('|')
-        .map((field) => field.trim());
+      const [
+        name = '',
+        price = '',
+        originalPrice = '',
+        rating = '',
+        url = '',
+        image = '',
+        badge = '',
+        position = '',
+        forWho = '',
+        highlights = '',
+      ] = trimmed.slice(10, -2).split('|').map((field) => field.trim());
       renderedElements.push(
         <ProductCard
           key={`product-${index}`}
@@ -188,6 +225,9 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
           url={url}
           image={image}
           badge={badge}
+          position={position}
+          forWho={forWho}
+          highlights={highlights}
         />
       );
       return;

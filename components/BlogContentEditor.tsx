@@ -27,7 +27,18 @@ interface BlogContentEditorProps {
   products?: Product[];
 }
 
-const emptyProduct = { name: '', price: '', originalPrice: '', rating: '', url: '', image: '', badge: '' };
+const emptyProduct = {
+  name: '',
+  price: '',
+  originalPrice: '',
+  rating: '',
+  url: '',
+  image: '',
+  badge: '',
+  position: '',
+  forWho: '',
+  highlights: '',
+};
 
 export function BlogContentEditor({
   value,
@@ -68,6 +79,9 @@ export function BlogContentEditor({
       url: p.affiliateUrl,
       image: p.imageUrl,
       badge: p.badge || '',
+      position: '',
+      forWho: '',
+      highlights: '',
     });
   };
 
@@ -83,6 +97,9 @@ export function BlogContentEditor({
       productForm.url,
       productForm.image,
       productForm.badge,
+      productForm.position,
+      productForm.forWho,
+      productForm.highlights,
     ].map((f) => f.replace(/[|[\]\n]/g, ' ').trim());
     insertAtCursor(`\n[[produto|${fields.join('|')}]]\n`);
     setShowProductModal(false);
@@ -195,6 +212,15 @@ export function BlogContentEditor({
           >
             <ShoppingBag className="w-3.5 h-3.5" />
             <span>Produto</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => insertAtCursor('\n[[aviso]]\n')}
+            title="Inserir aviso de links de afiliado"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-stone-200 bg-white hover:bg-stone-50 text-stone-700"
+          >
+            <span>Aviso de afiliado</span>
           </button>
 
           <div className="h-4 w-px bg-stone-300 mx-1 hidden sm:block" />
@@ -371,6 +397,26 @@ export function BlogContentEditor({
                 onChange={(ev) => setProductField('badge', ev.target.value)}
               />
             </div>
+            <div className="grid grid-cols-3 gap-2">
+              <input
+                className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
+                placeholder="Posição (1, 2...)"
+                value={productForm.position}
+                onChange={(ev) => setProductField('position', ev.target.value)}
+              />
+              <input
+                className="col-span-2 w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
+                placeholder="Destaques (separe por ;)"
+                value={productForm.highlights}
+                onChange={(ev) => setProductField('highlights', ev.target.value)}
+              />
+            </div>
+            <input
+              className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
+              placeholder="Para quem é (ex: iniciantes em casa)"
+              value={productForm.forWho}
+              onChange={(ev) => setProductField('forWho', ev.target.value)}
+            />
             <input
               className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
               placeholder="Link da oferta (https://...)"
