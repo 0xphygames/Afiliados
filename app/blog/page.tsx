@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { ArticleDetailModal } from '@/components/ArticleDetailModal';
-import { CategorySidebar } from '@/components/CategorySidebar';
+import { TaxonomySidebar } from '@/components/TaxonomySidebar';
 import { Article, CustomCategory, PlatformId, Product } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
 import { subscribeFirestoreArticles, subscribeFirestoreCategories, subscribeFirestoreProducts } from '@/lib/firestore-products';
@@ -160,12 +160,11 @@ export default function BlogPage() {
 
         <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row items-start gap-6 lg:gap-8">
-            <CategorySidebar
+            <TaxonomySidebar
               activePlatform={activePlatform}
               activeCategory={activeCategory}
               onSelectCategory={setActiveCategory}
               products={products}
-              customCategories={customCats}
             />
 
             <div className="flex-1 min-w-0 w-full">

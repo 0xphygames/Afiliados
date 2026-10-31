@@ -29,7 +29,8 @@ export function articleLinkMeta(article: Article, products: Product[]): ArticleL
     const product = byUrl.get(url);
     const store = product?.platform ?? platformFromUrl(url);
     if (store) stores.add(store);
-    if (product?.category) departments.add(product.category);
+    if (product?.department) departments.add(product.department);
+    if (product?.subcategory) departments.add(product.subcategory);
   }
 
   // The store chosen in the editor counts too, even before any card is added
