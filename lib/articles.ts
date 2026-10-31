@@ -25,6 +25,16 @@ export function articleLinkMeta(article: Article, products: Product[]): ArticleL
   const stores = new Set<PlatformId>();
   const departments = new Set<string>();
 
+  // Articles created before the taxonomy fields existed may still have only
+  // `category`; newer articles carry the same macro/micro values as products.
+  const articleMapped = LEGACY_MAP[article.category];
+  if (article.department) departments.add(article.department);
+  if (article.subcategory) departments.add(article.subcategory);
+  if (articleMapped) {
+    departments.add(articleMapped[0]);
+    departments.add(articleMapped[1]);
+  }
+
   for (const match of article.content.matchAll(PRODUCT_LINE)) {
     const fields = match[1].split('|').map((field) => field.trim());
     // Current cards store the URL after the rating; older cards may have a

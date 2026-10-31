@@ -13,6 +13,7 @@ interface TaxonomySidebarProps {
   activeCategory: string;
   onSelectCategory: (category: string) => void;
   products: Product[];
+  categoryCounts?: { departments: Record<string, number>; subcategories: Record<string, number>; total: number };
   className?: string;
 }
 
@@ -20,7 +21,7 @@ const ALL = 'Todos os Setores';
 
 // Macro categories with their micro categories. Clicking a macro filters the whole department;
 // clicking a micro filters only that subcategory. The active macro opens its micros.
-export function TaxonomySidebar({ activePlatform, activeCategory, onSelectCategory, products, className = '' }: TaxonomySidebarProps) {
+export function TaxonomySidebar({ activePlatform, activeCategory, onSelectCategory, products, categoryCounts, className = '' }: TaxonomySidebarProps) {
   // The tree comes from the database (editable in Categorias & Setores); the code tree is the fallback
   const [tree, setTree] = useState<TaxMacro[]>([]);
   useEffect(() => subscribeTaxonomy((t) => setTree(t)), []);
@@ -34,8 +35,8 @@ export function TaxonomySidebar({ activePlatform, activeCategory, onSelectCatego
     const mapped = LEGACY_MAP[p.category];
     return { department: p.department || mapped?.[0], subcategory: p.subcategory || mapped?.[1] };
   };
-  const countDepartment = (name: string) => inStore.filter((p) => classify(p).department === name).length;
-  const countSubcategory = (name: string) => inStore.filter((p) => classify(p).subcategory === name).length;
+  const countDepartment = (name: string) => categoryCounts?.departments[name] ?? inStore.filter((p) => classify(p).department === name).length;
+  const countSubcategory = (name: string) => categoryCounts?.subcategories[name] ?? inStore.filter((p) => classify(p).subcategory === name).length;
 
   const storeLabel = activePlatform === 'all' ? 'TODAS AS LOJAS' : PLATFORMS[activePlatform].name.toUpperCase();
 
@@ -70,7 +71,7 @@ export function TaxonomySidebar({ activePlatform, activeCategory, onSelectCatego
             <LayoutGrid className="w-4 h-4" />
             Todos os departamentos
           </span>
-          {badge(inStore.length, activeCategory === ALL)}
+          {badge(categoryCounts?.total ?? inStore.length, activeCategory === ALL)}
         </button>
 
         {macros.map((dep) => {
