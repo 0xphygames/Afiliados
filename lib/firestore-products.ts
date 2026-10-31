@@ -663,10 +663,45 @@ export async function saveSitePage(page: SitePage): Promise<void> {
     updated_at: new Date().toISOString(),
   });
   if (error) throw error;
+  await syncPageMenuItem(page);
+}
+
+// Keeps a top-level page's menu item in step with the page: shown in the menu when
+// "Mostrar no menu" is on and the page is published, removed otherwise.
+async function syncPageMenuItem(page: SitePage): Promise<void> {
+  const menuId = `menu-page-${page.id}`;
+  if (!page.showInMenu || page.parentId) {
+    const { error } = await supabase.from('site_menu_items').delete().eq('id', menuId);
+    if (error) throw error;
+    return;
+  }
+  // Keep the position of an item that already exists; new items go to the end
+  const { data: existing } = await supabase.from('site_menu_items').select('position').eq('id', menuId).maybeSingle();
+  let position = existing?.position;
+  if (position === undefined) {
+    const { data: last } = await supabase
+      .from('site_menu_items').select('position').eq('area', 'public').order('position', { ascending: false }).limit(1);
+    position = (last?.[0]?.position ?? 0) + 1;
+  }
+  const { error } = await supabase.from('site_menu_items').upsert({
+    id: menuId,
+    area: 'public',
+    label: page.title.trim(),
+    href: `/${page.slug.trim().toLowerCase()}`,
+    icon: 'FileText',
+    color_class: 'text-stone-500',
+    exact: false,
+    position,
+    is_visible: page.isActive,
+  });
+  if (error) throw error;
 }
 
 // Deleting a page also deletes its subpages (foreign key on delete cascade)
 export async function deleteSitePage(pageId: string): Promise<void> {
   const { error } = await supabase.from('site_pages').delete().eq('id', pageId);
   if (error) throw error;
+  // The menu item is removed with the page
+  const { error: menuError } = await supabase.from('site_menu_items').delete().eq('id', `menu-page-${pageId}`);
+  if (menuError) throw menuError;
 }

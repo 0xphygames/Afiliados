@@ -188,6 +188,10 @@ export default function PainelPaginasPage() {
 
           <div className="flex flex-wrap gap-4 text-xs text-stone-700">
             <label className="flex items-center gap-2">
+              <input type="checkbox" checked={form.showInMenu} onChange={(e) => set('showInMenu', e.target.checked)} />
+              Mostrar no menu do site
+            </label>
+            <label className="flex items-center gap-2">
               <input type="checkbox" checked={form.isActive} onChange={(e) => set('isActive', e.target.checked)} />
               Publicada
             </label>
