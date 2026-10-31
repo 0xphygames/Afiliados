@@ -44,6 +44,7 @@ interface ProductLineProps {
 }
 
 function ArticleProductCard({ name, price, originalPrice, rating, url, image, badge, position, forWho, highlights, index }: ProductLineProps) {
+  const category = highlights.match(/(?:^|;\s*)Categoria:\s*([^;]+)/i)?.[1]?.trim() || 'Achadinho';
   const editorialTip = [
     forWho ? `Para quem é: ${forWho}` : '',
     highlights ? `Destaques: ${highlights}` : '',
@@ -52,7 +53,7 @@ function ArticleProductCard({ name, price, originalPrice, rating, url, image, ba
     id: `article-product-${index}`,
     title: name,
     platform: platformFromUrl(url),
-    category: 'Achadinho',
+    category,
     imageUrl: image,
     images: image ? [image] : [],
     affiliateUrl: url,
