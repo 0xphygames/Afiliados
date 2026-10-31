@@ -2283,7 +2283,7 @@ export function AdminDashboard({
                             Conteúdo Completo do Artigo
                           </label>
                           <span className="text-[11px] text-amber-700 font-medium">
-                            Use o botão &quot;Inserir Link&quot; para colocar hiperlinks de produtos
+                            Use o botão &quot;Produto&quot; para inserir um card de oferta com foto, preço e botão de compra
                           </span>
                         </div>
                         <BlogContentEditor
@@ -2291,6 +2291,7 @@ export function AdminDashboard({
                           onChange={setArtContent}
                           rows={8}
                           placeholder="Escreva suas dicas, resenhas dos produtos, tamanhos recomendados e links de compra..."
+                          products={products}
                         />
                       </div>
 
