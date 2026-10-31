@@ -2,11 +2,28 @@
 
 import React from 'react';
 import { ExternalLink, Sparkles } from 'lucide-react';
+import { ProductCard } from './ProductCard';
+import type { Product, PlatformId } from '@/lib/types';
 
 // Product card written on one line as:
 // [[produto|Nome|Preço|Preço original|Nota|Link da oferta|URL da imagem|Destaque|Posição|Para quem é|Destaques]]
 // Affiliate disclosure box, on its own line: [[aviso]]
-interface ProductCardProps {
+// Turns the one-line article syntax into a catalog Product and renders the same card as the Achadinhos grid
+const platformFromUrl = (url: string): PlatformId => {
+  const u = url.toLowerCase();
+  if (u.includes('shopee')) return 'shopee';
+  if (u.includes('shein')) return 'shein';
+  if (u.includes('mercadolivre') || u.includes('mercadolibre') || u.includes('meli.la')) return 'mercadolivre';
+  if (u.includes('amazon') || u.includes('amzn')) return 'amazon';
+  return 'shopee';
+};
+
+const parseMoney = (value: string) => {
+  const n = Number(value.replace(/[^0-9,.-]/g, '').replace(/\./g, '').replace(',', '.'));
+  return Number.isFinite(n) ? n : 0;
+};
+
+interface ProductLineProps {
   name: string;
   price: string;
   originalPrice: string;
@@ -17,53 +34,34 @@ interface ProductCardProps {
   position: string;
   forWho: string;
   highlights: string;
+  index: number;
 }
 
-function ProductCard({ name, price, originalPrice, rating, url, image, badge, position, forWho, highlights }: ProductCardProps) {
+function ArticleProductCard({ name, price, originalPrice, rating, url, image, badge, position, forWho, highlights, index }: ProductLineProps) {
+  const editorialTip = [
+    forWho ? `Para quem é: ${forWho}` : '',
+    highlights ? `Destaques: ${highlights}` : '',
+  ].filter(Boolean).join(' · ');
+  const product: Product = {
+    id: `article-product-${index}`,
+    title: name,
+    platform: platformFromUrl(url),
+    category: 'Achadinho',
+    imageUrl: image,
+    images: image ? [image] : [],
+    affiliateUrl: url,
+    price: parseMoney(price),
+    originalPrice: originalPrice ? parseMoney(originalPrice) : undefined,
+    rating: Number(rating.replace(',', '.')) || 5,
+    reviewCount: 1,
+    badge: [position && `${position}.`, badge].filter(Boolean).join(' ') || undefined,
+    tamiresTip: editorialTip || undefined,
+    isFeatured: false,
+    createdAt: new Date().toISOString(),
+  };
   return (
-    <div className="my-6 rounded-2xl border border-stone-200 bg-white p-4 sm:p-5 shadow-2xs">
-      {badge && (
-        <span className="inline-block mb-2 text-[11px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">
-          {badge}
-        </span>
-      )}
-      <h3 className="font-serif text-lg sm:text-xl font-bold text-stone-900 leading-snug">
-        {position && <span className="text-amber-600 mr-1.5">{position}.</span>}
-        {name}
-      </h3>
-      <div className="mt-3 flex flex-col sm:flex-row gap-4">
-        {image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={image} alt={name} loading="lazy" className="w-full sm:w-44 h-44 object-contain rounded-xl bg-stone-50 shrink-0" />
-        )}
-        <div className="flex-1 min-w-0 space-y-2 text-sm text-stone-800">
-          {rating && <p className="text-amber-600 font-semibold">★ {rating}</p>}
-          {forWho && (
-            <p>
-              <strong className="text-stone-900">Para quem é:</strong> {forWho}
-            </p>
-          )}
-          {highlights && (
-            <p>
-              <strong className="text-stone-900">Destaques:</strong> {highlights}
-            </p>
-          )}
-          <div className="flex items-baseline gap-2 pt-1">
-            {price && <span className="text-xl font-bold text-stone-900">{price}</span>}
-            {originalPrice && <span className="text-sm text-stone-400 line-through">{originalPrice}</span>}
-          </div>
-          {url && (
-            <a
-              href={url}
-              target="_blank"
-              rel="sponsored noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-stone-900 text-white text-sm font-bold hover:bg-stone-700 transition-colors"
-            >
-              Ver oferta <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          )}
-        </div>
-      </div>
+    <div className="h-full">
+      <ProductCard product={product} />
     </div>
   );
 }
@@ -171,6 +169,18 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
 
   let inList = false;
   let currentListItems: React.ReactNode[] = [];
+  let productGroup: React.ReactNode[] = [];
+
+  const flushProductGroup = () => {
+    if (productGroup.length > 0) {
+      renderedElements.push(
+        <div key={`products-${renderedElements.length}`} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 my-5 items-stretch">
+          {productGroup}
+        </div>,
+      );
+      productGroup = [];
+    }
+  };
 
   const flushList = () => {
     if (inList && currentListItems.length > 0) {
@@ -196,6 +206,7 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
     // Affiliate disclosure: [[aviso]]
     if (trimmed === '[[aviso]]') {
       flushList();
+      flushProductGroup();
       renderedElements.push(<AffiliateDisclosure key={`aviso-${index}`} />);
       return;
     }
@@ -215,8 +226,9 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
         forWho = '',
         highlights = '',
       ] = trimmed.slice(10, -2).split('|').map((field) => field.trim());
-      renderedElements.push(
-        <ProductCard
+      productGroup.push(
+        <ArticleProductCard
+          index={index}
           key={`product-${index}`}
           name={name}
           price={price}
@@ -236,6 +248,7 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
     // Heading 2 (## Title)
     if (trimmed.startsWith('## ')) {
       flushList();
+      flushProductGroup();
       renderedElements.push(
         <h2
           key={`h2-${index}`}
@@ -250,6 +263,7 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
     // Heading 3 (### Subtitle)
     if (trimmed.startsWith('### ')) {
       flushList();
+      flushProductGroup();
       renderedElements.push(
         <h3
           key={`h3-${index}`}
@@ -264,6 +278,7 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
     // Blockquote or Curator Tip (> Dica)
     if (trimmed.startsWith('> ')) {
       flushList();
+      flushProductGroup();
       renderedElements.push(
         <div
           key={`quote-${index}`}
@@ -287,6 +302,7 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
 
     // Bullet list item (- Item, * Item, • Item)
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ') || trimmed.startsWith('• ')) {
+      flushProductGroup();
       inList = true;
       const bulletContent = trimmed.slice(2);
       currentListItems.push(
@@ -299,6 +315,7 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
 
     // Standard paragraph
     flushList();
+    flushProductGroup();
     renderedElements.push(
       <p key={`p-${index}`} className="leading-relaxed text-stone-800 my-2">
         {parseInlineFormattedText(trimmed)}
@@ -307,6 +324,7 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
   });
 
   flushList();
+  flushProductGroup();
 
   return (
     <div className={`space-y-2 text-stone-800 font-sans leading-relaxed ${className}`}>
