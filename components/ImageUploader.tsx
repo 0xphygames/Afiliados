@@ -45,10 +45,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, initialU
         setUploading(false);
         onUpload(data.publicUrl);
       } catch (storageError) {
-        console.warn('Supabase Storage indisponível, usando fallback otimizado:', storageError);
-        setPreview(optimizedDataUrl);
+        // Base64 inside the database makes every catalog request megabytes large, so do not save it silently
+        console.error('Falha ao enviar imagem para o Storage:', storageError);
         setUploading(false);
-        onUpload(optimizedDataUrl);
+        alert(
+          'Não foi possível enviar a imagem para o armazenamento. Verifique a conexão e as permissões do bucket de imagens. ' +
+            ((storageError as { message?: string })?.message ?? ''),
+        );
+        void optimizedDataUrl;
       }
     } catch (compressErr) {
       console.error('Erro ao processar imagem:', compressErr);
