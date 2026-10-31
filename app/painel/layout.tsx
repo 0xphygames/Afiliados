@@ -37,7 +37,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const [adminMenu, setAdminMenu] = useState<MenuItem[]>([]);
   useEffect(() => subscribeMenuItems('admin', (list) => setAdminMenu(list.filter((i) => i.isVisible))), []);
 
-  const navItems = adminMenu.map((item) => ({
+  const navItems = adminMenu.filter((item) => item.href !== '/painel/menu').map((item) => ({
     label: item.label,
     href: item.href,
     icon: MENU_ICONS[item.icon] ?? Tag,
