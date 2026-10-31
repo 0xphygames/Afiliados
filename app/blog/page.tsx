@@ -9,7 +9,8 @@ import { ArticleDetailModal } from '@/components/ArticleDetailModal';
 import { CategorySidebar } from '@/components/CategorySidebar';
 import { Article, CustomCategory, PlatformId, Product } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
-import { subscribeFirestoreArticles, subscribeFirestoreCategories } from '@/lib/firestore-products';
+import { subscribeFirestoreArticles, subscribeFirestoreCategories, subscribeFirestoreProducts } from '@/lib/firestore-products';
+import { articleLinkMeta } from '@/lib/articles';
 import {
   BookOpen,
   ArrowLeft,
@@ -29,6 +30,9 @@ export default function BlogPage() {
   const [activeCategory, setActiveCategory] = useState<string>('Todos os Setores');
   const [activePlatform, setActivePlatform] = useState<PlatformId | 'all'>('all');
   const [customCats, setCustomCats] = useState<CustomCategory[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => subscribeFirestoreProducts((list) => setProducts(list)), []);
 
   useEffect(() => subscribeFirestoreCategories((list) => setCustomCats(list)), []);
 
@@ -48,12 +52,18 @@ export default function BlogPage() {
     return Array.from(new Set(['Todos os Setores', ...defaults, ...names]));
   }, [customCats]);
 
+  // Stores and departments of each article, read from the products linked in it
+  const meta = useMemo(
+    () => new Map(articles.map((a) => [a.id, articleLinkMeta(a, products)])),
+    [articles, products],
+  );
   const filteredArticles = useMemo(() => {
     return articles.filter((art) => {
-      if (activePlatform !== 'all' && art.platform !== activePlatform) {
+      const linked = meta.get(art.id);
+      if (activePlatform !== 'all' && !linked?.stores.has(activePlatform)) {
         return false;
       }
-      if (activeCategory !== 'Todos os Setores' && art.category !== activeCategory) {
+      if (activeCategory !== 'Todos os Setores' && !linked?.departments.has(activeCategory)) {
         return false;
       }
       if (searchQuery.trim()) {
@@ -66,17 +76,12 @@ export default function BlogPage() {
       }
       return true;
     });
-  }, [articles, activePlatform, activeCategory, searchQuery]);
+  }, [articles, meta, activePlatform, activeCategory, searchQuery]);
 
   const featuredArticle = articles[0] || null;
 
-  // The Achadinhos sidebar counts products by store and sector; articles use the same fields
-  const articlesAsProducts = useMemo(
-    () => articles.map((a) => ({ id: a.id, title: a.title, platform: a.platform || '', category: a.category }) as unknown as Product),
-    [articles],
-  );
   const storeCount = (p: 'all' | PlatformId) =>
-    p === 'all' ? articles.length : articles.filter((a) => a.platform === p).length;
+    p === 'all' ? articles.length : articles.filter((a) => meta.get(a.id)?.stores.has(p)).length;
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-stone-900 selection:bg-stone-900 selection:text-white">
@@ -159,7 +164,7 @@ export default function BlogPage() {
               activePlatform={activePlatform}
               activeCategory={activeCategory}
               onSelectCategory={setActiveCategory}
-              products={articlesAsProducts}
+              products={products}
               customCategories={customCats}
             />
 
