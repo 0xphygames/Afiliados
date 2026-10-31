@@ -1,7 +1,7 @@
 'use client';
 
-import { departmentOptions } from '@/lib/departments';
-import React, { useState } from 'react';
+import { subscribeTaxonomy, TaxMacro } from '@/lib/taxonomy-db';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
@@ -55,7 +55,10 @@ function EditProductForm({
   // Form states initialized with product
   const [title, setTitle] = useState(product.title || '');
   const [platform, setPlatform] = useState<PlatformId>(product.platform || 'shopee');
-  const [category, setCategory] = useState(product.category || 'Geral');
+  const [department, setDepartment] = useState(product.department || '');
+  const [subcategory, setSubcategory] = useState(product.subcategory || product.category || '');
+  const [tree, setTree] = useState<TaxMacro[]>([]);
+  useEffect(() => subscribeTaxonomy((t) => setTree(t)), []);
   const [price, setPrice] = useState(product.price ? String(product.price) : '');
   const [originalPrice, setOriginalPrice] = useState(
     product.originalPrice ? String(product.originalPrice) : ''
@@ -186,7 +189,9 @@ function EditProductForm({
         id: product.id,
         title: title.trim(),
         platform,
-        category: category.trim() || 'Geral',
+        department: department || undefined,
+        subcategory: subcategory || undefined,
+        category: subcategory || department || 'Geral',
         price: numPrice,
         originalPrice: numOrigPrice > numPrice ? numOrigPrice : undefined,
         affiliateUrl: affiliateUrl.trim(),
@@ -317,19 +322,27 @@ function EditProductForm({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-900">
-                Categoria / Setor
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900"
-              >
-                <option value="">Escolha um setor</option>
-                {departmentOptions(categories.map((c) => c.name), category).map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
+              <label className="text-xs font-bold text-stone-900">Classificação</label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-900">Macro</label>
+                <select value={department} onChange={(e) => { setDepartment(e.target.value); setSubcategory(''); }} className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900">
+                  <option value="">Escolha a macro</option>
+                  {tree.map((m) => (
+                    <option key={m.node.id} value={m.node.name}>{m.node.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-900">Micro</label>
+                <select value={subcategory} onChange={(e) => setSubcategory(e.target.value)} className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900">
+                  <option value="">Escolha a micro</option>
+                  {(tree.find((m) => m.node.name === department)?.micros ?? []).map((mi) => (
+                    <option key={mi.id} value={mi.name}>{mi.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
             </div>
           </div>
 
@@ -673,7 +686,7 @@ function EditProductForm({
             {/* Card Content */}
             <div className="p-4 space-y-3">
               <div className="flex items-center justify-between text-xs text-stone-500">
-                <span className="font-semibold text-stone-600">{category || 'Categoria'}</span>
+                <span className="font-semibold text-stone-600">{subcategory || department || 'Categoria'}</span>
                 <div className="flex items-center gap-1 font-semibold text-stone-800">
                   <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                   <span>{rating}</span>

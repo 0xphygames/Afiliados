@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { departmentOptions } from '@/lib/departments';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAdmin } from '@/lib/AdminContext';
@@ -26,13 +25,16 @@ export default function PainelProdutosPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [platformFilter, setPlatformFilter] = useState<PlatformId | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const categoryOptions = useMemo(() => departmentOptions(products.map((p) => p.category)), [products]);
+  const categoryOptions = useMemo(
+    () => Array.from(new Set(products.map((p) => p.subcategory || p.category).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    [products],
+  );
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       if (platformFilter !== 'all' && p.platform !== platformFilter) return false;
-      if (categoryFilter !== 'all' && p.category !== categoryFilter) return false;
+      if (categoryFilter !== 'all' && (p.subcategory || p.category) !== categoryFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const mTitle = p.title.toLowerCase().includes(q);
@@ -112,7 +114,7 @@ export default function PainelProdutosPage() {
           >
             <option value="all">Todos os setores</option>
             {categoryOptions.map((c) => (
-              <option key={c} value={c}>{c} ({products.filter((p) => p.category === c).length})</option>
+              <option key={c} value={c}>{c} ({products.filter((p) => (p.subcategory || p.category) === c).length})</option>
             ))}
           </select>
           <button
