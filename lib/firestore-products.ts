@@ -43,6 +43,10 @@ let productsCache: Product[] | null = null;
 let productsRequest: Promise<Product[]> | null = null;
 let adminProductsCache: Product[] | null = null;
 let adminProductsRequest: Promise<Product[]> | null = null;
+let articlesCache: Article[] | null = null;
+let articlesRequest: Promise<Article[]> | null = null;
+let couponsCache: Coupon[] | null = null;
+let couponsRequest: Promise<Coupon[]> | null = null;
 
 export const INITIAL_LANDING_PAGES: CustomLandingPage[] = [];
 
@@ -218,6 +222,10 @@ function invalidateProductsCache() {
   productsRequest = null;
   adminProductsCache = null;
   adminProductsRequest = null;
+  articlesCache = null;
+  articlesRequest = null;
+  couponsCache = null;
+  couponsRequest = null;
 }
 
 // Subscribe to real-time articles collection in Firestore
@@ -225,13 +233,14 @@ export function subscribeFirestoreArticles(
   onSuccess: (articles: Article[]) => void,
   onError?: (err: Error) => void
 ): () => void {
-  void supabase.from('articles').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
+  if (articlesCache) onSuccess(articlesCache);
+  if (articlesRequest) {
+    void articlesRequest.then(onSuccess).catch((error: Error) => onError?.(error));
+    return () => undefined;
+  }
+  articlesRequest = supabase.from('articles').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
     if (error) {
-      onError?.(error as unknown as Error);
-      // Do not silently replace the live catalog with the bundled template.
-      // That makes a Supabase outage look like products/articles disappeared.
-      onSuccess([]);
-      return;
+      throw error;
     }
     const list = (data ?? []).map((row) => ({
       id: row.id, title: row.title, category: row.category, summary: row.summary,
@@ -239,8 +248,14 @@ export function subscribeFirestoreArticles(
       author: row.author || 'Tamires Santos', featured: Boolean(row.featured), createdAt: row.created_at,
     } satisfies Article));
     const articles = list;
+    articlesCache = articles;
     saveStoredArticles(articles);
-    onSuccess(articles);
+    return articles;
+  });
+  void articlesRequest.then(onSuccess).catch((error: Error) => {
+    articlesRequest = null;
+    onError?.(error);
+    onSuccess([]);
   });
   return () => undefined;
 }
@@ -316,6 +331,8 @@ export async function saveArticleToFirestore(article: Article): Promise<void> {
     created_at: article.createdAt || new Date().toISOString(),
   }).select('id').single();
   if (error) throw error;
+  articlesCache = null;
+  articlesRequest = null;
   if (!data?.id) throw new Error('O Supabase não confirmou a gravação do artigo. Verifique a sessão do administrador e as políticas RLS.');
 }
 
@@ -567,19 +584,29 @@ export function subscribeFirestoreCoupons(
   onSuccess: (coupons: Coupon[]) => void,
   onError?: (err: Error) => void
 ): () => void {
-  void supabase
+  if (couponsCache) onSuccess(couponsCache);
+  if (couponsRequest) {
+    void couponsRequest.then(onSuccess).catch((error: Error) => onError?.(error));
+    return () => undefined;
+  }
+  couponsRequest = supabase
     .from('coupons')
     .select('*')
     .order('created_at', { ascending: false })
     .then(({ data, error }) => {
       if (error) {
-        console.warn('Leitura de cupons (fallback):', error);
-        onSuccess(INITIAL_COUPONS);
-        onError?.(error as unknown as Error);
-        return;
+        throw error;
       }
-      onSuccess((data ?? []).map(couponFromRow));
+      const coupons = (data ?? []).map(couponFromRow);
+      couponsCache = coupons;
+      return coupons;
     });
+  void couponsRequest.then(onSuccess).catch((error: Error) => {
+    couponsRequest = null;
+    console.warn('Leitura de cupons (fallback):', error);
+    onSuccess(INITIAL_COUPONS);
+    onError?.(error);
+  });
   return () => undefined;
 }
 
@@ -598,6 +625,8 @@ export async function saveCouponToFirestore(coupon: Coupon): Promise<void> {
     category: coupon.category || 'Geral',
   });
   if (error) throw error;
+  couponsCache = null;
+  couponsRequest = null;
 }
 
 export async function deleteCouponFromFirestore(couponId: string): Promise<void> {

@@ -203,7 +203,7 @@ export function HeroBanner({
           {/* Framed Lifestyle Showcase Photo */}
           <div className="relative aspect-16/10 rounded-2xl overflow-hidden border border-stone-200 shadow-xs bg-stone-100">
             <Image
-              src="/images/hero_achadinhos_looks_1791404026649.jpg"
+              src="/images/hero_achadinhos_looks_optimized.jpg"
               alt="Curadoria Tamires Santos Achadinhos e Looks"
               fill
               priority
