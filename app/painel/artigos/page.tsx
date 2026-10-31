@@ -1,7 +1,7 @@
 'use client';
 
-import { departmentOptions } from '@/lib/departments';
-import React, { useState } from 'react';
+import { subscribeTaxonomy, TaxMacro } from '@/lib/taxonomy-db';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAdmin } from '@/lib/AdminContext';
@@ -51,7 +51,10 @@ export default function PainelArtigosPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('Guia de Compras');
+  const [department, setDepartment] = useState('');
+  const [subcategory, setSubcategory] = useState('');
+  const [tree, setTree] = useState<TaxMacro[]>([]);
+  useEffect(() => subscribeTaxonomy((t) => setTree(t)), []);
   const [platform, setPlatform] = useState<string>('');
   const [summary, setSummary] = useState('');
   const [content, setContent] = useState('');
@@ -88,7 +91,8 @@ export default function PainelArtigosPage() {
   const startCreate = () => {
     setEditingId(null);
     setTitle('');
-    setCategory('Guia de Compras');
+    setDepartment('');
+    setSubcategory('');
     setSummary('');
     setContent('');
     setCoverImageUrl('/images/hero_achadinhos_looks_1791404026649.jpg');
@@ -98,7 +102,8 @@ export default function PainelArtigosPage() {
   const startEdit = (art: Article) => {
     setEditingId(art.id);
     setTitle(art.title);
-    setCategory(art.category);
+    setDepartment(art.department || '');
+    setSubcategory(art.subcategory || '');
     setPlatform(art.platform || '');
     setSummary(art.summary);
     setContent(art.content);
@@ -114,7 +119,9 @@ export default function PainelArtigosPage() {
     const newArt: Article = {
       id: editingId || `art-${Date.now()}`,
       title: title.trim(),
-      category: category.trim() || 'Guia de Compras',
+      category: subcategory || department || 'Guia de Compras',
+      department: department || undefined,
+      subcategory: subcategory || undefined,
       summary: summary.trim() || title.trim(),
       content: content.trim(),
       coverImageUrl: coverImageUrl.trim() || '/images/hero_achadinhos_looks_1791404026649.jpg',
@@ -212,17 +219,21 @@ export default function PainelArtigosPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-900">Categoria do Post</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900"
-              >
-                
-                {departmentOptions(['Guia de Compras'], category).map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
+              <label className="text-xs font-bold text-stone-900">Classificação</label>
+              <div className="grid grid-cols-2 gap-3">
+                <select value={department} onChange={(e) => { setDepartment(e.target.value); setSubcategory(''); }} className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900">
+                  <option value="">Escolha a macro</option>
+                  {tree.map((m) => (
+                    <option key={m.node.id} value={m.node.name}>{m.node.name}</option>
+                  ))}
+                </select>
+                <select value={subcategory} onChange={(e) => setSubcategory(e.target.value)} className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900">
+                  <option value="">Escolha a micro</option>
+                  {(tree.find((m) => m.node.name === department)?.micros ?? []).map((mi) => (
+                    <option key={mi.id} value={mi.name}>{mi.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
