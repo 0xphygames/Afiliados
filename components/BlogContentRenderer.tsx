@@ -19,7 +19,13 @@ const platformFromUrl = (url: string): PlatformId => {
 };
 
 const parseMoney = (value: string) => {
-  const n = Number(value.replace(/[^0-9,.-]/g, '').replace(/\./g, '').replace(',', '.'));
+  const cleaned = value.replace(/[^0-9,.-]/g, '').trim();
+  const lastComma = cleaned.lastIndexOf(',');
+  const lastDot = cleaned.lastIndexOf('.');
+  const normalized = lastComma > lastDot
+    ? cleaned.replace(/\./g, '').replace(',', '.')
+    : cleaned.replace(/,/g, '');
+  const n = Number(normalized);
   return Number.isFinite(n) ? n : 0;
 };
 
