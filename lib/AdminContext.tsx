@@ -92,7 +92,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
     const unsubProducts = subscribeFirestoreProducts((list) => {
       if (list && list.length > 0) setProducts(list);
-    });
+    }, undefined, { includeImages: true });
 
     const unsubArticles = subscribeFirestoreArticles((list) => {
       if (list && list.length > 0) setArticles(list);
