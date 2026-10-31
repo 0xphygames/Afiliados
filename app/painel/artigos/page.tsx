@@ -18,6 +18,7 @@ import {
   Check,
 } from 'lucide-react';
 import { optimizeImageFile } from '@/lib/image-compress';
+import { supabase, SUPABASE_STORAGE_BUCKET } from '@/lib/supabase';
 import { BlogContentEditor } from '@/components/BlogContentEditor';
 
 const PRESET_ARTICLE_COVERS = [
@@ -61,7 +62,14 @@ export default function PainelArtigosPage() {
 
     try {
       const optimized = await optimizeImageFile(file, 800, 0.72);
-      setCoverImageUrl(optimized);
+      const blob = await (await fetch(optimized)).blob();
+      const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const path = `articles/${Date.now()}-${safeName.replace(/\.[^.]+$/, '')}.jpg`;
+      const { error } = await supabase.storage
+        .from(SUPABASE_STORAGE_BUCKET)
+        .upload(path, blob, { contentType: 'image/jpeg', upsert: false, cacheControl: '31536000' });
+      if (error) throw error;
+      setCoverImageUrl(supabase.storage.from(SUPABASE_STORAGE_BUCKET).getPublicUrl(path).data.publicUrl);
     } catch (err) {
       console.error('Erro ao otimizar imagem do artigo:', err);
       const reader = new FileReader();

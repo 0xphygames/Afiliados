@@ -21,6 +21,7 @@ import {
   logoutUser,
 } from '@/lib/firestore-products';
 import { optimizeImageFile } from '@/lib/image-compress';
+import { ImageUploader } from './ImageUploader';
 import {
   X,
   Plus,
@@ -2261,6 +2262,9 @@ export function AdminDashboard({
                             placeholder="Link da foto de capa"
                             className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:ring-2 focus:ring-stone-900 focus:outline-none"
                           />
+                          <div className="mt-2">
+                            <ImageUploader initialUrl={artCoverUrl} onUpload={setArtCoverUrl} />
+                          </div>
                         </div>
                       </div>
 

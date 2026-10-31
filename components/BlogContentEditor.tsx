@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Link as LinkIcon,
   Bold,
@@ -86,8 +87,7 @@ export function BlogContentEditor({
   };
 
   // Insert one line: [[produto|Nome|Preço|Preço original|Nota|Link|Imagem|Destaque]]
-  const handleInsertProduct = (ev: React.FormEvent) => {
-    ev.preventDefault();
+  const handleInsertProduct = () => {
     if (!productForm.name.trim() || !productForm.url.trim()) return;
     const fields = [
       productForm.name,
@@ -125,6 +125,7 @@ export function BlogContentEditor({
   // Insert markdown hyperlink [text](url) into textarea
   const handleInsertLink = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!linkUrl.trim()) return;
 
     let cleanUrl = linkUrl.trim();
@@ -339,10 +340,9 @@ export function BlogContentEditor({
       )}
 
       {/* Hyperlink Inserter Modal / Dialog */}
-      {showProductModal && (
+      {showProductModal && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <form
-            onSubmit={handleInsertProduct}
+          <div
             className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-stone-200 p-5 space-y-3 max-h-[90vh] overflow-y-auto"
           >
             <h3 className="font-serif text-lg font-bold text-stone-900 border-b border-stone-100 pb-2">Inserir produto</h3>
@@ -437,15 +437,16 @@ export function BlogContentEditor({
               >
                 Cancelar
               </button>
-              <button type="submit" className="px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold">
+              <button type="button" onClick={handleInsertProduct} className="px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold">
                 Inserir
               </button>
             </div>
-          </form>
-        </div>
+          </div>
+        </div>,
+        document.body
       )}
 
-      {showLinkModal && (
+      {showLinkModal && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
           <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-stone-200 p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-stone-100 pb-3">
@@ -464,7 +465,7 @@ export function BlogContentEditor({
               </button>
             </div>
 
-            <form onSubmit={handleInsertLink} className="space-y-3.5">
+            <div className="space-y-3.5">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-stone-800">
                   Texto visível do link <span className="text-stone-400 font-normal">(O que o leitor vai ler)</span>
@@ -514,16 +515,18 @@ export function BlogContentEditor({
                   Cancelar
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={() => handleInsertLink({ preventDefault: () => undefined } as React.FormEvent)}
                   className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5"
                 >
                   <Check className="w-3.5 h-3.5 text-amber-300" />
                   <span>Inserir Link no Post</span>
                 </button>
               </div>
-            </form>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
