@@ -1,5 +1,6 @@
 'use client';
 
+import { departmentOptions } from '@/lib/departments';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -319,18 +320,16 @@ function EditProductForm({
               <label className="text-xs font-bold text-stone-900">
                 Categoria / Setor
               </label>
-              <input
-                type="text"
-                list="cats-list-edit"
+              <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900"
-              />
-              <datalist id="cats-list-edit">
-                {categories.map((c) => (
-                  <option key={c.id} value={c.name} />
+              >
+                <option value="">Escolha um setor</option>
+                {departmentOptions(categories.map((c) => c.name), category).map((d) => (
+                  <option key={d} value={d}>{d}</option>
                 ))}
-              </datalist>
+              </select>
             </div>
           </div>
 

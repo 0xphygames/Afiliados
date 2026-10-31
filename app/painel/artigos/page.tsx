@@ -1,5 +1,6 @@
 'use client';
 
+import { departmentOptions } from '@/lib/departments';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -212,13 +213,16 @@ export default function PainelArtigosPage() {
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-stone-900">Categoria do Post</label>
-              <input
-                type="text"
+              <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                placeholder="Ex: Guia de Compras, Dicas de Moda, Fitness..."
                 className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900"
-              />
+              >
+                
+                {departmentOptions(['Guia de Compras'], category).map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
             </div>
           </div>
 
