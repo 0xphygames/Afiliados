@@ -10,7 +10,7 @@ import {
   INITIAL_CUSTOM_CATEGORIES,
 } from '@/lib/firestore-products';
 import { Navbar } from '@/components/Navbar';
-import { CategorySidebar } from '@/components/CategorySidebar';
+import { TaxonomySidebar } from '@/components/TaxonomySidebar';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { Footer } from '@/components/Footer';
@@ -61,7 +61,8 @@ export default function AchadinhosPage() {
         }
         if (
           activeCategory !== 'Todos os Setores' &&
-          p.category.toLowerCase() !== activeCategory.toLowerCase()
+          p.department !== activeCategory &&
+          p.subcategory !== activeCategory
         ) {
           return false;
         }
@@ -209,12 +210,11 @@ export default function AchadinhosPage() {
         {/* Vertical Category Sidebar beside Product Grid */}
         <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row items-start gap-6 lg:gap-8">
-            <CategorySidebar
+            <TaxonomySidebar
               activePlatform={activePlatform}
               activeCategory={activeCategory}
               onSelectCategory={setActiveCategory}
               products={products}
-              customCategories={categories}
             />
 
             <div className="flex-1 min-w-0 w-full">
