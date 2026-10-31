@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { SitePage } from '@/lib/types';
 import { subscribeSitePages, saveSitePage, deleteSitePage } from '@/lib/firestore-products';
-import { FileText, PlusCircle, Trash2, ExternalLink, Eye, EyeOff } from 'lucide-react';
+import { MenuItem, subscribeMenuItems, saveMenuItem } from '@/lib/menu';
+import { FileText, PlusCircle, Trash2, ExternalLink, Eye, EyeOff, ArrowUp, ArrowDown, Menu as MenuIcon } from 'lucide-react';
 
 const emptyForm = {
   title: '',
@@ -28,8 +29,10 @@ export default function PainelPaginasPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [publicMenu, setPublicMenu] = useState<MenuItem[]>([]);
 
   useEffect(() => subscribeSitePages((list) => setPages(list)), []);
+  useEffect(() => subscribeMenuItems('public', (list) => setPublicMenu(list)), []);
 
   const set = <K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -98,6 +101,33 @@ export default function PainelPaginasPage() {
     } catch (err) {
       console.error(err);
       setMessage('Não foi possível alterar a página.');
+    }
+  };
+
+  const toggleMenu = async (page: SitePage) => {
+    try {
+      await saveSitePage({ ...page, showInMenu: !page.showInMenu });
+      setMessage(!page.showInMenu ? 'Página adicionada ao menu público.' : 'Página retirada do menu público.');
+    } catch (err) {
+      console.error(err);
+      setMessage('Não foi possível alterar o menu da página.');
+    }
+  };
+
+  const moveMenu = async (item: MenuItem, direction: -1 | 1) => {
+    const ordered = [...publicMenu].sort((a, b) => a.position - b.position);
+    const index = ordered.findIndex((entry) => entry.id === item.id);
+    const other = ordered[index + direction];
+    if (!other) return;
+    try {
+      await Promise.all([
+        saveMenuItem({ ...item, position: other.position }),
+        saveMenuItem({ ...other, position: item.position }),
+      ]);
+      setPublicMenu(ordered.map((entry) => entry.id === item.id ? { ...entry, position: other.position } : entry.id === other.id ? { ...entry, position: item.position } : entry));
+    } catch (err) {
+      console.error(err);
+      setMessage('Não foi possível reordenar o menu público.');
     }
   };
 
@@ -265,6 +295,35 @@ export default function PainelPaginasPage() {
           )}
         </div>
       </div>
+
+      <section className="bg-white rounded-3xl p-5 sm:p-7 border border-stone-200 shadow-sm space-y-3">
+        <div className="flex items-center gap-2 pb-2 border-b border-stone-100">
+          <MenuIcon className="w-4 h-4 text-amber-600" />
+          <div>
+            <h2 className="font-serif text-lg font-bold text-stone-900">Menu público e rotas</h2>
+            <p className="text-xs text-stone-500">As páginas marcadas como “Mostrar no menu” aparecem aqui. A ordem define a barra superior do site.</p>
+          </div>
+        </div>
+        <div className="space-y-2">
+          {publicMenu.map((item, index) => {
+            const page = pages.find((entry) => `/${entry.slug}` === item.href || `menu-page-${entry.id}` === item.id);
+            return (
+              <div key={item.id} className="flex items-center justify-between gap-3 rounded-2xl border border-stone-200 p-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-stone-900 truncate">{item.label}</p>
+                  <p className="text-xs text-stone-500 font-mono truncate">{item.href}{page ? ' · página cadastrada' : ' · rota do sistema'}</p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  {page && <button type="button" onClick={() => toggleMenu(page)} className="p-2 rounded-xl text-stone-600 hover:bg-stone-100" aria-label="Retirar página do menu"><Eye className="w-4 h-4" /></button>}
+                  <button type="button" disabled={index === 0} onClick={() => moveMenu(item, -1)} className="p-2 rounded-xl text-stone-600 hover:bg-stone-100 disabled:opacity-30" aria-label="Mover para cima"><ArrowUp className="w-4 h-4" /></button>
+                  <button type="button" disabled={index === publicMenu.length - 1} onClick={() => moveMenu(item, 1)} className="p-2 rounded-xl text-stone-600 hover:bg-stone-100 disabled:opacity-30" aria-label="Mover para baixo"><ArrowDown className="w-4 h-4" /></button>
+                </div>
+              </div>
+            );
+          })}
+          {publicMenu.length === 0 && <p className="text-sm text-stone-500 py-4">Nenhuma rota pública cadastrada.</p>}
+        </div>
+      </section>
     </div>
   );
 }
