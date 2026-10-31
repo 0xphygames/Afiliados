@@ -3,7 +3,7 @@
 import React from 'react';
 import { PlatformId, Product } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
-import { TAXONOMY } from '@/lib/taxonomy';
+import { TAXONOMY, LEGACY_MAP } from '@/lib/taxonomy';
 import { TaxMacro, subscribeTaxonomy } from '@/lib/taxonomy-db';
 import { ChevronDown, ChevronRight, Layers, Tag, LayoutGrid } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -30,8 +30,12 @@ export function TaxonomySidebar({ activePlatform, activeCategory, onSelectCatego
 
   const inStore = activePlatform === 'all' ? products : products.filter((p) => p.platform === activePlatform);
 
-  const countDepartment = (name: string) => inStore.filter((p) => p.department === name).length;
-  const countSubcategory = (name: string) => inStore.filter((p) => p.subcategory === name).length;
+  const classify = (p: Product) => {
+    const mapped = LEGACY_MAP[p.category];
+    return { department: p.department || mapped?.[0], subcategory: p.subcategory || mapped?.[1] };
+  };
+  const countDepartment = (name: string) => inStore.filter((p) => classify(p).department === name).length;
+  const countSubcategory = (name: string) => inStore.filter((p) => classify(p).subcategory === name).length;
 
   const storeLabel = activePlatform === 'all' ? 'TODAS AS LOJAS' : PLATFORMS[activePlatform].name.toUpperCase();
 
