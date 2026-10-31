@@ -41,6 +41,8 @@ const toAppUser = (user: SupabaseUser | null | undefined): User | null => {
 // request per component, while keeping the curated catalog available instantly.
 let productsCache: Product[] | null = null;
 let productsRequest: Promise<Product[]> | null = null;
+let adminProductsCache: Product[] | null = null;
+let adminProductsRequest: Promise<Product[]> | null = null;
 
 export const INITIAL_LANDING_PAGES: CustomLandingPage[] = [];
 
@@ -115,14 +117,18 @@ export function isUserAdmin(user: User | null): boolean {
 // Subscribe to real-time products collection in Firestore
 export function subscribeFirestoreProducts(
   onSuccess: (products: Product[]) => void,
-  onError?: (err: Error) => void
+  onError?: (err: Error) => void,
+  options: { includeImages?: boolean } = {},
 ): () => void {
+  const includeImages = options.includeImages === true;
+  const cachedProducts = includeImages ? adminProductsCache : productsCache;
+  const requestInFlight = includeImages ? adminProductsRequest : productsRequest;
   // Do not paint the bundled/template catalog before Supabase responds. That
   // caused the public page to flash the old catalog and then replace it.
-  if (productsCache) onSuccess(productsCache);
+  if (cachedProducts) onSuccess(cachedProducts);
 
-  if (!productsRequest) {
-    productsRequest = (async () => {
+  if (!requestInFlight) {
+    const request = (async () => {
       // Product images are currently stored as Base64 in older rows. Fetching
       // all 149 rows in one response can exceed the Data API/proxy payload
       // limit, so page the catalog into smaller responses.
@@ -130,7 +136,9 @@ export function subscribeFirestoreProducts(
       const fetchPage = async (from: number, size: number) => {
         const { data, error } = await supabase
           .from('products')
-          .select('id,title,platform,category,image_url,images,affiliate_url,price,original_price,rating,review_count,badge,tamires_tip,is_featured,created_at')
+          .select(includeImages
+            ? 'id,title,platform,category,image_url,images,affiliate_url,price,original_price,rating,review_count,badge,tamires_tip,is_featured,created_at'
+            : 'id,title,platform,category,image_url,affiliate_url,price,original_price,rating,review_count,badge,tamires_tip,is_featured,created_at')
           // id as a tie-breaker keeps pages stable when rows share created_at
           .order('created_at', { ascending: false })
           .order('id', { ascending: true })
@@ -181,18 +189,24 @@ export function subscribeFirestoreProducts(
       });
       // Supabase is the source of truth. Merging the bundled and browser-cached products
       // here made deleted products come back on the next load.
-      productsCache = list.sort(
+      const sortedProducts = list.sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
-      saveStoredProducts(productsCache);
-      return productsCache;
+      if (includeImages) adminProductsCache = sortedProducts;
+      else productsCache = sortedProducts;
+      saveStoredProducts(sortedProducts);
+      return sortedProducts;
     })();
+    if (includeImages) adminProductsRequest = request;
+    else productsRequest = request;
   }
 
-  const request = productsRequest;
+  const request = includeImages ? adminProductsRequest : productsRequest;
+  if (!request) return () => undefined;
   void request.then(onSuccess).catch((error: Error) => {
     console.error('Falha ao carregar produtos do Supabase:', error);
-    productsRequest = null;
+    if (includeImages) adminProductsRequest = null;
+    else productsRequest = null;
     onError?.(error);
     onSuccess(getStoredProducts());
   });
@@ -202,6 +216,8 @@ export function subscribeFirestoreProducts(
 function invalidateProductsCache() {
   productsCache = null;
   productsRequest = null;
+  adminProductsCache = null;
+  adminProductsRequest = null;
 }
 
 // Subscribe to real-time articles collection in Firestore
