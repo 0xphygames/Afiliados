@@ -6,8 +6,9 @@ import Image from 'next/image';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { ArticleDetailModal } from '@/components/ArticleDetailModal';
-import { Article } from '@/lib/types';
-import { subscribeFirestoreArticles } from '@/lib/firestore-products';
+import { Article, CustomCategory, PlatformId } from '@/lib/types';
+import { PLATFORMS } from '@/lib/constants';
+import { subscribeFirestoreArticles, subscribeFirestoreCategories } from '@/lib/firestore-products';
 import {
   BookOpen,
   ArrowLeft,
@@ -24,7 +25,11 @@ export default function BlogPage() {
   const [articlesLoaded, setArticlesLoaded] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string>('Todas as Categorias');
+  const [activeCategory, setActiveCategory] = useState<string>('Todos os Setores');
+  const [activePlatform, setActivePlatform] = useState<PlatformId | 'all'>('all');
+  const [customCats, setCustomCats] = useState<CustomCategory[]>([]);
+
+  useEffect(() => subscribeFirestoreCategories((list) => setCustomCats(list)), []);
 
   useEffect(() => {
     // Wait for Supabase before rendering, so the bundled placeholder article never flashes
@@ -35,14 +40,19 @@ export default function BlogPage() {
     return () => unsub();
   }, []);
 
+  // Same sectors as the Achadinhos page: defaults plus the ones created in the admin
   const categories = useMemo(() => {
-    const cats = Array.from(new Set(articles.map((a) => a.category).filter(Boolean)));
-    return ['Todas as Categorias', ...cats];
-  }, [articles]);
+    const defaults = ['Vestuário', 'Suplementos', 'Musculação', 'Natal', 'Dia das Crianças', 'Guloseimas', 'Casa & Decoração', 'Beleza & Skincare'];
+    const names = customCats.map((c) => c.name);
+    return Array.from(new Set(['Todos os Setores', ...defaults, ...names]));
+  }, [customCats]);
 
   const filteredArticles = useMemo(() => {
     return articles.filter((art) => {
-      if (activeCategory !== 'Todas as Categorias' && art.category !== activeCategory) {
+      if (activePlatform !== 'all' && art.platform !== activePlatform) {
+        return false;
+      }
+      if (activeCategory !== 'Todos os Setores' && art.category !== activeCategory) {
         return false;
       }
       if (searchQuery.trim()) {
@@ -55,7 +65,7 @@ export default function BlogPage() {
       }
       return true;
     });
-  }, [articles, activeCategory, searchQuery]);
+  }, [articles, activePlatform, activeCategory, searchQuery]);
 
   const featuredArticle = articles[0] || null;
 
@@ -100,21 +110,38 @@ export default function BlogPage() {
 
             {/* Filter and Search Bar */}
             <div className="pt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-              {/* Category Filter Pills */}
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveCategory(cat)}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                      activeCategory === cat
-                        ? 'bg-stone-900 text-white shadow-xs'
-                        : 'bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-200'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+              {/* Store and sector filters, same as the Achadinhos page */}
+              <div className="flex flex-col gap-2 min-w-0">
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                  {(['all', 'shopee', 'shein', 'mercadolivre', 'amazon'] as const).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setActivePlatform(p)}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                        activePlatform === p
+                          ? 'bg-stone-900 text-white shadow-xs'
+                          : 'bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-200'
+                      }`}
+                    >
+                      {p === 'all' ? '✨ Todas as Lojas' : PLATFORMS[p].name}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                        activeCategory === cat
+                          ? 'bg-stone-900 text-white shadow-xs'
+                          : 'bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-200'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Search in blog */}
@@ -133,7 +160,7 @@ export default function BlogPage() {
         </section>
 
         {/* Featured Article Hero (When no search active) */}
-        {!searchQuery && activeCategory === 'Todas as Categorias' && featuredArticle && (
+        {!searchQuery && activeCategory === 'Todos os Setores' && featuredArticle && (
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
             <Link
               href={`/artigo/${featuredArticle.id}`}
@@ -284,7 +311,7 @@ export default function BlogPage() {
               <button
                 onClick={() => {
                   setSearchQuery('');
-                  setActiveCategory('Todas as Categorias');
+                  setActiveCategory('Todos os Setores');
                 }}
                 className="px-4 py-2 bg-stone-900 text-white rounded-xl text-xs font-bold"
               >

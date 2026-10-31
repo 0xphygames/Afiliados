@@ -41,6 +41,8 @@ export interface Article {
   coverImageUrl?: string;
   author: string;
   featured?: boolean;
+  // Store the article is about; drives the store filter on the blog
+  platform?: PlatformId | null;
   bottomFunnelKeywords?: string[];
   createdAt: string;
 }
