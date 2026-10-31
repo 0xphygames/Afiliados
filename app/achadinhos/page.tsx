@@ -11,6 +11,7 @@ import {
 } from '@/lib/firestore-products';
 import { Navbar } from '@/components/Navbar';
 import { TaxonomySidebar } from '@/components/TaxonomySidebar';
+import { LEGACY_MAP } from '@/lib/taxonomy';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { Footer } from '@/components/Footer';
@@ -62,7 +63,9 @@ export default function AchadinhosPage() {
         if (
           activeCategory !== 'Todos os Setores' &&
           p.department !== activeCategory &&
-          p.subcategory !== activeCategory
+          p.subcategory !== activeCategory &&
+          LEGACY_MAP[p.category]?.[0] !== activeCategory &&
+          LEGACY_MAP[p.category]?.[1] !== activeCategory
         ) {
           return false;
         }
