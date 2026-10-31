@@ -235,7 +235,7 @@ export function subscribeFirestoreArticles(
       return;
     }
     const list = (data ?? []).map((row) => ({
-      id: row.id, title: row.title, category: row.category, summary: row.summary,
+      id: row.id, title: row.title, category: row.category, department: row.department || undefined, subcategory: row.subcategory || undefined, summary: row.summary,
       content: row.content, coverImageUrl: row.cover_image_url || '',
       author: row.author || 'Tamires Santos', featured: Boolean(row.featured), createdAt: row.created_at,
       platform: (row.platform as Article["platform"]) || null,
@@ -315,6 +315,7 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
 export async function saveArticleToFirestore(article: Article): Promise<void> {
   const { data, error } = await supabase.from('articles').upsert({
     id: article.id, title: article.title.trim(), category: article.category.trim(),
+    department: article.department?.trim() || null, subcategory: article.subcategory?.trim() || null,
     summary: article.summary.trim(), content: article.content, cover_image_url: article.coverImageUrl || null,
     author: article.author || 'Tamires Santos', featured: Boolean(article.featured),
     platform: article.platform || null,

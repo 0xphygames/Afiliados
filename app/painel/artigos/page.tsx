@@ -1,6 +1,6 @@
 'use client';
 
-import { departmentOptions } from '@/lib/departments';
+import { TAXONOMY, LEGACY_MAP } from '@/lib/taxonomy';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -51,7 +51,8 @@ export default function PainelArtigosPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('Guia de Compras');
+  const [department, setDepartment] = useState(TAXONOMY[0].name);
+  const [category, setCategory] = useState(TAXONOMY[0].subcategories[0].name);
   const [platform, setPlatform] = useState<string>('');
   const [summary, setSummary] = useState('');
   const [content, setContent] = useState('');
@@ -88,7 +89,8 @@ export default function PainelArtigosPage() {
   const startCreate = () => {
     setEditingId(null);
     setTitle('');
-    setCategory('Guia de Compras');
+    setDepartment(TAXONOMY[0].name);
+    setCategory(TAXONOMY[0].subcategories[0].name);
     setSummary('');
     setContent('');
     setCoverImageUrl('/images/hero_achadinhos_looks_1791404026649.jpg');
@@ -98,7 +100,10 @@ export default function PainelArtigosPage() {
   const startEdit = (art: Article) => {
     setEditingId(art.id);
     setTitle(art.title);
-    setCategory(art.category);
+    const mapped = art.department && art.subcategory ? null : LEGACY_MAP[art.category];
+    const nextDepartment = art.department || mapped?.[0] || TAXONOMY[0].name;
+    setDepartment(nextDepartment);
+    setCategory(art.subcategory || mapped?.[1] || art.category);
     setPlatform(art.platform || '');
     setSummary(art.summary);
     setContent(art.content);
@@ -115,6 +120,8 @@ export default function PainelArtigosPage() {
       id: editingId || `art-${Date.now()}`,
       title: title.trim(),
       category: category.trim() || 'Guia de Compras',
+      department,
+      subcategory: category,
       summary: summary.trim() || title.trim(),
       content: content.trim(),
       coverImageUrl: coverImageUrl.trim() || '/images/hero_achadinhos_looks_1791404026649.jpg',
@@ -212,17 +219,15 @@ export default function PainelArtigosPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-900">Categoria do Post</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900"
-              >
-                
-                {departmentOptions(['Guia de Compras'], category).map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
+              <label className="text-xs font-bold text-stone-900">Classificação do Post</label>
+              <div className="grid grid-cols-2 gap-2">
+                <select value={department} onChange={(e) => { const next = e.target.value; setDepartment(next); setCategory(TAXONOMY.find((d) => d.name === next)?.subcategories[0]?.name || ''); }} className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl text-stone-900">
+                  {TAXONOMY.map((d) => <option key={d.name} value={d.name}>{d.name}</option>)}
+                </select>
+                <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl text-stone-900">
+                  {TAXONOMY.find((d) => d.name === department)?.subcategories.map((s) => <option key={s.name} value={s.name}>{s.name}</option>)}
+                </select>
+              </div>
             </div>
           </div>
 

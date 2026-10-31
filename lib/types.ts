@@ -38,6 +38,8 @@ export interface Article {
   id: string;
   title: string;
   category: string;
+  department?: string;
+  subcategory?: string;
   summary: string;
   content: string;
   coverImageUrl?: string;

@@ -1,6 +1,6 @@
 'use client';
 
-import { departmentOptions } from '@/lib/departments';
+import { TAXONOMY } from '@/lib/taxonomy';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -48,7 +48,8 @@ export default function NovoAchadinhoPage() {
   // Form states
   const [title, setTitle] = useState('');
   const [platform, setPlatform] = useState<PlatformId>('shopee');
-  const [category, setCategory] = useState('Vestuário');
+  const [department, setDepartment] = useState(TAXONOMY[0].name);
+  const [category, setCategory] = useState(TAXONOMY[0].subcategories[0].name);
   const [price, setPrice] = useState('');
   const [originalPrice, setOriginalPrice] = useState('');
   const [affiliateUrl, setAffiliateUrl] = useState('');
@@ -179,6 +180,8 @@ export default function NovoAchadinhoPage() {
         title: title.trim(),
         platform,
         category: category.trim() || 'Geral',
+        department,
+        subcategory: category,
         price: numPrice,
         originalPrice: numOrigPrice > numPrice ? numOrigPrice : undefined,
         affiliateUrl: affiliateUrl.trim(),
@@ -292,19 +295,15 @@ export default function NovoAchadinhoPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-900">
-                Categoria / Setor
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900"
-              >
-                <option value="">Escolha um setor</option>
-                {departmentOptions(categories.map((c) => c.name), category).map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
+              <label className="text-xs font-bold text-stone-900">Classificação</label>
+              <div className="grid grid-cols-2 gap-2">
+                <select value={department} onChange={(e) => { const next = e.target.value; setDepartment(next); setCategory(TAXONOMY.find((d) => d.name === next)?.subcategories[0]?.name || ''); }} className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl text-stone-900">
+                  {TAXONOMY.map((d) => <option key={d.name} value={d.name}>{d.name}</option>)}
+                </select>
+                <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl text-stone-900">
+                  {TAXONOMY.find((d) => d.name === department)?.subcategories.map((s) => <option key={s.name} value={s.name}>{s.name}</option>)}
+                </select>
+              </div>
             </div>
           </div>
 
