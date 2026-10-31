@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { departmentOptions } from '@/lib/departments';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAdmin } from '@/lib/AdminContext';
@@ -24,11 +25,14 @@ export default function PainelProdutosPage() {
   const { products, handleDeleteProduct } = useAdmin();
   const [searchQuery, setSearchQuery] = useState('');
   const [platformFilter, setPlatformFilter] = useState<PlatformId | 'all'>('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const categoryOptions = useMemo(() => departmentOptions(products.map((p) => p.category)), [products]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       if (platformFilter !== 'all' && p.platform !== platformFilter) return false;
+      if (categoryFilter !== 'all' && p.category !== categoryFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const mTitle = p.title.toLowerCase().includes(q);
@@ -38,7 +42,7 @@ export default function PainelProdutosPage() {
       }
       return true;
     });
-  }, [products, platformFilter, searchQuery]);
+  }, [products, platformFilter, categoryFilter, searchQuery]);
 
   const handleCopy = (id: string, url?: string) => {
     if (url && navigator.clipboard) {
@@ -101,6 +105,16 @@ export default function PainelProdutosPage() {
           >
             Todas ({products.length})
           </button>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-stone-200 bg-white text-stone-700"
+          >
+            <option value="all">Todos os setores</option>
+            {categoryOptions.map((c) => (
+              <option key={c} value={c}>{c} ({products.filter((p) => p.category === c).length})</option>
+            ))}
+          </select>
           <button
             onClick={() => setPlatformFilter('shopee')}
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
