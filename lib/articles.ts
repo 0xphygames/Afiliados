@@ -1,4 +1,5 @@
 import type { Article, PlatformId, Product } from './types';
+import { LEGACY_MAP } from './taxonomy';
 
 // Product cards in an article are written as [[produto|Nome|Preço|Preço original|Nota|Link|...]].
 // The link identifies the catalog product, so an article's store and departments come from its products.
@@ -25,12 +26,17 @@ export function articleLinkMeta(article: Article, products: Product[]): ArticleL
   const departments = new Set<string>();
 
   for (const match of article.content.matchAll(PRODUCT_LINE)) {
-    const url = (match[1].split('|')[4] ?? '').trim();
+    const fields = match[1].split('|').map((field) => field.trim());
+    // Current cards store the URL after the rating; older cards may have a
+    // different number of optional fields, so find the first URL instead of
+    // relying on a fixed position.
+    const url = fields.find((field) => /^https?:\/\//i.test(field)) ?? '';
     const product = byUrl.get(url);
     const store = product?.platform ?? platformFromUrl(url);
     if (store) stores.add(store);
-    if (product?.department) departments.add(product.department);
-    if (product?.subcategory) departments.add(product.subcategory);
+    const mapped = product ? LEGACY_MAP[product.category] : undefined;
+    if (product?.department || mapped?.[0]) departments.add(product?.department || mapped![0]);
+    if (product?.subcategory || mapped?.[1]) departments.add(product?.subcategory || mapped![1]);
   }
 
   // The store chosen in the editor counts too, even before any card is added
