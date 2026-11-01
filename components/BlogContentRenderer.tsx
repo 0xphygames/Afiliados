@@ -95,22 +95,40 @@ const formatBRL = (value: number) => value.toLocaleString('pt-BR', { style: 'cur
 
 const buyButtonClass = 'inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white whitespace-nowrap';
 
-// Rows with a buy button: "Com descrição" (with tip) and "Lista simplificada" (compact)
+// Detailed rows: photo, description and a buy button
+// Compact rows: one line per product, no photo, a plain text link
 function ArticleProductRows({ products, detailed }: { products: Product[]; detailed: boolean }) {
+  if (!detailed) {
+    return (
+      <ul className="my-5 divide-y divide-stone-200 rounded-xl border border-stone-200 bg-white">
+        {products.map((p) => (
+          <li key={p.id} className="flex items-center gap-3 px-3 py-2.5 text-sm">
+            <span className="min-w-0 flex-1 truncate text-stone-800">{p.title}</span>
+            <span className="shrink-0 font-bold tabular-nums text-stone-900">{formatBRL(p.price)}</span>
+            <a
+              href={p.affiliateUrl || '#'}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              className="shrink-0 text-xs font-bold text-stone-900 underline underline-offset-4"
+            >
+              Ver oferta
+            </a>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
   return (
     <div className="my-5 space-y-3">
       {products.map((p) => (
         <div key={p.id} className="flex items-start gap-4 rounded-2xl border border-stone-200 bg-white p-3 sm:p-4">
           {p.imageUrl && (
-            <img
-              src={p.imageUrl}
-              alt={p.title}
-              className={`${detailed ? 'w-24 h-24' : 'w-14 h-14'} shrink-0 object-contain rounded-xl bg-stone-50`}
-            />
+            <img src={p.imageUrl} alt={p.title} className="w-24 h-24 shrink-0 object-contain rounded-xl bg-stone-50" />
           )}
           <div className="min-w-0 flex-1 space-y-1.5">
             <p className="font-semibold text-stone-900 text-sm leading-snug">{p.title}</p>
-            {detailed && p.tamiresTip && <p className="text-xs text-stone-600 leading-relaxed">{p.tamiresTip}</p>}
+            {p.tamiresTip && <p className="text-xs text-stone-600 leading-relaxed">{p.tamiresTip}</p>}
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
               <span className="font-bold text-stone-900 tabular-nums">{formatBRL(p.price)}</span>
               <a
@@ -130,7 +148,7 @@ function ArticleProductRows({ products, detailed }: { products: Product[]; detai
   );
 }
 
-// One horizontal card: image on the left; click opens the same expanded view as the Achadinhos grid
+// One card of the horizontal strip; click opens the same expanded view as the Achadinhos grid
 function ArticleProductHorizontalItem({ product }: { product: Product }) {
   const [open, setOpen] = useState(false);
   return (
@@ -138,31 +156,31 @@ function ArticleProductHorizontalItem({ product }: { product: Product }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full text-left flex gap-4 rounded-2xl border border-stone-200 bg-white p-3 hover:border-stone-300 hover:shadow-sm transition-all"
+        className="w-56 shrink-0 snap-start text-left flex flex-col gap-2 rounded-2xl border border-stone-200 bg-white p-3 hover:border-stone-300 hover:shadow-sm transition-all"
       >
-        {product.imageUrl && (
-          <img src={product.imageUrl} alt={product.title} className="w-28 h-28 sm:w-32 sm:h-32 shrink-0 object-contain rounded-xl bg-stone-50" />
+        {product.imageUrl ? (
+          <img src={product.imageUrl} alt={product.title} className="w-full h-40 object-contain rounded-xl bg-stone-50" />
+        ) : (
+          <div className="w-full h-40 rounded-xl bg-stone-100" />
         )}
-        <div className="min-w-0 flex-1 flex flex-col gap-1.5">
-          <p className="font-semibold text-stone-900 text-sm leading-snug line-clamp-2">{product.title}</p>
-          {product.rating > 0 && <p className="text-[11px] font-semibold text-amber-700">★ {product.rating.toFixed(1)}</p>}
-          <p className="font-bold text-stone-900 tabular-nums">{formatBRL(product.price)}</p>
-          <span
-            className="mt-auto inline-flex w-fit items-center rounded-xl px-3 py-2 text-xs font-bold text-white"
-            style={{ backgroundColor: PLATFORMS[product.platform]?.color }}
-          >
-            Ver detalhes
-          </span>
-        </div>
+        <p className="font-semibold text-stone-900 text-sm leading-snug line-clamp-2">{product.title}</p>
+        <p className="font-bold text-stone-900 tabular-nums">{formatBRL(product.price)}</p>
+        <span
+          className="mt-auto inline-flex w-fit items-center rounded-xl px-3 py-2 text-xs font-bold text-white"
+          style={{ backgroundColor: PLATFORMS[product.platform]?.color }}
+        >
+          Ver detalhes
+        </span>
       </button>
       {open && createPortal(<ProductDetailModal product={product} onClose={() => setOpen(false)} />, document.body)}
     </>
   );
 }
 
+// Cards side by side in a horizontal strip that scrolls sideways
 function ArticleProductHorizontal({ products }: { products: Product[] }) {
   return (
-    <div className="my-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="my-5 flex gap-4 overflow-x-auto snap-x pb-3">
       {products.map((p) => (
         <ArticleProductHorizontalItem key={p.id} product={p} />
       ))}
@@ -170,20 +188,70 @@ function ArticleProductHorizontal({ products }: { products: Product[] }) {
   );
 }
 
-// Comparison table; the style decides which columns it shows
+// Comparison table. Descrição: one row per product with its highlight.
+// Simplificada: name and price only. Horizontal: products side by side, attributes as rows.
 function ArticleProductTable({ products, style }: { products: Product[]; style: ArticleProductStyle }) {
-  const withTip = style === 'descricao';
-  const withRating = style !== 'simplificada';
-  const bigImage = style === 'horizontal';
+  if (style === 'horizontal') {
+    const rows: { label: string; render: (p: Product) => React.ReactNode }[] = [
+      {
+        label: 'Produto',
+        render: (p) => (
+          <div className="space-y-2">
+            {p.imageUrl && <img src={p.imageUrl} alt={p.title} className="w-24 h-24 object-contain rounded-lg bg-stone-50" />}
+            <span className="block font-semibold text-stone-900">{p.title}</span>
+          </div>
+        ),
+      },
+      { label: 'Preço', render: (p) => <span className="font-bold text-stone-900 tabular-nums">{formatBRL(p.price)}</span> },
+      { label: 'Nota', render: (p) => (p.rating > 0 ? `${p.rating.toFixed(1)} ★` : '—') },
+      { label: 'Destaque', render: (p) => p.tamiresTip || '—' },
+      {
+        label: 'Oferta',
+        render: (p) => (
+          <a
+            href={p.affiliateUrl || '#'}
+            target="_blank"
+            rel="noopener noreferrer sponsored"
+            className={buyButtonClass}
+            style={{ backgroundColor: PLATFORMS[p.platform]?.color }}
+          >
+            Ver oferta <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        ),
+      },
+    ];
+    return (
+      <div className="my-5 overflow-x-auto rounded-2xl border border-stone-200 bg-white">
+        <table className="text-left text-sm">
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.label} className="border-t border-stone-100 first:border-t-0">
+                <th scope="row" className="sticky left-0 bg-stone-50 p-3 align-top text-[11px] font-bold uppercase tracking-wide text-stone-500 whitespace-nowrap">
+                  {row.label}
+                </th>
+                {products.map((p) => (
+                  <td key={p.id} className="min-w-[11rem] p-3 align-top text-stone-800">
+                    {row.render(p)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  const detailed = style === 'descricao';
   return (
     <div className="my-5 overflow-x-auto rounded-2xl border border-stone-200 bg-white">
-      <table className="w-full min-w-[28rem] text-left text-sm">
+      <table className={`w-full min-w-[24rem] text-left ${detailed ? 'text-sm' : 'text-xs'}`}>
         <thead className="bg-stone-50 text-[11px] font-bold uppercase tracking-wide text-stone-500">
           <tr>
             <th className="p-3">Produto</th>
-            {withTip && <th className="p-3">Destaque</th>}
+            {detailed && <th className="p-3">Destaque</th>}
             <th className="p-3">Preço</th>
-            {withRating && <th className="p-3">Nota</th>}
+            {detailed && <th className="p-3">Nota</th>}
             <th className="p-3" />
           </tr>
         </thead>
@@ -192,25 +260,31 @@ function ArticleProductTable({ products, style }: { products: Product[]; style: 
             <tr key={p.id} className="border-t border-stone-100 align-middle">
               <td className="p-3">
                 <div className="flex items-center gap-3">
-                  {p.imageUrl && (
-                    <img src={p.imageUrl} alt={p.title} className={`${bigImage ? 'w-20 h-20' : 'w-12 h-12'} shrink-0 object-contain rounded-lg bg-stone-50`} />
+                  {detailed && p.imageUrl && (
+                    <img src={p.imageUrl} alt={p.title} className="w-12 h-12 shrink-0 object-contain rounded-lg bg-stone-50" />
                   )}
                   <span className="font-semibold text-stone-900">{p.title}</span>
                 </div>
               </td>
-              {withTip && <td className="p-3 text-xs text-stone-600 leading-relaxed">{p.tamiresTip || '—'}</td>}
+              {detailed && <td className="p-3 text-xs text-stone-600 leading-relaxed">{p.tamiresTip || '—'}</td>}
               <td className="p-3 font-bold text-stone-900 tabular-nums whitespace-nowrap">{formatBRL(p.price)}</td>
-              {withRating && <td className="p-3 text-stone-700 whitespace-nowrap">{p.rating > 0 ? `${p.rating.toFixed(1)} ★` : '—'}</td>}
+              {detailed && <td className="p-3 text-stone-700 whitespace-nowrap">{p.rating > 0 ? `${p.rating.toFixed(1)} ★` : '—'}</td>}
               <td className="p-3">
-                <a
-                  href={p.affiliateUrl || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer sponsored"
-                  className={buyButtonClass}
-                  style={{ backgroundColor: PLATFORMS[p.platform]?.color }}
-                >
-                  Ver oferta <ExternalLink className="w-3.5 h-3.5" />
-                </a>
+                {detailed ? (
+                  <a
+                    href={p.affiliateUrl || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    className={buyButtonClass}
+                    style={{ backgroundColor: PLATFORMS[p.platform]?.color }}
+                  >
+                    Ver oferta <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                ) : (
+                  <a href={p.affiliateUrl || '#'} target="_blank" rel="noopener noreferrer sponsored" className="text-xs font-bold text-stone-900 underline underline-offset-4">
+                    Ver oferta
+                  </a>
+                )}
               </td>
             </tr>
           ))}
