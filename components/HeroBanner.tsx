@@ -208,7 +208,7 @@ export function HeroBanner({
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 384px"
-              className="object-cover object-center"
+              className="object-cover object-top"
               referrerPolicy="no-referrer"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-stone-950/20 to-transparent" />
