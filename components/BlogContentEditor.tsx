@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { ARTICLE_PRODUCT_LAYOUTS, DEFAULT_ARTICLE_PRODUCT_LAYOUT } from '@/lib/article-product-layouts';
 import {
   Link as LinkIcon,
   Bold,
@@ -39,6 +40,7 @@ const emptyProduct = {
   position: '',
   forWho: '',
   highlights: '',
+  layout: DEFAULT_ARTICLE_PRODUCT_LAYOUT as string,
 };
 
 export function BlogContentEditor({
@@ -85,6 +87,7 @@ export function BlogContentEditor({
       position: '',
       forWho: '',
       highlights: '',
+      layout: productForm.layout,
     });
   };
 
@@ -102,6 +105,7 @@ export function BlogContentEditor({
       productForm.position,
       productForm.forWho,
       productForm.highlights,
+      productForm.layout,
     ].map((f) => f.replace(/[|[\]\n]/g, ' ').trim());
     insertAtCursor(`\n[[produto|${fields.join('|')}]]\n`);
     setShowProductModal(false);
@@ -365,6 +369,18 @@ export function BlogContentEditor({
                 </select>
               </label>
             )}
+            <label className="block space-y-1">
+              <span className="text-xs font-bold text-stone-700">Layout de exibição no artigo</span>
+              <select
+                className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
+                value={productForm.layout}
+                onChange={(ev) => setProductField('layout', ev.target.value)}
+              >
+                {ARTICLE_PRODUCT_LAYOUTS.map((l) => (
+                  <option key={l.id} value={l.id}>{l.label}</option>
+                ))}
+              </select>
+            </label>
             <input
               className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
               placeholder="Nome do produto"

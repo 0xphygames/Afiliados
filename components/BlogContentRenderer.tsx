@@ -5,6 +5,8 @@ import { createPortal } from 'react-dom';
 import { ExternalLink, Sparkles } from 'lucide-react';
 import { ProductCard } from './ProductCard';
 import { ProductDetailModal } from './ProductDetailModal';
+import { PLATFORMS } from '@/lib/constants';
+import { DEFAULT_ARTICLE_PRODUCT_LAYOUT } from '@/lib/article-product-layouts';
 import type { Product, PlatformId } from '@/lib/types';
 
 // Product card written on one line as:
@@ -42,18 +44,17 @@ interface ProductLineProps {
   position: string;
   forWho: string;
   highlights: string;
+  layout: string;
   index: number;
 }
 
-function ArticleProductCard({ name, price, originalPrice, rating, url, image, badge, position, forWho, highlights, index }: ProductLineProps) {
-  // Same expanded view as the Achadinhos grid; the modal is portalled to body so the article layout cannot clip it
-  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+function toArticleProduct({ name, price, originalPrice, rating, url, image, badge, position, forWho, highlights, index }: ProductLineProps): Product {
   const category = highlights.match(/(?:^|;\s*)Categoria:\s*([^;]+)/i)?.[1]?.trim() || 'Achadinho';
   const editorialTip = [
     forWho ? `Para quem é: ${forWho}` : '',
     highlights ? `Destaques: ${highlights}` : '',
   ].filter(Boolean).join(' · ');
-  const product: Product = {
+  return {
     id: `article-product-${index}`,
     title: name,
     platform: platformFromUrl(url),
@@ -70,6 +71,12 @@ function ArticleProductCard({ name, price, originalPrice, rating, url, image, ba
     isFeatured: false,
     createdAt: new Date().toISOString(),
   };
+}
+
+// Same expanded view as the Achadinhos grid; the modal is portalled to body so the article layout cannot clip it
+function ArticleProductCard(props: ProductLineProps) {
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+  const product = toArticleProduct(props);
   return (
     <div className="h-full">
       <ProductCard product={product} onOpenDetails={setDetailProduct} />
@@ -77,6 +84,127 @@ function ArticleProductCard({ name, price, originalPrice, rating, url, image, ba
         createPortal(<ProductDetailModal product={detailProduct} onClose={() => setDetailProduct(null)} />, document.body)}
     </div>
   );
+}
+
+const formatBRL = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+// Compact rows: "Lista com descrição" (with tip) and "Lista simplificada"
+function ArticleProductRows({ products, detailed }: { products: Product[]; detailed: boolean }) {
+  return (
+    <div className="my-5 space-y-3">
+      {products.map((p) => (
+        <div key={p.id} className="flex items-start gap-4 rounded-2xl border border-stone-200 bg-white p-3 sm:p-4">
+          {p.imageUrl && (
+            <img
+              src={p.imageUrl}
+              alt={p.title}
+              className={`${detailed ? 'w-24 h-24' : 'w-14 h-14'} shrink-0 object-contain rounded-xl bg-stone-50`}
+            />
+          )}
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <p className="font-semibold text-stone-900 text-sm leading-snug">{p.title}</p>
+            {detailed && p.tamiresTip && <p className="text-xs text-stone-600 leading-relaxed">{p.tamiresTip}</p>}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <span className="font-bold text-stone-900 tabular-nums">{formatBRL(p.price)}</span>
+              <a
+                href={p.affiliateUrl || '#'}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white"
+                style={{ backgroundColor: PLATFORMS[p.platform]?.color }}
+              >
+                Ver oferta <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Comparison table: one row per product
+function ArticleProductTable({ products }: { products: Product[] }) {
+  return (
+    <div className="my-5 overflow-x-auto rounded-2xl border border-stone-200 bg-white">
+      <table className="w-full min-w-[32rem] text-left text-sm">
+        <thead className="bg-stone-50 text-[11px] font-bold uppercase tracking-wide text-stone-500">
+          <tr>
+            <th className="p-3">Produto</th>
+            <th className="p-3">Preço</th>
+            <th className="p-3">Nota</th>
+            <th className="p-3" />
+          </tr>
+        </thead>
+        <tbody>
+          {products.map((p) => (
+            <tr key={p.id} className="border-t border-stone-100">
+              <td className="p-3">
+                <div className="flex items-center gap-3">
+                  {p.imageUrl && <img src={p.imageUrl} alt={p.title} className="w-12 h-12 shrink-0 object-contain rounded-lg bg-stone-50" />}
+                  <span className="font-semibold text-stone-900">{p.title}</span>
+                </div>
+              </td>
+              <td className="p-3 font-bold text-stone-900 tabular-nums whitespace-nowrap">{formatBRL(p.price)}</td>
+              <td className="p-3 text-stone-700 whitespace-nowrap">{p.rating.toFixed(1)} ★</td>
+              <td className="p-3">
+                <a
+                  href={p.affiliateUrl || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer sponsored"
+                  className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white whitespace-nowrap"
+                  style={{ backgroundColor: PLATFORMS[p.platform]?.color }}
+                >
+                  Ver oferta <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// Renders one run of consecutive product lines with the layout chosen for them in the editor
+function renderProductLayout(layout: string, items: ProductLineProps[], key: string) {
+  const products = items.map((item) => toArticleProduct(item));
+  switch (layout) {
+    case 'unico':
+      return (
+        <div key={key} className="space-y-5 my-5">
+          {items.map((item) => (
+            <div key={item.index} className="mx-auto max-w-sm">
+              <ArticleProductCard {...item} />
+            </div>
+          ))}
+        </div>
+      );
+    case 'tabela':
+      return <ArticleProductTable key={key} products={products} />;
+    case 'lista-descricao':
+      return <ArticleProductRows key={key} products={products} detailed />;
+    case 'lista-simples':
+      return <ArticleProductRows key={key} products={products} detailed={false} />;
+    case 'horizontal':
+      return (
+        <div key={key} className="flex gap-4 overflow-x-auto snap-x pb-3 my-5">
+          {items.map((item) => (
+            <div key={item.index} className="w-64 shrink-0 snap-start">
+              <ArticleProductCard {...item} />
+            </div>
+          ))}
+        </div>
+      );
+    default:
+      return (
+        <div key={key} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 my-5 items-stretch">
+          {items.map((item) => (
+            <ArticleProductCard key={item.index} {...item} />
+          ))}
+        </div>
+      );
+  }
 }
 
 function AffiliateDisclosure() {
@@ -182,15 +310,11 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
 
   let inList = false;
   let currentListItems: React.ReactNode[] = [];
-  let productGroup: React.ReactNode[] = [];
+  let productGroup: { layout: string; item: ProductLineProps }[] = [];
 
   const flushProductGroup = () => {
     if (productGroup.length > 0) {
-      renderedElements.push(
-        <div key={`products-${renderedElements.length}`} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 my-5 items-stretch">
-          {productGroup}
-        </div>,
-      );
+      renderedElements.push(renderProductLayout(productGroup[0].layout, productGroup.map((g) => g.item), `products-${renderedElements.length}`));
       productGroup = [];
     }
   };
@@ -238,23 +362,15 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
         position = '',
         forWho = '',
         highlights = '',
+        layout = '',
       ] = trimmed.slice(10, -2).split('|').map((field) => field.trim());
-      productGroup.push(
-        <ArticleProductCard
-          index={index}
-          key={`product-${index}`}
-          name={name}
-          price={price}
-          originalPrice={originalPrice}
-          rating={rating}
-          url={url}
-          image={image}
-          badge={badge}
-          position={position}
-          forWho={forWho}
-          highlights={highlights}
-        />
-      );
+      const groupLayout = layout || DEFAULT_ARTICLE_PRODUCT_LAYOUT;
+      // A new layout starts a new block of products
+      if (productGroup.length > 0 && productGroup[0].layout !== groupLayout) flushProductGroup();
+      productGroup.push({
+        layout: groupLayout,
+        item: { index, name, price, originalPrice, rating, url, image, badge, position, forWho, highlights, layout: groupLayout },
+      });
       return;
     }
 
