@@ -69,7 +69,7 @@ function toArticleProduct({ name, price, originalPrice, rating, url, image, badg
     affiliateUrl: url,
     price: parseMoney(price),
     originalPrice: originalPrice ? parseMoney(originalPrice) : undefined,
-    rating: Number(rating.replace(',', '.')) || 5,
+    rating: Number(rating.replace(',', '.')) || 0,
     reviewCount: 1,
     badge: [position && `${position}.`, badge].filter(Boolean).join(' ') || undefined,
     tamiresTip: editorialTip || undefined,
@@ -145,7 +145,7 @@ function ArticleProductHorizontalItem({ product }: { product: Product }) {
         )}
         <div className="min-w-0 flex-1 flex flex-col gap-1.5">
           <p className="font-semibold text-stone-900 text-sm leading-snug line-clamp-2">{product.title}</p>
-          <p className="text-[11px] font-semibold text-amber-700">★ {product.rating.toFixed(1)}</p>
+          {product.rating > 0 && <p className="text-[11px] font-semibold text-amber-700">★ {product.rating.toFixed(1)}</p>}
           <p className="font-bold text-stone-900 tabular-nums">{formatBRL(product.price)}</p>
           <span
             className="mt-auto inline-flex w-fit items-center rounded-xl px-3 py-2 text-xs font-bold text-white"
@@ -200,7 +200,7 @@ function ArticleProductTable({ products, style }: { products: Product[]; style: 
               </td>
               {withTip && <td className="p-3 text-xs text-stone-600 leading-relaxed">{p.tamiresTip || '—'}</td>}
               <td className="p-3 font-bold text-stone-900 tabular-nums whitespace-nowrap">{formatBRL(p.price)}</td>
-              {withRating && <td className="p-3 text-stone-700 whitespace-nowrap">{p.rating.toFixed(1)} ★</td>}
+              {withRating && <td className="p-3 text-stone-700 whitespace-nowrap">{p.rating > 0 ? `${p.rating.toFixed(1)} ★` : '—'}</td>}
               <td className="p-3">
                 <a
                   href={p.affiliateUrl || '#'}
