@@ -201,7 +201,7 @@ export function HeroBanner({
         {/* Right Column: Hero Visual + Curator Bio Card */}
         <div className="w-full lg:w-96 shrink-0 space-y-4">
           {/* Framed Lifestyle Showcase Photo */}
-          <div className="relative aspect-16/10 rounded-2xl overflow-hidden border border-stone-200 shadow-xs bg-stone-100">
+          <div className="relative aspect-16/9 sm:aspect-21/9 lg:aspect-16/10 rounded-2xl overflow-hidden border border-stone-200 shadow-xs bg-stone-100">
             <Image
               src={settings?.heroImageUrl || '/images/hero_achadinhos_looks_1791404026649.jpg'}
               alt="Curadoria Tamires Santos Achadinhos e Looks"

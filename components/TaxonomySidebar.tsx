@@ -23,6 +23,8 @@ const ALL = 'Todos os Setores';
 // clicking a micro filters only that subcategory. The active macro opens its micros.
 export function TaxonomySidebar({ activePlatform, activeCategory, onSelectCategory, products, categoryCounts, className = '' }: TaxonomySidebarProps) {
   // The tree comes from the database (editable in Categorias & Setores); the code tree is the fallback
+  // On phones the sector list starts closed so the products show first
+  const [sectionsOpen, setSectionsOpen] = useState(false);
   const [tree, setTree] = useState<TaxMacro[]>([]);
   useEffect(() => subscribeTaxonomy((t) => setTree(t)), []);
   const macros = tree.length
@@ -63,9 +65,15 @@ export function TaxonomySidebar({ activePlatform, activeCategory, onSelectCatego
             <Layers className="w-4 h-4 text-amber-600" />
             <span>Setores</span>
           </div>
-          <span className="text-[10px] font-bold text-white bg-stone-900 px-2 py-0.5 rounded-md">{storeLabel}</span>
+          <span className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-white bg-stone-900 px-2 py-0.5 rounded-md">{storeLabel}</span>
+            <button type="button" onClick={() => setSectionsOpen((v) => !v)} className="md:hidden text-xs font-bold text-stone-700 underline underline-offset-4">
+              {sectionsOpen ? 'Fechar' : 'Abrir'}
+            </button>
+          </span>
         </div>
 
+        <div className={`${sectionsOpen ? 'block' : 'hidden'} md:block space-y-3`}>
         <button type="button" onClick={() => onSelectCategory(ALL)} className={rowClass(activeCategory === ALL)}>
           <span className="flex items-center gap-2">
             <LayoutGrid className="w-4 h-4" />
@@ -115,6 +123,7 @@ export function TaxonomySidebar({ activePlatform, activeCategory, onSelectCatego
             </div>
           );
         })}
+        </div>
       </div>
     </aside>
   );
