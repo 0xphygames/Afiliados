@@ -77,14 +77,11 @@ export default function PainelArtigosPage() {
       setCoverImageUrl(supabase.storage.from(SUPABASE_STORAGE_BUCKET).getPublicUrl(path).data.publicUrl);
     } catch (err) {
       console.error('Erro ao otimizar imagem do artigo:', err);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        if (result) {
-          setCoverImageUrl(result);
-        }
-      };
-      reader.readAsDataURL(file);
+      const reason = (err as { message?: string })?.message;
+      alert(
+        'Não foi possível enviar a foto de capa. ' +
+          (reason || 'Verifique se você está logada como administradora e se o bucket images está configurado.')
+      );
     }
   };
 
