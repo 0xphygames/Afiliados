@@ -15,7 +15,6 @@ import {
   Heart,
   Share2,
   Tag,
-  ShieldCheck,
   Camera,
   Flame,
 } from 'lucide-react';
@@ -220,10 +219,6 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
                 <span className="truncate">{kw}</span>
               </span>
             ))}
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-stone-600 bg-stone-100 px-1.5 py-0.5 rounded-md border border-stone-200">
-              <ShieldCheck className="w-2.5 h-2.5 text-stone-500" />
-              <span>Link Seguro</span>
-            </span>
           </div>
         </div>
 
@@ -243,7 +238,7 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
 
             <button
               onClick={handleCopyLink}
-              className={`p-1.5 rounded-lg border text-xs transition-colors flex items-center gap-1 ${
+              className={`shrink-0 whitespace-nowrap p-1.5 rounded-lg border text-xs transition-colors flex items-center gap-1 ${
                 copied
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                   : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100 hover:text-stone-900'
