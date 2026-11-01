@@ -26,7 +26,7 @@ export function LandingPagesSection({
 
   return (
     <section id="cupons" className="w-full bg-white border-b border-stone-200 py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-amber-100 text-amber-900 rounded-lg">

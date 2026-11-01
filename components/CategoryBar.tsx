@@ -82,7 +82,7 @@ export function CategoryBar({
 
   return (
     <div className="w-full bg-white border-y border-stone-200 py-3 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4 mb-2">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-stone-900 tracking-wide uppercase">

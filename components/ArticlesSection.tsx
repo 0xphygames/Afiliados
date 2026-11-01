@@ -21,7 +21,7 @@ export function ArticlesSection({
   if (!articles || articles.length === 0) return null;
 
   return (
-    <section id="blog" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-white">
+    <section id="blog" className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-white">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-stone-200">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-900 rounded-full text-xs font-semibold border border-amber-200 mb-2">
