@@ -90,6 +90,7 @@ export default function PainelArtigosPage() {
     setTitle('');
     setDepartment('');
     setSubcategory('');
+    setPlatform('');
     setSummary('');
     setContent('');
     setCoverImageUrl('/images/hero_achadinhos_looks_1791404026649.jpg');
@@ -110,7 +111,10 @@ export default function PainelArtigosPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !content.trim()) return;
+    if (!title.trim() || !content.trim()) {
+      alert('Preencha o título e o conteúdo do artigo antes de publicar.');
+      return;
+    }
 
     setSaving(true);
     const newArt: Article = {
