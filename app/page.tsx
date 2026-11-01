@@ -168,7 +168,7 @@ export default function HomePage() {
               <ProductCard
                 key={product.id}
                 product={product}
-                onOpenDetails={setSelectedProduct} showTip={false}
+                onOpenDetails={setSelectedProduct}
               />
             ))}
           </div>

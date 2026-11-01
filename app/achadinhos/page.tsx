@@ -22,6 +22,9 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+// Products shown per step; more load when the reader asks, so the page stays light
+const PAGE_SIZE = 20;
+
 export default function AchadinhosPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<CustomCategory[]>([]);
@@ -38,6 +41,7 @@ export default function AchadinhosPage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortOption, setSortOption] = useState<SortOption>('recent');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
     const unsubProds = subscribeFirestoreProducts((list) => {
@@ -54,6 +58,11 @@ export default function AchadinhosPage() {
       unsubCats();
     };
   }, []);
+
+  // A new filter or search starts again from the first page
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [activePlatform, activeCategory, searchQuery, sortOption]);
 
   const handleSelectPlatform = (platform: PlatformId | 'all') => {
     setActivePlatform(platform);
@@ -234,15 +243,28 @@ export default function AchadinhosPage() {
                   <p className="text-xs text-stone-500">Buscando o catálogo atualizado.</p>
                 </div>
               ) : filteredProducts.length > 0 ? (
+                <>
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4">
-                  {filteredProducts.map((product) => (
+                  {filteredProducts.slice(0, visibleCount).map((product) => (
                     <ProductCard
                       key={product.id}
                       product={product}
-                      onOpenDetails={setSelectedProduct} showTip={false}
+                      onOpenDetails={setSelectedProduct}
                     />
                   ))}
                 </div>
+                {filteredProducts.length > visibleCount && (
+                  <div className="mt-8 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs transition-all"
+                    >
+                      Mostrar mais achadinhos ({filteredProducts.length - visibleCount} restantes)
+                    </button>
+                  </div>
+                )}
+                </>
               ) : (
                 <div className="text-center py-16 px-4 bg-white rounded-3xl border border-stone-200 max-w-md mx-auto space-y-3">
                   <ShoppingBag className="w-12 h-12 text-stone-300 mx-auto" />
