@@ -158,12 +158,12 @@ export function ArticleView({ initialArticle }: { initialArticle?: Article | nul
 
               {/* Cover Image */}
               {article.coverImageUrl && (
-                <div className="relative h-56 sm:h-64 w-full max-w-3xl mx-auto rounded-3xl overflow-hidden bg-stone-100 border border-stone-200 shadow-sm">
+                <div className="relative aspect-16/9 w-full max-w-3xl mx-auto rounded-2xl overflow-hidden bg-stone-100">
                   <Image
                     src={article.coverImageUrl}
                     alt={article.title}
                     fill
-                    className="object-contain"
+                    className="object-cover object-center"
                     priority
                     referrerPolicy="no-referrer"
                     unoptimized
