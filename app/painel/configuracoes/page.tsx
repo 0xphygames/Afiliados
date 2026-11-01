@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAdmin } from '@/lib/AdminContext';
 import { SiteSettings } from '@/lib/types';
 import { seedInitialDataToFirestore } from '@/lib/firestore-products';
+import { ImageUploader } from '@/components/ImageUploader';
 import {
   Settings,
   Save,
@@ -24,6 +25,7 @@ function ConfiguracoesForm({
   const [heroSubheading, setHeroSubheading] = useState(settings?.heroSubheading || '');
   const [topBannerNotice, setTopBannerNotice] = useState(settings?.topBannerNotice || '');
   const [whatsappUrl, setWhatsappUrl] = useState(settings?.whatsappUrl || '');
+  const [heroImageUrl, setHeroImageUrl] = useState(settings?.heroImageUrl || '');
 
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState(false);
@@ -39,6 +41,7 @@ function ConfiguracoesForm({
       heroSubheading: heroSubheading.trim(),
       topBannerNotice: topBannerNotice.trim(),
       whatsappUrl: whatsappUrl.trim(),
+      heroImageUrl: heroImageUrl || undefined,
       updatedAt: new Date().toISOString(),
     };
 
@@ -143,6 +146,13 @@ function ConfiguracoesForm({
               placeholder="https://chat.whatsapp.com/..."
               className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900"
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-stone-900">
+              Foto de Capa da Página Inicial (cartão ao lado do texto principal)
+            </label>
+            <ImageUploader initialUrl={heroImageUrl} onUpload={(url) => setHeroImageUrl(url)} />
           </div>
 
           <div className="pt-4 border-t border-stone-100 flex items-center justify-end">
