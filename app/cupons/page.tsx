@@ -45,7 +45,7 @@ export default function CuponsPage() {
       <main className="flex-1 bg-stone-50/60 pb-16">
         {/* Breadcrumb & Hero */}
         <section className="bg-white border-b border-stone-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
             <div className="mb-4">
               <Link
                 href="/"
@@ -143,7 +143,7 @@ export default function CuponsPage() {
         </section>
 
         {/* Coupons Grid */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <section className="w-full px-4 sm:px-6 lg:px-8 pt-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCoupons.map((coupon) => {
               const platformConfig = PLATFORMS[coupon.platform] || PLATFORMS.shopee;

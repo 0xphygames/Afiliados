@@ -96,10 +96,10 @@ export function HeroBanner({
 
   return (
     <section className="bg-white rounded-3xl mx-4 sm:mx-6 lg:mx-8 my-6 border border-stone-200 shadow-sm overflow-hidden transition-all">
-      <div className="max-w-[1600px] mx-auto px-6 py-8 sm:py-12 lg:py-10 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
+      <div className="w-full px-6 py-8 sm:py-12 lg:py-10 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
         {/* Left Column: Editorial Information */}
         <div className="flex-1 space-y-4 sm:space-y-5">
-          <h1 className="font-serif text-3xl sm:text-4xl lg:text-4xl font-bold tracking-tight text-stone-900 leading-tight text-balance">
+          <h1 className="font-serif text-3xl sm:text-4xl lg:text-3xl font-bold tracking-tight text-stone-900 leading-tight text-balance">
             {details.title}
           </h1>
 

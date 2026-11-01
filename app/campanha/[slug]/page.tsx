@@ -227,7 +227,7 @@ export default function PublicCampaignPage() {
 
       <main className="flex-1 bg-white pb-24">
         {/* Breadcrumb Navigation */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 flex items-center justify-between">
+        <div className="w-full px-4 sm:px-6 lg:px-8 pt-4 flex items-center justify-between">
           <Link
             href="/campanha"
             className="inline-flex items-center gap-2 text-xs font-semibold text-stone-600 hover:text-stone-950 transition-colors py-1.5 px-3 rounded-lg hover:bg-stone-100"
@@ -244,7 +244,7 @@ export default function PublicCampaignPage() {
         {/* Campaign Hero Banner (Bottom-of-Funnel Conversion Core) */}
         {campaign ? (
           <section className="bg-stone-950 text-white rounded-3xl mx-4 sm:mx-6 lg:mx-8 my-4 border border-stone-800 shadow-xl overflow-hidden relative">
-            <div className="relative max-w-7xl mx-auto px-6 py-8 sm:py-12 lg:py-14 flex flex-col lg:flex-row items-center justify-between gap-8 z-10">
+            <div className="relative w-full px-6 py-8 sm:py-12 lg:py-14 flex flex-col lg:flex-row items-center justify-between gap-8 z-10">
               <div className="flex-1 space-y-4">
                 {/* Badges & Urgency Tag */}
                 <div className="flex flex-wrap items-center gap-2">
@@ -403,7 +403,7 @@ export default function PublicCampaignPage() {
         )}
 
         {/* Campaign Products Grid */}
-        <section id="produtos" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-white">
+        <section id="produtos" className="w-full px-4 sm:px-6 lg:px-8 py-10 bg-white">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-stone-200 mb-8 gap-4">
             <div>
               <div className="flex items-center gap-2">
@@ -460,7 +460,7 @@ export default function PublicCampaignPage() {
 
         {/* Social Proof (Testimonials / Depoimentos de Clientes) */}
         <section className="bg-stone-50/70 border-y border-stone-200 py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100/70 text-amber-900 rounded-full text-xs font-bold">
                 <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />

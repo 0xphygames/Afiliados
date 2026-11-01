@@ -107,7 +107,7 @@ export default function BlogPage() {
       <main className="flex-1 bg-stone-50/60 pb-16">
         {/* Header Section */}
         <section className="bg-white border-b border-stone-200">
-          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
             <div className="mb-4">
               <Link
                 href="/"
@@ -157,7 +157,7 @@ export default function BlogPage() {
         </section>
 
         {/* Store bar, same as the Achadinhos page */}
-        <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <section className="w-full px-4 sm:px-6 lg:px-8 pt-6">
           <div className="flex flex-wrap items-center gap-2">
             {(['all', 'shopee', 'shein', 'mercadolivre', 'amazon'] as const).map((p) => (
               <button
@@ -175,7 +175,7 @@ export default function BlogPage() {
           </div>
         </section>
 
-        <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <section className="w-full px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row items-start gap-6 lg:gap-8">
             <TaxonomySidebar
               activePlatform={activePlatform}

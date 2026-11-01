@@ -115,7 +115,7 @@ export default function AchadinhosPage() {
       <main className="flex-1 bg-white pb-16">
         {/* Header Breadcrumb & Title */}
         <section className="bg-stone-50/60 border-b border-stone-200">
-          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
             <div className="mb-4">
               <Link
                 href="/"
@@ -217,7 +217,7 @@ export default function AchadinhosPage() {
         </section>
 
         {/* Vertical Category Sidebar beside Product Grid */}
-        <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <section className="w-full px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row items-start gap-6 lg:gap-8">
             <TaxonomySidebar
               activePlatform={activePlatform}
