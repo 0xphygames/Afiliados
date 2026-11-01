@@ -104,6 +104,7 @@ export const INITIAL_SETTINGS: SiteSettings = {
   heroSubheading: 'A curadoria oficial de Tamires Santos reunindo as melhores promoções, cupons e achados da Shopee, Shein, Mercado Livre e Amazon com links 100% seguros!',
   topBannerNotice: 'Curadoria oficial de Tamires Santos · Links com cupons verificados e compras 100% seguras',
   whatsappUrl: 'https://whatsapp.com',
+  heroImageUrl: '/images/hero_achadinhos_looks_1791404026649.jpg',
   updatedAt: new Date().toISOString(),
 };
 
@@ -275,6 +276,7 @@ export function subscribeFirestoreSettings(
         heroSubheading: data.hero_subheading || INITIAL_SETTINGS.heroSubheading,
         topBannerNotice: data.top_banner_notice || INITIAL_SETTINGS.topBannerNotice,
         whatsappUrl: data.whatsapp_url || INITIAL_SETTINGS.whatsappUrl,
+        heroImageUrl: data.hero_image_url || INITIAL_SETTINGS.heroImageUrl,
         updatedAt: data.updated_at,
       });
     });
@@ -337,6 +339,7 @@ export async function saveSettingsToFirestore(settings: SiteSettings): Promise<v
     hero_subheading: settings.heroSubheading,
     top_banner_notice: settings.topBannerNotice,
     whatsapp_url: settings.whatsappUrl,
+    hero_image_url: settings.heroImageUrl || null,
     updated_at: new Date().toISOString(),
   });
   if (error) throw error;

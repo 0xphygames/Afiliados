@@ -56,6 +56,8 @@ export interface SiteSettings {
   heroSubheading: string;
   topBannerNotice: string;
   whatsappUrl: string;
+  // Photo shown in the home hero card; falls back to the bundled photo
+  heroImageUrl?: string;
   updatedAt?: string;
 }
 
