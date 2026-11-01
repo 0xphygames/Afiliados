@@ -11,7 +11,9 @@ import {
 } from '@/lib/firestore-products';
 import { Navbar } from '@/components/Navbar';
 import { TaxonomySidebar } from '@/components/TaxonomySidebar';
-import { LEGACY_MAP } from '@/lib/taxonomy';
+import { LEGACY_MAP, TAXONOMY } from '@/lib/taxonomy';
+import { TaxMacro, subscribeTaxonomy } from '@/lib/taxonomy-db';
+import { CategoryPreview } from '@/components/CategoryPreview';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { Footer } from '@/components/Footer';
@@ -42,6 +44,14 @@ export default function AchadinhosPage() {
   const [sortOption, setSortOption] = useState<SortOption>('recent');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  // Macro and micro categories shown as the preview until a category is picked
+  const [taxTree, setTaxTree] = useState<TaxMacro[]>([]);
+  useEffect(() => subscribeTaxonomy((t) => setTaxTree(t)), []);
+  const previewMacros = taxTree.length
+    ? taxTree.map((m) => ({ name: m.node.name, subcategories: m.micros.map((x) => x.name) }))
+    : TAXONOMY.map((m) => ({ name: m.name, subcategories: m.subcategories.map((s) => s.name) }));
+  const showPreview = activeCategory === 'Todos os Setores' && !searchQuery.trim();
 
   useEffect(() => {
     const unsubProds = subscribeFirestoreProducts((list) => {
@@ -236,7 +246,13 @@ export default function AchadinhosPage() {
             />
 
             <div className="flex-1 min-w-0 w-full">
-              {isLoadingProducts ? (
+              {showPreview && !isLoadingProducts ? (
+                <CategoryPreview
+                  macros={previewMacros}
+                  products={products.filter((p) => activePlatform === 'all' || p.platform === activePlatform)}
+                  onSelect={setActiveCategory}
+                />
+              ) : isLoadingProducts ? (
                 <div className="text-center py-16 px-4 bg-white rounded-3xl border border-stone-200 max-w-md mx-auto space-y-3">
                   <div className="w-10 h-10 mx-auto rounded-full border-4 border-stone-200 border-t-amber-500 animate-spin" />
                   <h3 className="font-serif text-lg font-bold text-stone-900">Carregando achadinhos...</h3>
