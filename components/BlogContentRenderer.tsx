@@ -6,7 +6,12 @@ import { ExternalLink, Sparkles } from 'lucide-react';
 import { ProductCard } from './ProductCard';
 import { ProductDetailModal } from './ProductDetailModal';
 import { PLATFORMS } from '@/lib/constants';
-import { DEFAULT_ARTICLE_PRODUCT_LAYOUT } from '@/lib/article-product-layouts';
+import {
+  LEGACY_ARTICLE_PRODUCT_LAYOUT,
+  parseArticleProductLayout,
+  type ArticleProductFields,
+  type ArticleProductStyle,
+} from '@/lib/article-product-layouts';
 import type { Product, PlatformId } from '@/lib/types';
 
 // Product card written on one line as:
@@ -88,7 +93,9 @@ function ArticleProductCard(props: ProductLineProps) {
 
 const formatBRL = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-// Compact rows: "Lista com descrição" (with tip) and "Lista simplificada"
+const buyButtonClass = 'inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white whitespace-nowrap';
+
+// Rows with a buy button: "Com descrição" (with tip) and "Lista simplificada" (compact)
 function ArticleProductRows({ products, detailed }: { products: Product[]; detailed: boolean }) {
   return (
     <div className="my-5 space-y-3">
@@ -110,7 +117,7 @@ function ArticleProductRows({ products, detailed }: { products: Product[]; detai
                 href={p.affiliateUrl || '#'}
                 target="_blank"
                 rel="noopener noreferrer sponsored"
-                className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white"
+                className={buyButtonClass}
                 style={{ backgroundColor: PLATFORMS[p.platform]?.color }}
               >
                 Ver oferta <ExternalLink className="w-3.5 h-3.5" />
@@ -123,36 +130,83 @@ function ArticleProductRows({ products, detailed }: { products: Product[]; detai
   );
 }
 
-// Comparison table: one row per product
-function ArticleProductTable({ products }: { products: Product[] }) {
+// One horizontal card: image on the left; click opens the same expanded view as the Achadinhos grid
+function ArticleProductHorizontalItem({ product }: { product: Product }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="w-full text-left flex gap-4 rounded-2xl border border-stone-200 bg-white p-3 hover:border-stone-300 hover:shadow-sm transition-all"
+      >
+        {product.imageUrl && (
+          <img src={product.imageUrl} alt={product.title} className="w-28 h-28 sm:w-32 sm:h-32 shrink-0 object-contain rounded-xl bg-stone-50" />
+        )}
+        <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+          <p className="font-semibold text-stone-900 text-sm leading-snug line-clamp-2">{product.title}</p>
+          <p className="text-[11px] font-semibold text-amber-700">★ {product.rating.toFixed(1)}</p>
+          <p className="font-bold text-stone-900 tabular-nums">{formatBRL(product.price)}</p>
+          <span
+            className="mt-auto inline-flex w-fit items-center rounded-xl px-3 py-2 text-xs font-bold text-white"
+            style={{ backgroundColor: PLATFORMS[product.platform]?.color }}
+          >
+            Ver detalhes
+          </span>
+        </div>
+      </button>
+      {open && createPortal(<ProductDetailModal product={product} onClose={() => setOpen(false)} />, document.body)}
+    </>
+  );
+}
+
+function ArticleProductHorizontal({ products }: { products: Product[] }) {
+  return (
+    <div className="my-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {products.map((p) => (
+        <ArticleProductHorizontalItem key={p.id} product={p} />
+      ))}
+    </div>
+  );
+}
+
+// Comparison table; the style decides which columns it shows
+function ArticleProductTable({ products, style }: { products: Product[]; style: ArticleProductStyle }) {
+  const withTip = style === 'descricao';
+  const withRating = style !== 'simplificada';
+  const bigImage = style === 'horizontal';
   return (
     <div className="my-5 overflow-x-auto rounded-2xl border border-stone-200 bg-white">
-      <table className="w-full min-w-[32rem] text-left text-sm">
+      <table className="w-full min-w-[28rem] text-left text-sm">
         <thead className="bg-stone-50 text-[11px] font-bold uppercase tracking-wide text-stone-500">
           <tr>
             <th className="p-3">Produto</th>
+            {withTip && <th className="p-3">Destaque</th>}
             <th className="p-3">Preço</th>
-            <th className="p-3">Nota</th>
+            {withRating && <th className="p-3">Nota</th>}
             <th className="p-3" />
           </tr>
         </thead>
         <tbody>
           {products.map((p) => (
-            <tr key={p.id} className="border-t border-stone-100">
+            <tr key={p.id} className="border-t border-stone-100 align-middle">
               <td className="p-3">
                 <div className="flex items-center gap-3">
-                  {p.imageUrl && <img src={p.imageUrl} alt={p.title} className="w-12 h-12 shrink-0 object-contain rounded-lg bg-stone-50" />}
+                  {p.imageUrl && (
+                    <img src={p.imageUrl} alt={p.title} className={`${bigImage ? 'w-20 h-20' : 'w-12 h-12'} shrink-0 object-contain rounded-lg bg-stone-50`} />
+                  )}
                   <span className="font-semibold text-stone-900">{p.title}</span>
                 </div>
               </td>
+              {withTip && <td className="p-3 text-xs text-stone-600 leading-relaxed">{p.tamiresTip || '—'}</td>}
               <td className="p-3 font-bold text-stone-900 tabular-nums whitespace-nowrap">{formatBRL(p.price)}</td>
-              <td className="p-3 text-stone-700 whitespace-nowrap">{p.rating.toFixed(1)} ★</td>
+              {withRating && <td className="p-3 text-stone-700 whitespace-nowrap">{p.rating.toFixed(1)} ★</td>}
               <td className="p-3">
                 <a
                   href={p.affiliateUrl || '#'}
                   target="_blank"
                   rel="noopener noreferrer sponsored"
-                  className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white whitespace-nowrap"
+                  className={buyButtonClass}
                   style={{ backgroundColor: PLATFORMS[p.platform]?.color }}
                 >
                   Ver oferta <ExternalLink className="w-3.5 h-3.5" />
@@ -166,45 +220,44 @@ function ArticleProductTable({ products }: { products: Product[] }) {
   );
 }
 
-// Renders one run of consecutive product lines with the layout chosen for them in the editor
+// Renders one run of product lines according to the objective and style chosen in the editor
 function renderProductLayout(layout: string, items: ProductLineProps[], key: string) {
+  const { objective, style } = parseArticleProductLayout(layout);
   const products = items.map((item) => toArticleProduct(item));
-  switch (layout) {
-    case 'unico':
-      return (
-        <div key={key} className="space-y-5 my-5">
-          {items.map((item) => (
+
+  if (objective === 'tabela') {
+    return <ArticleProductTable key={key} products={products} style={style} />;
+  }
+
+  if (objective === 'unico') {
+    return (
+      <div key={key} className="my-5 space-y-5">
+        {items.map((item) => {
+          if (style === 'horizontal') return <ArticleProductHorizontal key={item.index} products={[toArticleProduct(item)]} />;
+          if (style === 'simplificada') return <ArticleProductRows key={item.index} products={[toArticleProduct(item)]} detailed={false} />;
+          return (
             <div key={item.index} className="mx-auto max-w-sm">
               <ArticleProductCard {...item} />
             </div>
-          ))}
-        </div>
-      );
-    case 'tabela':
-      return <ArticleProductTable key={key} products={products} />;
-    case 'lista-descricao':
-      return <ArticleProductRows key={key} products={products} detailed />;
-    case 'lista-simples':
-      return <ArticleProductRows key={key} products={products} detailed={false} />;
-    case 'horizontal':
-      return (
-        <div key={key} className="flex gap-4 overflow-x-auto snap-x pb-3 my-5">
-          {items.map((item) => (
-            <div key={item.index} className="w-64 shrink-0 snap-start">
-              <ArticleProductCard {...item} />
-            </div>
-          ))}
-        </div>
-      );
-    default:
-      return (
-        <div key={key} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 my-5 items-stretch">
-          {items.map((item) => (
-            <ArticleProductCard key={item.index} {...item} />
-          ))}
-        </div>
-      );
+          );
+        })}
+      </div>
+    );
   }
+
+  if (style === 'horizontal') {
+    return (
+      <div key={key}>
+        <ArticleProductHorizontal products={products} />
+      </div>
+    );
+  }
+  return <ArticleProductRows key={key} products={products} detailed={style === 'descricao'} />;
+}
+
+// Preview used by the editor: the same blocks the article will show
+export function ProductLayoutPreview({ layout, items }: { layout: string; items: ArticleProductFields[] }) {
+  return <>{renderProductLayout(layout, items.map((item, index) => ({ ...item, index, layout })), 'preview')}</>;
 }
 
 function AffiliateDisclosure() {
@@ -364,7 +417,7 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
         highlights = '',
         layout = '',
       ] = trimmed.slice(10, -2).split('|').map((field) => field.trim());
-      const groupLayout = layout || DEFAULT_ARTICLE_PRODUCT_LAYOUT;
+      const groupLayout = layout || LEGACY_ARTICLE_PRODUCT_LAYOUT;
       // A new layout starts a new block of products
       if (productGroup.length > 0 && productGroup[0].layout !== groupLayout) flushProductGroup();
       productGroup.push({

@@ -1,8 +1,17 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ARTICLE_PRODUCT_LAYOUTS, DEFAULT_ARTICLE_PRODUCT_LAYOUT } from '@/lib/article-product-layouts';
+import {
+  ARTICLE_PRODUCT_OBJECTIVES,
+  ARTICLE_PRODUCT_STYLES,
+  articleProductLayoutId,
+  type ArticleProductFields,
+  type ArticleProductObjective,
+  type ArticleProductStyle,
+} from '@/lib/article-product-layouts';
+import { ProductLayoutPreview } from './BlogContentRenderer';
+import { subscribeTaxonomy, type TaxMacro } from '@/lib/taxonomy-db';
 import {
   Link as LinkIcon,
   Bold,
@@ -40,7 +49,6 @@ const emptyProduct = {
   position: '',
   forWho: '',
   highlights: '',
-  layout: DEFAULT_ARTICLE_PRODUCT_LAYOUT as string,
 };
 
 export function BlogContentEditor({
@@ -56,61 +64,105 @@ export function BlogContentEditor({
   const [linkUrl, setLinkUrl] = useState('');
   const [showProductModal, setShowProductModal] = useState(false);
   const [productForm, setProductForm] = useState(emptyProduct);
-  const [pickedProductId, setPickedProductId] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [objective, setObjective] = useState<ArticleProductObjective>('lista');
+  const [style, setStyle] = useState<ArticleProductStyle>('descricao');
+  const [pickerSearch, setPickerSearch] = useState('');
+  const [pickerMacro, setPickerMacro] = useState('');
+  const [pickerMicro, setPickerMicro] = useState('');
+  const [taxTree, setTaxTree] = useState<TaxMacro[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // Keep the insertion point while focus moves into the portal modal.
   const selectionRef = useRef({ start: 0, end: 0 });
 
+  // The macro and micro filter of the product picker come from the taxonomy table
+  useEffect(() => subscribeTaxonomy((t) => setTaxTree(t)), []);
+
   const setProductField = (key: keyof typeof emptyProduct, value: string) =>
     setProductForm((prev) => ({ ...prev, [key]: value }));
 
+  const money = (n: number) => `R$ ${n.toFixed(2).replace('.', ',')}`;
+
+  // Catalog product as the fields of one product line
+  const catalogFields = (p: Product): ArticleProductFields => ({
+    name: p.title,
+    price: p.price ? money(p.price) : '',
+    originalPrice: p.originalPrice ? money(p.originalPrice) : '',
+    rating: p.rating ? String(p.rating) : '',
+    url: p.affiliateUrl,
+    image: p.imageUrl,
+    badge: p.badge || '',
+    position: '',
+    forWho: '',
+    highlights: '',
+  });
+
+  const layoutValue = articleProductLayoutId(objective, style);
+  const microOptions = taxTree.find((m) => m.node.name === pickerMacro)?.micros ?? [];
+  const pickerSearchTerm = pickerSearch.trim().toLowerCase();
+  const pickerProducts = products
+    .filter((p) => (!pickerMacro || p.department === pickerMacro) && (!pickerMicro || p.subcategory === pickerMicro))
+    .filter((p) => !pickerSearchTerm || p.title.toLowerCase().includes(pickerSearchTerm))
+    .slice(0, 60);
+  const selectedProducts = selectedIds
+    .map((id) => products.find((p) => p.id === id))
+    .filter((p): p is Product => Boolean(p));
+  // Catalog picks win; the manual form is used only when nothing is picked
+  const manualReady = Boolean(productForm.name.trim() && productForm.url.trim());
+  const itemsToInsert: ArticleProductFields[] =
+    selectedProducts.length > 0 ? selectedProducts.map(catalogFields) : manualReady ? [productForm] : [];
+
+  const togglePick = (id: string) =>
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      // The single-card objective holds one product at a time
+      return objective === 'unico' ? [id] : [...prev, id];
+    });
+
+  const chooseObjective = (next: ArticleProductObjective) => {
+    setObjective(next);
+    if (next === 'unico') setSelectedIds((prev) => prev.slice(0, 1));
+  };
+
+  const optionClass = (active: boolean) =>
+    `px-3 py-2.5 rounded-xl border text-xs font-bold text-left transition-colors ${
+      active ? 'border-stone-900 bg-stone-900 text-white' : 'border-stone-200 bg-white text-stone-700 hover:border-stone-300'
+    }`;
+
+  const fieldClass = 'w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm';
+
   const handleOpenProductModal = () => {
     setProductForm(emptyProduct);
-    setPickedProductId('');
+    setSelectedIds([]);
+    setPickerSearch('');
+    setPickerMacro('');
+    setPickerMicro('');
     setShowProductModal(true);
   };
 
-  // Fill the form from a catalog product so the admin does not retype it
-  const handlePickProduct = (id: string) => {
-    setPickedProductId(id);
-    const p = products.find((item) => item.id === id);
-    if (!p) return;
-    const money = (n: number) => `R$ ${n.toFixed(2).replace('.', ',')}`;
-    setProductForm({
-      name: p.title,
-      price: p.price ? money(p.price) : '',
-      originalPrice: p.originalPrice ? money(p.originalPrice) : '',
-      rating: p.rating ? String(p.rating) : '',
-      url: p.affiliateUrl,
-      image: p.imageUrl,
-      badge: p.badge || '',
-      position: '',
-      forWho: '',
-      highlights: '',
-      layout: productForm.layout,
-    });
-  };
-
-  // Insert one line: [[produto|Nome|Preço|Preço original|Nota|Link|Imagem|Destaque]]
+  // One line per product; consecutive lines with the same layout form one block in the article
   const handleInsertProduct = () => {
-    if (!productForm.name.trim() || !productForm.url.trim()) return;
-    const fields = [
-      productForm.name,
-      productForm.price,
-      productForm.originalPrice,
-      productForm.rating,
-      productForm.url,
-      productForm.image,
-      productForm.badge,
-      productForm.position,
-      productForm.forWho,
-      productForm.highlights,
-      productForm.layout,
-    ].map((f) => f.replace(/[|[\]\n]/g, ' ').trim());
-    insertAtCursor(`\n[[produto|${fields.join('|')}]]\n`);
+    if (itemsToInsert.length === 0) return;
+    const lines = itemsToInsert.map((item) => {
+      const fields = [
+        item.name,
+        item.price,
+        item.originalPrice,
+        item.rating,
+        item.url,
+        item.image,
+        item.badge,
+        item.position,
+        item.forWho,
+        item.highlights,
+        layoutValue,
+      ].map((f) => f.replace(/[|[\]\n]/g, ' ').trim());
+      return `[[produto|${fields.join('|')}]]`;
+    });
+    insertAtCursor(`\n${lines.join('\n')}\n`);
     setShowProductModal(false);
     setProductForm(emptyProduct);
-    setPickedProductId('');
+    setSelectedIds([]);
   };
 
   // Open link modal and capture current selected text
@@ -348,116 +400,133 @@ export function BlogContentEditor({
       {/* Hyperlink Inserter Modal / Dialog */}
       {showProductModal && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div
-            className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-stone-200 p-5 space-y-3 max-h-[90vh] overflow-y-auto"
-          >
-            <h3 className="font-serif text-lg font-bold text-stone-900 border-b border-stone-100 pb-2">Inserir produto</h3>
-            {products.length > 0 && (
-              <label className="block space-y-1">
-                <span className="text-xs font-bold text-stone-700">Preencher a partir do catálogo</span>
+          <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-stone-200 p-5 space-y-5 max-h-[90vh] overflow-y-auto">
+            <h3 className="font-serif text-lg font-bold text-stone-900 border-b border-stone-100 pb-2">Inserir produtos</h3>
+
+            <section className="space-y-3">
+              <p className="text-xs font-bold text-stone-700">1. Escolha os produtos do catálogo</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <input
+                  className={fieldClass}
+                  placeholder="Buscar pelo nome"
+                  value={pickerSearch}
+                  onChange={(ev) => setPickerSearch(ev.target.value)}
+                />
                 <select
-                  className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
-                  value={pickedProductId}
-                  onChange={(ev) => handlePickProduct(ev.target.value)}
+                  className={fieldClass}
+                  value={pickerMacro}
+                  onChange={(ev) => {
+                    setPickerMacro(ev.target.value);
+                    setPickerMicro('');
+                  }}
                 >
-                  <option value="">Escolher um achadinho</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.title}
-                    </option>
+                  <option value="">Todas as macros</option>
+                  {taxTree.map((m) => (
+                    <option key={m.node.id} value={m.node.name}>{m.node.name}</option>
                   ))}
                 </select>
-              </label>
-            )}
-            <label className="block space-y-1">
-              <span className="text-xs font-bold text-stone-700">Layout de exibição no artigo</span>
-              <select
-                className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
-                value={productForm.layout}
-                onChange={(ev) => setProductField('layout', ev.target.value)}
-              >
-                {ARTICLE_PRODUCT_LAYOUTS.map((l) => (
-                  <option key={l.id} value={l.id}>{l.label}</option>
+                <select className={fieldClass} value={pickerMicro} onChange={(ev) => setPickerMicro(ev.target.value)}>
+                  <option value="">Todas as micros</option>
+                  {microOptions.map((mi) => (
+                    <option key={mi.id} value={mi.name}>{mi.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
+                {pickerProducts.map((p) => {
+                  const picked = selectedIds.includes(p.id);
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => togglePick(p.id)}
+                      className={`text-left rounded-xl border p-2 flex gap-3 transition-colors ${
+                        picked ? 'border-violet-500 bg-violet-50 ring-2 ring-violet-200' : 'border-stone-200 hover:border-stone-300'
+                      }`}
+                    >
+                      {p.imageUrl ? (
+                        <img src={p.imageUrl} alt="" className="w-16 h-16 shrink-0 object-contain rounded-lg bg-stone-50" />
+                      ) : (
+                        <div className="w-16 h-16 shrink-0 rounded-lg bg-stone-100" />
+                      )}
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <p className="text-xs font-semibold text-stone-900 line-clamp-2">{p.title}</p>
+                        <p className="text-[11px] text-stone-500">★ {p.rating ? p.rating.toFixed(1) : '—'}</p>
+                        <p className="text-xs font-bold text-stone-900">{money(p.price)}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {pickerProducts.length === 0 && <p className="text-xs text-stone-500">Nenhum produto para este filtro.</p>}
+            </section>
+
+            <section className="space-y-2">
+              <p className="text-xs font-bold text-stone-700">2. Objetivo</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {ARTICLE_PRODUCT_OBJECTIVES.map((o) => (
+                  <button key={o.id} type="button" onClick={() => chooseObjective(o.id)} className={optionClass(objective === o.id)}>
+                    {o.label}
+                  </button>
                 ))}
-              </select>
-            </label>
-            <input
-              className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
-              placeholder="Nome do produto"
-              value={productForm.name}
-              onChange={(ev) => setProductField('name', ev.target.value)}
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
-                placeholder="Preço (R$ 99,90)"
-                value={productForm.price}
-                onChange={(ev) => setProductField('price', ev.target.value)}
-              />
-              <input
-                className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
-                placeholder="Preço original"
-                value={productForm.originalPrice}
-                onChange={(ev) => setProductField('originalPrice', ev.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
-                placeholder="Nota (ex: 4.8)"
-                value={productForm.rating}
-                onChange={(ev) => setProductField('rating', ev.target.value)}
-              />
-              <input
-                className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
-                placeholder="Destaque (ex: Melhor custo)"
-                value={productForm.badge}
-                onChange={(ev) => setProductField('badge', ev.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <input
-                className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
-                placeholder="Posição (1, 2...)"
-                value={productForm.position}
-                onChange={(ev) => setProductField('position', ev.target.value)}
-              />
-              <input
-                className="col-span-2 w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
-                placeholder="Destaques (separe por ;)"
-                value={productForm.highlights}
-                onChange={(ev) => setProductField('highlights', ev.target.value)}
-              />
-            </div>
-            <input
-              className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
-              placeholder="Para quem é (ex: iniciantes em casa)"
-              value={productForm.forWho}
-              onChange={(ev) => setProductField('forWho', ev.target.value)}
-            />
-            <input
-              className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
-              placeholder="Link da oferta (https://...)"
-              value={productForm.url}
-              onChange={(ev) => setProductField('url', ev.target.value)}
-            />
-            <input
-              className="w-full px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-sm"
-              placeholder="URL da imagem"
-              value={productForm.image}
-              onChange={(ev) => setProductField('image', ev.target.value)}
-            />
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowProductModal(false)}
-                className="px-4 py-2 text-xs font-bold text-stone-600 hover:text-stone-900"
-              >
-                Cancelar
-              </button>
-              <button type="button" onClick={handleInsertProduct} className="px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold">
-                Inserir
-              </button>
+              </div>
+            </section>
+
+            <section className="space-y-2">
+              <p className="text-xs font-bold text-stone-700">3. Estilo de exibição</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {ARTICLE_PRODUCT_STYLES.map((s) => (
+                  <button key={s.id} type="button" onClick={() => setStyle(s.id)} className={optionClass(style === s.id)}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-2">
+              <p className="text-xs font-bold text-stone-700">Prévia no artigo</p>
+              <div className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 p-3">
+                {itemsToInsert.length > 0 ? (
+                  <ProductLayoutPreview layout={layoutValue} items={itemsToInsert} />
+                ) : (
+                  <p className="py-6 text-center text-xs text-stone-500">Escolha um produto para ver a prévia.</p>
+                )}
+              </div>
+            </section>
+
+            <details className="rounded-xl border border-stone-200 p-3">
+              <summary className="cursor-pointer text-xs font-bold text-stone-700">
+                Produto fora do catálogo (preencher manualmente)
+              </summary>
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <input className={fieldClass} placeholder="Nome do produto" value={productForm.name} onChange={(ev) => setProductField('name', ev.target.value)} />
+                <input className={fieldClass} placeholder="Link de afiliado" value={productForm.url} onChange={(ev) => setProductField('url', ev.target.value)} />
+                <input className={fieldClass} placeholder="Preço (ex: R$ 99,90)" value={productForm.price} onChange={(ev) => setProductField('price', ev.target.value)} />
+                <input className={fieldClass} placeholder="Preço original" value={productForm.originalPrice} onChange={(ev) => setProductField('originalPrice', ev.target.value)} />
+                <input className={fieldClass} placeholder="Nota (ex: 4.8)" value={productForm.rating} onChange={(ev) => setProductField('rating', ev.target.value)} />
+                <input className={fieldClass} placeholder="URL da imagem" value={productForm.image} onChange={(ev) => setProductField('image', ev.target.value)} />
+                <input className={fieldClass} placeholder="Selo (ex: Mais vendido)" value={productForm.badge} onChange={(ev) => setProductField('badge', ev.target.value)} />
+                <input className={fieldClass} placeholder="Posição (1, 2...)" value={productForm.position} onChange={(ev) => setProductField('position', ev.target.value)} />
+                <input className={`${fieldClass} sm:col-span-2`} placeholder="Para quem é (ex: iniciantes em casa)" value={productForm.forWho} onChange={(ev) => setProductField('forWho', ev.target.value)} />
+                <input className={`${fieldClass} sm:col-span-2`} placeholder="Destaques (separe por ;)" value={productForm.highlights} onChange={(ev) => setProductField('highlights', ev.target.value)} />
+              </div>
+            </details>
+
+            <div className="flex items-center justify-between gap-2 border-t border-stone-100 pt-3">
+              <span className="text-xs text-stone-500">{itemsToInsert.length} produto(s) pronto(s) para inserir</span>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setShowProductModal(false)} className="px-4 py-2 text-xs font-bold text-stone-600 hover:text-stone-900">
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleInsertProduct}
+                  disabled={itemsToInsert.length === 0}
+                  className="px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold disabled:opacity-40"
+                >
+                  Inserir no artigo
+                </button>
+              </div>
             </div>
           </div>
         </div>,
