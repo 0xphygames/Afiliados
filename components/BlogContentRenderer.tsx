@@ -156,7 +156,7 @@ function ArticleProductHorizontalItem({ product }: { product: Product }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-56 shrink-0 snap-start text-left flex flex-col gap-2 rounded-2xl border border-stone-200 bg-white p-3 hover:border-stone-300 hover:shadow-sm transition-all"
+        className="w-56 text-left flex flex-col gap-2 rounded-2xl border border-stone-200 bg-white p-3 hover:border-stone-300 hover:shadow-sm transition-all"
       >
         {product.imageUrl ? (
           <img src={product.imageUrl} alt={product.title} className="w-full h-40 object-contain rounded-xl bg-stone-50" />
@@ -177,10 +177,10 @@ function ArticleProductHorizontalItem({ product }: { product: Product }) {
   );
 }
 
-// Cards side by side in a horizontal strip that scrolls sideways
+// Cards side by side, wrapping onto the next line when there is no room; no scrollbar
 function ArticleProductHorizontal({ products }: { products: Product[] }) {
   return (
-    <div className="my-5 flex gap-4 overflow-x-auto snap-x pb-3">
+    <div className="my-5 flex flex-wrap gap-4">
       {products.map((p) => (
         <ArticleProductHorizontalItem key={p.id} product={p} />
       ))}
