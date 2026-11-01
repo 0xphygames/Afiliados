@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ExternalLink, Sparkles } from 'lucide-react';
 import { ProductCard } from './ProductCard';
+import { ProductDetailModal } from './ProductDetailModal';
 import type { Product, PlatformId } from '@/lib/types';
 
 // Product card written on one line as:
@@ -44,6 +46,8 @@ interface ProductLineProps {
 }
 
 function ArticleProductCard({ name, price, originalPrice, rating, url, image, badge, position, forWho, highlights, index }: ProductLineProps) {
+  // Same expanded view as the Achadinhos grid; the modal is portalled to body so the article layout cannot clip it
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const category = highlights.match(/(?:^|;\s*)Categoria:\s*([^;]+)/i)?.[1]?.trim() || 'Achadinho';
   const editorialTip = [
     forWho ? `Para quem é: ${forWho}` : '',
@@ -68,7 +72,9 @@ function ArticleProductCard({ name, price, originalPrice, rating, url, image, ba
   };
   return (
     <div className="h-full">
-      <ProductCard product={product} />
+      <ProductCard product={product} onOpenDetails={setDetailProduct} />
+      {detailProduct &&
+        createPortal(<ProductDetailModal product={detailProduct} onClose={() => setDetailProduct(null)} />, document.body)}
     </div>
   );
 }
