@@ -138,14 +138,14 @@ export default function HomePage() {
         />
 
         {/* 1. SEÇÃO DE ACHADINHOS: APENAS OS 3 MAIS RECENTES */}
-        <section id="achadinhos" className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 border-b border-stone-200">
+        <section id="achadinhos" className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 border-b border-stone-200">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
             <div className="space-y-1.5">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-50 text-[#EE4D2D] border border-orange-200 text-xs font-bold uppercase tracking-wider">
                 <ShoppingBag className="w-3.5 h-3.5" />
                 <span>Últimos Achadinhos da Curadoria</span>
               </div>
-              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">
+              <h2 className="font-serif text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
                 Achadinhos Mais Recentes
               </h2>
               <p className="text-xs sm:text-sm text-stone-600 max-w-2xl">
@@ -163,7 +163,7 @@ export default function HomePage() {
           </div>
 
           {/* 3 Most Recent Products Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-5">
             {recentProducts.map((product) => (
               <ProductCard
                 key={product.id}
@@ -188,14 +188,14 @@ export default function HomePage() {
 
         {/* 2. SEÇÃO DE CAMPANHAS & PÁGINAS ESPECIAIS: APENAS AS 3 MAIS RECENTES */}
         {recentCampaigns.length > 0 && (
-          <section id="campanhas" className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 border-b border-stone-200">
+          <section id="campanhas" className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 border-b border-stone-200">
             <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
               <div className="space-y-1.5">
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold uppercase tracking-wider">
                   <Flame className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
                   <span>Ofertas & Páginas de Alta Conversão</span>
                 </div>
-                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">
+                <h2 className="font-serif text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
                   Campanhas & Seleções Especiais
                 </h2>
                 <p className="text-xs sm:text-sm text-stone-600 max-w-2xl">
@@ -292,14 +292,14 @@ export default function HomePage() {
         )}
 
         {/* 2. SEÇÃO DE CUPONS: APENAS OS 3 MAIS RECENTES */}
-        <section id="cupons" className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 border-b border-stone-200 bg-stone-50/40">
+        <section id="cupons" className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 border-b border-stone-200 bg-stone-50/40">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
             <div className="space-y-1.5">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold uppercase tracking-wider">
                 <Tag className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Economia Garantida</span>
               </div>
-              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">
+              <h2 className="font-serif text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
                 Cupons de Desconto & Campanhas em Destaque
               </h2>
               <p className="text-xs sm:text-sm text-stone-600 max-w-2xl">
