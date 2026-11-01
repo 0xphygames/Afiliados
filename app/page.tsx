@@ -138,8 +138,8 @@ export default function HomePage() {
         />
 
         {/* 1. SEÇÃO DE ACHADINHOS: APENAS OS 3 MAIS RECENTES */}
-        <section id="achadinhos" className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 border-b border-stone-200">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
+        <section id="achadinhos" className="w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-6 border-b border-stone-200">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-5">
             <div className="space-y-1.5">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-50 text-[#EE4D2D] border border-orange-200 text-xs font-bold uppercase tracking-wider">
                 <ShoppingBag className="w-3.5 h-3.5" />
@@ -168,13 +168,13 @@ export default function HomePage() {
               <ProductCard
                 key={product.id}
                 product={product}
-                onOpenDetails={setSelectedProduct}
+                onOpenDetails={setSelectedProduct} showTip={false}
               />
             ))}
           </div>
 
           {/* Direct CTA button to full catalog */}
-          <div className="mt-10 text-center">
+          <div className="mt-6 text-center">
             <Link
               href="/achadinhos"
               className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-stone-50 hover:bg-stone-100 text-stone-900 font-bold text-xs sm:text-sm border border-stone-300 shadow-2xs hover:shadow-xs transition-all"
@@ -188,8 +188,8 @@ export default function HomePage() {
 
         {/* 2. SEÇÃO DE CAMPANHAS & PÁGINAS ESPECIAIS: APENAS AS 3 MAIS RECENTES */}
         {recentCampaigns.length > 0 && (
-          <section id="campanhas" className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 border-b border-stone-200">
-            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
+          <section id="campanhas" className="w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-6 border-b border-stone-200">
+            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-5">
               <div className="space-y-1.5">
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold uppercase tracking-wider">
                   <Flame className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
@@ -292,8 +292,8 @@ export default function HomePage() {
         )}
 
         {/* 2. SEÇÃO DE CUPONS: APENAS OS 3 MAIS RECENTES */}
-        <section id="cupons" className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 border-b border-stone-200 bg-stone-50/40">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
+        <section id="cupons" className="w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-6 border-b border-stone-200 bg-stone-50/40">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-5">
             <div className="space-y-1.5">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold uppercase tracking-wider">
                 <Tag className="w-3.5 h-3.5 text-emerald-600" />
@@ -402,7 +402,7 @@ export default function HomePage() {
             })}
           </div>
 
-          <div className="mt-10 text-center">
+          <div className="mt-6 text-center">
             <Link
               href="/cupons"
               className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-white hover:bg-stone-100 text-stone-900 font-bold text-xs sm:text-sm border border-stone-300 shadow-2xs hover:shadow-xs transition-all"
