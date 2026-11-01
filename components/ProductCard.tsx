@@ -85,7 +85,7 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
       className="group cursor-pointer bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md hover:border-stone-300 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between"
     >
       {/* Top Media Container: Balanced height container matching catalog proportions */}
-      <div className="relative h-44 sm:h-48 w-full bg-stone-50/70 overflow-hidden border-b border-stone-100 flex items-center justify-center p-3">
+      <div className="relative h-36 sm:h-44 lg:h-48 w-full bg-stone-50/70 overflow-hidden border-b border-stone-100 flex items-center justify-center p-3">
         {!imgError && currentImage ? (
           <div className="relative w-full h-full flex items-center justify-center">
             <Image
@@ -178,7 +178,7 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
       </div>
 
       {/* Card Content */}
-      <div className="p-4 flex-1 flex flex-col justify-between bg-white">
+      <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between bg-white">
         <div className="space-y-2">
           {/* Metadata: Category and Rating */}
           <div className="flex items-center justify-between text-xs text-stone-500">
@@ -201,7 +201,7 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
 
           {/* Tamires' Tip Quote */}
           {product.tamiresTip && (
-            <div className="bg-stone-50 border-l-2 border-amber-400 p-2.5 rounded-r-md text-xs text-stone-700 italic border border-stone-150">
+            <div className="hidden sm:block bg-stone-50 border-l-2 border-amber-400 p-2.5 rounded-r-md text-xs text-stone-700 italic border border-stone-150">
               <div className="flex items-center gap-1 text-[10px] text-amber-700 font-bold uppercase not-italic mb-0.5">
                 <Sparkles className="w-2.5 h-2.5 text-amber-600" />
                 <span>Dica da Tamires</span>
@@ -228,7 +228,7 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
         <div className="pt-3 mt-3 border-t border-stone-100 space-y-3">
           <div className="flex items-baseline justify-between">
             <div className="flex items-baseline gap-2">
-              <span className="text-lg font-bold text-stone-900 tabular-nums">
+              <span className="text-base sm:text-lg font-bold text-stone-900 tabular-nums">
                 {formattedPrice}
               </span>
               {formattedOriginalPrice && (
