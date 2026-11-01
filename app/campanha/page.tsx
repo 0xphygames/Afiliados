@@ -84,7 +84,7 @@ export default function CampanhasCatalogPage() {
       <main className="flex-1 pb-16">
         {/* Editorial Hero Header for Campaigns */}
         <section className="bg-white border-b border-stone-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
             <div className="max-w-3xl space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-50 border border-amber-200/80 rounded-full text-xs font-semibold text-amber-900">
                 <Flame className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
@@ -190,7 +190,7 @@ export default function CampanhasCatalogPage() {
         </section>
 
         {/* Campaigns Grid */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 pt-8">
           <div className="flex items-center justify-between pb-4">
             <div>
               <h2 className="text-sm font-bold text-stone-900 uppercase tracking-wider">

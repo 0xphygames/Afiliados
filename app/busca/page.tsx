@@ -98,7 +98,7 @@ function SearchContent() {
       <main className="flex-1 bg-stone-50/60 pb-16">
         {/* Search Header */}
         <section className="bg-white border-b border-stone-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
             <div className="mb-4">
               <Link
                 href="/"
@@ -192,7 +192,7 @@ function SearchContent() {
         </section>
 
         {/* Results Container */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-12">
+        <section className="w-full px-4 sm:px-6 lg:px-8 pt-8 space-y-12">
           {/* 1. Products Section */}
           {(activeTab === 'all' || activeTab === 'products') && results.products.length > 0 && (
             <div>

@@ -21,14 +21,14 @@ export function ArticlesSection({
   if (!articles || articles.length === 0) return null;
 
   return (
-    <section id="blog" className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-white">
+    <section id="blog" className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 bg-white">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-stone-200">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-900 rounded-full text-xs font-semibold border border-amber-200 mb-2">
             <BookOpen className="w-3.5 h-3.5 text-amber-600" />
             <span>Blog & Dicas de Compras da Tamires</span>
           </div>
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">
+          <h2 className="font-serif text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
             Guias, Resenhas e Dicas Exclusivas
           </h2>
           <p className="text-xs text-stone-500 mt-1">
