@@ -69,14 +69,16 @@ export function ArticleView({ initialArticle }: { initialArticle?: Article | nul
       })
     : '';
 
+  // Lines without a 'Categoria:' note belong to the article's own sector, not to 'Outros'
+  const fallbackCategory = article?.subcategory || article?.department || 'Outros';
   const productLines = article?.content.split('\n').filter((line) => line.trim().startsWith('[[produto|') && line.trim().endsWith(']]')) ?? [];
   const articleProducts = productLines.map((line) => {
     const fields = line.trim().slice(10, -2).split('|').map((field) => field.trim());
     const url = fields[4] || '';
-    const highlights = fields[10] || '';
+    const highlights = fields[9] || '';
     return {
       platform: (url.includes('amazon') || url.includes('amzn') ? 'amazon' : url.includes('shein') ? 'shein' : url.includes('mercadolivre') || url.includes('mercadolibre') || url.includes('meli.la') ? 'mercadolivre' : 'shopee') as PlatformId,
-      category: highlights.match(/(?:^|;\s*)Categoria:\s*([^;]+)/i)?.[1]?.trim() || 'Outros',
+      category: highlights.match(/(?:^|;\s*)Categoria:\s*([^;]+)/i)?.[1]?.trim() || fallbackCategory,
     };
   });
   const articleCategories = Array.from(new Set(articleProducts.map((product) => product.category))).sort((a, b) => a.localeCompare(b, 'pt-BR'));
@@ -86,9 +88,9 @@ export function ArticleView({ initialArticle }: { initialArticle?: Article | nul
         if (!trimmed.startsWith('[[produto|') || !trimmed.endsWith(']]')) return true;
         const fields = trimmed.slice(10, -2).split('|').map((field) => field.trim());
         const url = fields[4] || '';
-        const highlights = fields[10] || '';
+        const highlights = fields[9] || '';
         const platform = url.includes('amazon') || url.includes('amzn') ? 'amazon' : url.includes('shein') ? 'shein' : url.includes('mercadolivre') || url.includes('mercadolibre') || url.includes('meli.la') ? 'mercadolivre' : 'shopee';
-        const category = highlights.match(/(?:^|;\s*)Categoria:\s*([^;]+)/i)?.[1]?.trim() || 'Outros';
+        const category = highlights.match(/(?:^|;\s*)Categoria:\s*([^;]+)/i)?.[1]?.trim() || fallbackCategory;
         return (activePlatform === 'all' || platform === activePlatform) && (activeCategory === 'Todos os Departamentos' || category === activeCategory);
       }).join('\n')
     : '';

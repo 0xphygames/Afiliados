@@ -185,11 +185,13 @@ export function ProductCard({ product, onEditProduct, onOpenDetails }: ProductCa
             <span className="font-semibold text-stone-600 truncate max-w-[150px]">
               {product.category}
             </span>
-            <div className="flex items-center gap-1 text-stone-800 font-semibold tabular-nums">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              <span>{product.rating.toFixed(1)}</span>
-              <span className="text-stone-400 font-normal">({product.reviewCount})</span>
-            </div>
+            {product.rating > 0 && (
+              <div className="flex items-center gap-1 text-stone-800 font-semibold tabular-nums">
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span>{product.rating.toFixed(1)}</span>
+                <span className="text-stone-400 font-normal">({product.reviewCount})</span>
+              </div>
+            )}
           </div>
 
           {/* Product Title */}
