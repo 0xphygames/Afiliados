@@ -158,7 +158,7 @@ export function ArticleView({ initialArticle }: { initialArticle?: Article | nul
 
               {/* Cover Image */}
               {article.coverImageUrl && (
-                <div className="relative aspect-16/9 w-full rounded-3xl overflow-hidden bg-stone-100 border border-stone-200 shadow-sm">
+                <div className="relative h-56 sm:h-72 lg:h-80 w-full rounded-3xl overflow-hidden bg-stone-100 border border-stone-200 shadow-sm">
                   <Image
                     src={article.coverImageUrl}
                     alt={article.title}
