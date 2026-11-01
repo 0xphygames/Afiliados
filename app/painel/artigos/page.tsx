@@ -138,9 +138,11 @@ export default function PainelArtigosPage() {
       setIsEditing(false);
     } catch (err) {
       console.error(err);
+      // Supabase errors are plain objects, not Error instances, so read the message from either shape
+      const reason = (err as { message?: string })?.message;
       alert(
         'Não foi possível publicar o artigo. ' +
-          (err instanceof Error ? err.message : 'Verifique as permissões de escrita no banco (migração 202610140002).')
+          (reason || 'Verifique as permissões de escrita no banco (migração 202610140002).')
       );
     } finally {
       setSaving(false);
