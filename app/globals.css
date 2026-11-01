@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+/* Desktop: every rem-based size (text, spacing, blocks) scales down a little so the page fits the screen */
+@media (min-width: 1024px) and (max-width: 1535px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1536px) {
+  html {
+    font-size: 14px;
+  }
+}
