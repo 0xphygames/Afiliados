@@ -57,7 +57,7 @@ export function ArticlesSection({
               className="group cursor-pointer bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md hover:border-stone-300 hover:-translate-y-0.5 transition-all flex flex-col justify-between"
             >
               <div>
-                <div className="relative aspect-16/10 w-full bg-stone-100 overflow-hidden">
+                <div className="relative aspect-16/9 w-full bg-stone-100 overflow-hidden">
                   {art.coverImageUrl ? (
                     <Image
                       src={art.coverImageUrl}

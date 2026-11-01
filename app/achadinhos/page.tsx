@@ -115,8 +115,8 @@ export default function AchadinhosPage() {
       <main className="flex-1 bg-white pb-16">
         {/* Header Breadcrumb & Title */}
         <section className="bg-stone-50/60 border-b border-stone-200">
-          <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-            <div className="mb-4">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+            <div className="mb-2">
               <Link
                 href="/"
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-900 transition-colors"
@@ -132,7 +132,7 @@ export default function AchadinhosPage() {
                   <ShoppingBag className="w-3.5 h-3.5 text-amber-300" />
                   <span>Catálogo Completo</span>
                 </div>
-                <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">
+                <h1 className="font-serif text-3xl font-bold tracking-tight text-stone-900">
                   {activePlatform === 'all'
                     ? 'Todos os Achadinhos Selecionados'
                     : `Achadinhos da ${currentPlatformInfo?.name}`}
@@ -161,7 +161,7 @@ export default function AchadinhosPage() {
             </div>
 
             {/* Platform Quick Filter */}
-            <div className="flex items-center gap-2 pt-6 overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-2 pt-4 overflow-x-auto no-scrollbar">
               <button
                 onClick={() => handleSelectPlatform('all')}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
@@ -217,7 +217,7 @@ export default function AchadinhosPage() {
         </section>
 
         {/* Vertical Category Sidebar beside Product Grid */}
-        <section className="w-full px-4 sm:px-6 lg:px-8 py-8">
+        <section className="w-full px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col md:flex-row items-start gap-6 lg:gap-8">
             <TaxonomySidebar
               activePlatform={activePlatform}
@@ -239,7 +239,7 @@ export default function AchadinhosPage() {
                     <ProductCard
                       key={product.id}
                       product={product}
-                      onOpenDetails={setSelectedProduct}
+                      onOpenDetails={setSelectedProduct} showTip={false}
                     />
                   ))}
                 </div>

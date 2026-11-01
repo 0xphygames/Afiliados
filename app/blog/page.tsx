@@ -107,8 +107,8 @@ export default function BlogPage() {
       <main className="flex-1 bg-stone-50/60 pb-16">
         {/* Header Section */}
         <section className="bg-white border-b border-stone-200">
-          <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-            <div className="mb-4">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+            <div className="mb-2">
               <Link
                 href="/"
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-900 transition-colors"
@@ -140,7 +140,7 @@ export default function BlogPage() {
             </div>
 
             {/* Filter and Search Bar */}
-            <div className="pt-8 flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-4">
+            <div className="pt-5 flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-4">
               {/* Search in blog */}
               <div className="relative w-full lg:w-64 lg:shrink-0">
                 <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -175,7 +175,7 @@ export default function BlogPage() {
           </div>
         </section>
 
-        <section className="w-full px-4 sm:px-6 lg:px-8 py-8">
+        <section className="w-full px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col md:flex-row items-start gap-6 lg:gap-8">
             <TaxonomySidebar
               activePlatform={activePlatform}
@@ -194,7 +194,7 @@ export default function BlogPage() {
               className="group block bg-white rounded-3xl border border-stone-200 overflow-hidden shadow-sm hover:shadow-lg transition-all"
             >
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
-                <div className="relative lg:col-span-7 aspect-16/10 lg:aspect-auto lg:min-h-[360px] bg-stone-100 overflow-hidden">
+                <div className="relative lg:col-span-7 aspect-16/10 lg:aspect-auto lg:min-h-[280px] bg-stone-100 overflow-hidden">
                   {featuredArticle.coverImageUrl ? (
                     <Image
                       src={featuredArticle.coverImageUrl}
@@ -216,7 +216,7 @@ export default function BlogPage() {
                   </div>
                 </div>
 
-                <div className="lg:col-span-5 p-6 sm:p-8 lg:p-10 flex flex-col justify-between space-y-4">
+                <div className="lg:col-span-5 p-5 sm:p-6 lg:p-8 flex flex-col justify-between space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-xs text-stone-500">
                       <span className="font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200">
@@ -226,7 +226,7 @@ export default function BlogPage() {
                       <span>{new Date(featuredArticle.createdAt).toLocaleDateString('pt-BR')}</span>
                     </div>
 
-                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 group-hover:text-amber-800 transition-colors leading-tight">
+                    <h2 className="font-serif text-xl sm:text-2xl font-bold text-stone-900 group-hover:text-amber-800 transition-colors leading-tight">
                       {featuredArticle.title}
                     </h2>
 
@@ -274,7 +274,7 @@ export default function BlogPage() {
                 >
                   <div>
                     {/* Media */}
-                    <div className="relative aspect-16/10 w-full bg-stone-100 overflow-hidden">
+                    <div className="relative aspect-16/9 w-full bg-stone-100 overflow-hidden">
                       {art.coverImageUrl ? (
                         <Image
                           src={art.coverImageUrl}

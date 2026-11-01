@@ -95,10 +95,10 @@ export function HeroBanner({
   const details = getBannerDetails();
 
   return (
-    <section className="bg-white rounded-3xl mx-4 sm:mx-6 lg:mx-8 my-6 border border-stone-200 shadow-sm overflow-hidden transition-all">
-      <div className="w-full px-6 py-8 sm:py-12 lg:py-10 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
+    <section className="bg-white rounded-3xl mx-4 sm:mx-6 lg:mx-8 my-4 border border-stone-200 shadow-sm overflow-hidden transition-all">
+      <div className="w-full px-6 py-6 sm:py-8 lg:py-8 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
         {/* Left Column: Editorial Information */}
-        <div className="flex-1 space-y-4 sm:space-y-5">
+        <div className="flex-1 space-y-3 sm:space-y-4">
           <h1 className="font-serif text-3xl sm:text-4xl lg:text-3xl font-bold tracking-tight text-stone-900 leading-tight text-balance">
             {details.title}
           </h1>
@@ -201,7 +201,7 @@ export function HeroBanner({
         {/* Right Column: Hero Visual + Curator Bio Card */}
         <div className="w-full lg:w-96 shrink-0 space-y-4">
           {/* Framed Lifestyle Showcase Photo */}
-          <div className="relative aspect-16/9 sm:aspect-21/9 lg:aspect-16/10 rounded-2xl overflow-hidden border border-stone-200 shadow-xs bg-stone-100">
+          <div className="relative aspect-16/9 sm:aspect-21/9 lg:aspect-16/9 rounded-2xl overflow-hidden border border-stone-200 shadow-xs bg-stone-100">
             <Image
               src={settings?.heroImageUrl || '/images/hero_achadinhos_looks_1791404026649.jpg'}
               alt="Curadoria Tamires Santos Achadinhos e Looks"
