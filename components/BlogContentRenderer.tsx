@@ -508,7 +508,7 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
       renderedElements.push(
         <h2
           key={`h2-${index}`}
-          className="font-serif text-xl sm:text-2xl font-bold text-stone-900 mt-6 mb-2 pt-2 border-b border-stone-100 pb-1"
+          className="font-serif text-lg sm:text-xl font-bold text-stone-900 mt-6 mb-2 pt-2 border-b border-stone-100 pb-1"
         >
           {parseInlineFormattedText(trimmed.slice(3))}
         </h2>
@@ -523,7 +523,7 @@ export function BlogContentRenderer({ content, className = '' }: BlogContentRend
       renderedElements.push(
         <h3
           key={`h3-${index}`}
-          className="font-serif text-lg font-bold text-stone-900 mt-4 mb-2"
+          className="font-serif text-base sm:text-lg font-bold text-stone-900 mt-4 mb-2"
         >
           {parseInlineFormattedText(trimmed.slice(4))}
         </h3>

@@ -108,7 +108,7 @@ export function ArticleView({ initialArticle }: { initialArticle?: Article | nul
       />
 
       <main className="flex-1 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
           <Link
             href="/"
             className="inline-flex items-center gap-2 text-xs font-semibold text-stone-600 hover:text-stone-950 transition-colors py-1.5 px-3 rounded-lg hover:bg-stone-100"
@@ -129,7 +129,7 @@ export function ArticleView({ initialArticle }: { initialArticle?: Article | nul
                   <span className="text-xs text-stone-500">{formattedDate}</span>
                 </div>
 
-                <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-stone-900 leading-tight">
+                <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 leading-tight">
                   {article.title}
                 </h1>
 
@@ -191,7 +191,7 @@ export function ArticleView({ initialArticle }: { initialArticle?: Article | nul
                       return <button key={category} onClick={() => setActiveCategory(category)} className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs ${activeCategory === category ? 'bg-stone-100 font-bold text-stone-900' : 'text-stone-600'}`}><span>{category}</span><span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-800">{count}</span></button>;
                     })}
                   </aside>
-                  <BlogContentRenderer content={filteredContent} className="text-base sm:text-lg leading-relaxed space-y-4" />
+                  <BlogContentRenderer content={filteredContent} className="text-[15px] sm:text-base leading-relaxed space-y-4" />
                 </div>
               </div>
             </article>
