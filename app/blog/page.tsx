@@ -194,7 +194,7 @@ export default function BlogPage() {
               className="group block bg-white rounded-3xl border border-stone-200 overflow-hidden shadow-sm hover:shadow-lg transition-all"
             >
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
-                <div className="relative lg:col-span-7 aspect-16/10 lg:aspect-auto lg:min-h-[280px] bg-stone-100 overflow-hidden">
+                <div className="relative lg:col-span-5 aspect-16/10 lg:aspect-auto lg:min-h-[240px] bg-stone-100 overflow-hidden">
                   {featuredArticle.coverImageUrl ? (
                     <Image
                       src={featuredArticle.coverImageUrl}
@@ -216,7 +216,7 @@ export default function BlogPage() {
                   </div>
                 </div>
 
-                <div className="lg:col-span-5 p-5 sm:p-6 lg:p-8 flex flex-col justify-between space-y-4">
+                <div className="lg:col-span-7 p-5 sm:p-6 lg:p-8 flex flex-col justify-between space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-xs text-stone-500">
                       <span className="font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200">
@@ -274,7 +274,7 @@ export default function BlogPage() {
                 >
                   <div>
                     {/* Media */}
-                    <div className="relative aspect-16/9 w-full bg-stone-100 overflow-hidden">
+                    <div className="relative h-36 sm:h-40 w-full bg-stone-100 overflow-hidden">
                       {art.coverImageUrl ? (
                         <Image
                           src={art.coverImageUrl}
