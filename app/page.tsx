@@ -108,7 +108,7 @@ export default function HomePage() {
   const isAdmin = isUserAdmin(currentUser);
 
   // Strictly the 3 most recent items for each section on Home
-  const recentProducts = products.slice(0, 3);
+  const recentProducts = products.slice(0, 4);
   const recentCampaigns = campaigns.filter((c) => c.isActive).slice(0, 3);
   const recentCoupons = coupons.slice(0, 3);
   const recentArticles = articles.slice(0, 3);
@@ -133,12 +133,12 @@ export default function HomePage() {
         {/* Clean Hero (only top banner, without duplicate navigation) */}
         <HeroBanner
           activePlatform="all"
-          onSelectPlatform={() => {}}
+          onSelectPlatform={(p) => { window.location.href = p === 'all' ? '/achadinhos' : `/achadinhos?loja=${p}`; }}
           settings={settings}
         />
 
         {/* 1. SEÇÃO DE ACHADINHOS: APENAS OS 3 MAIS RECENTES */}
-        <section id="achadinhos" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 border-b border-stone-200">
+        <section id="achadinhos" className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 border-b border-stone-200">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
             <div className="space-y-1.5">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-50 text-[#EE4D2D] border border-orange-200 text-xs font-bold uppercase tracking-wider">
@@ -149,7 +149,7 @@ export default function HomePage() {
                 Achadinhos Mais Recentes
               </h2>
               <p className="text-xs sm:text-sm text-stone-600 max-w-2xl">
-                Os 3 produtos mais novos garimpados, testados e aprovados pela Tamires Santos com os melhores preços e links oficiais verificados.
+                Os 4 produtos mais novos garimpados, testados e aprovados pela Tamires Santos com os melhores preços e links oficiais verificados.
               </p>
             </div>
 
@@ -163,7 +163,7 @@ export default function HomePage() {
           </div>
 
           {/* 3 Most Recent Products Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
             {recentProducts.map((product) => (
               <ProductCard
                 key={product.id}
@@ -188,7 +188,7 @@ export default function HomePage() {
 
         {/* 2. SEÇÃO DE CAMPANHAS & PÁGINAS ESPECIAIS: APENAS AS 3 MAIS RECENTES */}
         {recentCampaigns.length > 0 && (
-          <section id="campanhas" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 border-b border-stone-200">
+          <section id="campanhas" className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 border-b border-stone-200">
             <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
               <div className="space-y-1.5">
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold uppercase tracking-wider">
@@ -292,7 +292,7 @@ export default function HomePage() {
         )}
 
         {/* 2. SEÇÃO DE CUPONS: APENAS OS 3 MAIS RECENTES */}
-        <section id="cupons" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 border-b border-stone-200 bg-stone-50/40">
+        <section id="cupons" className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 border-b border-stone-200 bg-stone-50/40">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
             <div className="space-y-1.5">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold uppercase tracking-wider">

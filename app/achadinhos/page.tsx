@@ -27,6 +27,12 @@ export default function AchadinhosPage() {
   const [categories, setCategories] = useState<CustomCategory[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 
+  // The home store bar links here as /achadinhos?loja=shopee
+  useEffect(() => {
+    const loja = new URLSearchParams(window.location.search).get('loja');
+    if (loja && loja in PLATFORMS) setActivePlatform(loja as PlatformId);
+  }, []);
+
   const [activePlatform, setActivePlatform] = useState<PlatformId | 'all'>('all');
   const [activeCategory, setActiveCategory] = useState<string>('Todos os Setores');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -109,7 +115,7 @@ export default function AchadinhosPage() {
       <main className="flex-1 bg-white pb-16">
         {/* Header Breadcrumb & Title */}
         <section className="bg-stone-50/60 border-b border-stone-200">
-          <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
             <div className="mb-4">
               <Link
                 href="/"
@@ -211,7 +217,7 @@ export default function AchadinhosPage() {
         </section>
 
         {/* Vertical Category Sidebar beside Product Grid */}
-        <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row items-start gap-6 lg:gap-8">
             <TaxonomySidebar
               activePlatform={activePlatform}
@@ -228,7 +234,7 @@ export default function AchadinhosPage() {
                   <p className="text-xs text-stone-500">Buscando o catálogo atualizado.</p>
                 </div>
               ) : filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                   {filteredProducts.map((product) => (
                     <ProductCard
                       key={product.id}

@@ -37,7 +37,7 @@ export function Navbar({
       </div>
 
       {/* Top Bar: Wordmark, Navigation Links, OmniSearch Input */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
         {/* Wordmark */}
         <div className="flex items-center gap-3 shrink-0">
           <Link
