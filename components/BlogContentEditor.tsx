@@ -112,9 +112,13 @@ export function BlogContentEditor({
   const itemsToInsert: ArticleProductFields[] =
     selectedProducts.length > 0 ? selectedProducts.map(catalogFields) : manualReady ? [productForm] : [];
   const productMacros = Array.from(value.matchAll(/\[\[produto\|[^\]]+\]\]/g), (match) => match[0]);
-  const cleanContent = value.replace(/\n?\[\[produto\|[^\]]+\]\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
+  // Never trim the editor value while the user is typing: trimEnd() here used
+  // to erase the space/newline just entered at the end of the textarea.
+  const cleanContent = value.replace(/\n?\[\[produto\|[^\]]+\]\]/g, '').replace(/\n{3,}/g, '\n\n');
   const composeContent = (text: string, macros = productMacros) =>
-    `${text.trimEnd()}${macros.length ? `\n\n${macros.join('\n')}` : ''}`.trim();
+    macros.length
+      ? `${text}${text && !text.endsWith('\n') ? '\n\n' : ''}${macros.join('\n')}`
+      : text;
 
   const togglePick = (id: string) =>
     setSelectedIds((prev) => {
