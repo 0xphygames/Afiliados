@@ -19,23 +19,16 @@ export interface ArticleLinkMeta {
   departments: Set<string>;
 }
 
-// Stores and departments an article covers, read from the products it links to
+// Stores and departments an article covers. Departments (macro and micro) come only from the products
+// cited in the article, so the blog classifies it the way its products are classified.
 export function articleLinkMeta(article: Article, products: Product[]): ArticleLinkMeta {
   const byUrl = new Map(products.map((p) => [p.affiliateUrl, p]));
   const stores = new Set<PlatformId>();
-  const departments = new Set<string>();
-
-  // Articles created before the taxonomy fields existed may still have only
-  // `category`; newer articles carry the same macro/micro values as products.
-  const articleMapped = LEGACY_MAP[article.category];
-  if (article.department) departments.add(article.department);
-  if (article.subcategory) departments.add(article.subcategory);
-  if (articleMapped) {
-    departments.add(articleMapped[0]);
-    departments.add(articleMapped[1]);
-  }
+  const cited = new Set<string>();
+  let hasProductLines = false;
 
   for (const match of article.content.matchAll(PRODUCT_LINE)) {
+    hasProductLines = true;
     const fields = match[1].split('|').map((field) => field.trim());
     // Current cards store the URL after the rating; older cards may have a
     // different number of optional fields, so find the first URL instead of
@@ -45,8 +38,24 @@ export function articleLinkMeta(article: Article, products: Product[]): ArticleL
     const store = product?.platform ?? platformFromUrl(url);
     if (store) stores.add(store);
     const mapped = product ? LEGACY_MAP[product.category] : undefined;
-    if (product?.department || mapped?.[0]) departments.add(product?.department || mapped![0]);
-    if (product?.subcategory || mapped?.[1]) departments.add(product?.subcategory || mapped![1]);
+    const macro = product?.department || mapped?.[0];
+    const micro = product?.subcategory || mapped?.[1];
+    if (macro) cited.add(macro);
+    if (micro) cited.add(micro);
+  }
+
+  const departments = new Set<string>();
+  if (hasProductLines) {
+    cited.forEach((name) => departments.add(name));
+  } else {
+    // Articles without product cards keep the sector they were saved with
+    const articleMapped = LEGACY_MAP[article.category];
+    if (article.department) departments.add(article.department);
+    if (article.subcategory) departments.add(article.subcategory);
+    if (articleMapped) {
+      departments.add(articleMapped[0]);
+      departments.add(articleMapped[1]);
+    }
   }
 
   // The store chosen in the editor counts too, even before any card is added
