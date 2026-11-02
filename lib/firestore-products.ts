@@ -292,6 +292,9 @@ export async function seedInitialDataToFirestore(): Promise<void> {
 // Add or update product in Firestore
 export async function saveProductToFirestore(product: Product): Promise<void> {
   const images = (product.images?.filter(Boolean) || [product.imageUrl]).map((image) => image.trim()).filter(Boolean);
+  if (images.some((image) => /^data:image\//i.test(image))) {
+    throw new Error('Imagem Base64 bloqueada. Envie a imagem pelo upload para o Supabase Storage.');
+  }
   const { error } = await supabase.from('products').upsert({
     id: product.id,
     title: product.title.trim(),
@@ -317,6 +320,9 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
 
 // Add or update article in Firestore
 export async function saveArticleToFirestore(article: Article): Promise<void> {
+  if (/data:image\/[a-z0-9.+-]+;base64,/i.test(article.coverImageUrl || '') || /data:image\/[a-z0-9.+-]+;base64,/i.test(article.content || '')) {
+    throw new Error('Imagem Base64 bloqueada. Remova a imagem incorporada e envie-a pelo Storage.');
+  }
   const { data, error } = await supabase.from('articles').upsert({
     id: article.id, title: article.title.trim(), category: article.category.trim(),
     summary: article.summary.trim(), content: article.content, cover_image_url: article.coverImageUrl || null,
