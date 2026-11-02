@@ -87,7 +87,7 @@ export function ProductCard({ product, onEditProduct, onOpenDetails, showTip = t
       className="group cursor-pointer bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md hover:border-stone-300 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between"
     >
       {/* Top Media Container: Balanced height container matching catalog proportions */}
-      <div className="relative h-36 sm:h-40 lg:h-40 w-full bg-white overflow-hidden border-b border-stone-100 flex items-center justify-center p-3">
+      <div className="relative h-52 sm:h-56 lg:h-60 w-full bg-white overflow-hidden border-b border-stone-100 flex items-center justify-center p-3">
         {!imgError && currentImage ? (
           <div className="relative w-full h-full flex items-center justify-center">
             <Image
@@ -228,7 +228,7 @@ export function ProductCard({ product, onEditProduct, onOpenDetails, showTip = t
 
         {/* Pricing block & CTA */}
         <div className="pt-2.5 mt-2.5 border-t border-stone-100 space-y-2">
-          <div className="flex items-baseline justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-baseline gap-2">
               <span className="text-base sm:text-lg font-bold text-stone-900 tabular-nums">
                 {formattedPrice}
