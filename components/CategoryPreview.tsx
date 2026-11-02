@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Product } from '@/lib/types';
 import { LEGACY_MAP } from '@/lib/taxonomy';
 import { ProductCard } from './ProductCard';
@@ -18,58 +18,76 @@ interface CategoryPreviewProps {
   onOpenDetails?: (product: Product) => void;
 }
 
-// One-page preview on the Achadinhos page: each macro is a section with a few of its products as cards,
-// its micro categories with counts, and a "Ver mais" button that opens the macro in the catalog.
+// One-page preview on the Achadinhos page: macro tabs on top, then the chosen macro's micro filters,
+// a few of its products as cards, and a "Ver mais" button that opens it in the catalog.
 export function CategoryPreview({ macros, products, onSelect, onOpenDetails }: CategoryPreviewProps) {
+  const [activeMacroName, setActiveMacroName] = useState<string | null>(null);
+  const macro = macros.find((m) => m.name === activeMacroName) ?? macros[0];
+  if (!macro) return null;
+
   const departmentOf = (p: Product) => p.department || LEGACY_MAP[p.category]?.[0];
   const subcategoryOf = (p: Product) => p.subcategory || LEGACY_MAP[p.category]?.[1];
   const countDepartment = (name: string) => products.filter((p) => departmentOf(p) === name).length;
   const countSubcategory = (name: string) => products.filter((p) => subcategoryOf(p) === name).length;
+  const sample = products.filter((p) => departmentOf(p) === macro.name).slice(0, 4);
 
   return (
-    <div className="space-y-10">
-      {macros.map((macro) => {
-        const sample = products.filter((p) => departmentOf(p) === macro.name).slice(0, 4);
-        return (
-          <section key={macro.name} className="space-y-4">
-            <div className="flex flex-wrap items-end justify-between gap-3 border-b border-stone-200 pb-3">
-              <div className="space-y-1">
-                <h2 className="font-serif text-xl sm:text-2xl font-bold text-stone-900">{macro.name}</h2>
-                <div className="flex flex-wrap gap-1.5">
-                  {macro.subcategories.map((sub) => (
-                    <button
-                      key={sub}
-                      type="button"
-                      onClick={() => onSelect(sub)}
-                      className="inline-flex items-center gap-1 rounded-lg border border-stone-200 bg-stone-50 px-2 py-1 text-[11px] font-semibold text-stone-700 hover:bg-stone-100"
-                    >
-                      <Tag className="w-3 h-3" />
-                      <span>{sub}</span>
-                      <span className="text-[10px] text-stone-500">{countSubcategory(sub)}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => onSelect(macro.name)}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 px-3.5 py-2 text-xs font-bold text-white shrink-0"
-              >
-                <span>Ver mais {macro.name} ({countDepartment(macro.name)})</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
+    <div className="space-y-5">
+      <div className="flex flex-wrap gap-2">
+        {macros.map((m) => {
+          const active = m.name === macro.name;
+          return (
+            <button
+              key={m.name}
+              type="button"
+              onClick={() => setActiveMacroName(m.name)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                active ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-100'
+              }`}
+            >
+              {m.name} ({countDepartment(m.name)})
+            </button>
+          );
+        })}
+      </div>
 
-            {sample.length > 0 && (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                {sample.map((product) => (
-                  <ProductCard key={product.id} product={product} onOpenDetails={onOpenDetails} />
-                ))}
-              </div>
-            )}
-          </section>
-        );
-      })}
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-stone-200 pb-3">
+          <div className="space-y-2">
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-stone-900">{macro.name}</h2>
+            <div className="flex flex-wrap gap-1.5">
+              {macro.subcategories.map((sub) => (
+                <button
+                  key={sub}
+                  type="button"
+                  onClick={() => onSelect(sub)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-stone-200 bg-stone-50 px-2 py-1 text-[11px] font-semibold text-stone-700 hover:bg-stone-100"
+                >
+                  <Tag className="w-3 h-3" />
+                  <span>{sub}</span>
+                  <span className="text-[10px] text-stone-500">{countSubcategory(sub)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onSelect(macro.name)}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 px-3.5 py-2 text-xs font-bold text-white shrink-0"
+          >
+            <span>Ver mais {macro.name}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {sample.length > 0 && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {sample.map((product) => (
+              <ProductCard key={product.id} product={product} onOpenDetails={onOpenDetails} />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
