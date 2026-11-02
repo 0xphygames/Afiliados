@@ -57,6 +57,19 @@ const emptyProduct = {
 // records containing brackets or line breaks inside a product payload.
 const PRODUCT_TOKEN_PATTERN = /\[\[produto\|[\s\S]*?\]\]/g;
 
+// Some mobile WebViews can persist a plain-text value with one character per
+// line after a controlled textarea is updated while the product modal is open.
+// Repair only that unmistakable corruption; normal paragraphs and lists are
+// left untouched.
+const repairCharacterWrappedText = (text: string) => {
+  const lines = text.split('\n');
+  const nonEmpty = lines.filter((line) => line.trim());
+  if (nonEmpty.length >= 4 && nonEmpty.every((line) => Array.from(line.trim()).length === 1)) {
+    return nonEmpty.join('');
+  }
+  return text;
+};
+
 export function BlogContentEditor({
   value,
   onChange,
@@ -120,7 +133,9 @@ export function BlogContentEditor({
   const productMacros = value.match(PRODUCT_TOKEN_PATTERN) ?? [];
   // Never trim the editor value while the user is typing: trimEnd() here used
   // to erase the space/newline just entered at the end of the textarea.
-  const cleanContent = value.replace(PRODUCT_TOKEN_PATTERN, '').replace(/\n{3,}/g, '\n\n');
+  const cleanContent = repairCharacterWrappedText(
+    value.replace(PRODUCT_TOKEN_PATTERN, '').replace(/\n{3,}/g, '\n\n')
+  );
   const composeContent = (text: string, macros: string[] = productMacros) =>
     macros.length
       ? `${text}${text && !text.endsWith('\n') ? '\n\n' : ''}${macros.join('\n')}`
