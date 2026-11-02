@@ -111,6 +111,10 @@ export function BlogContentEditor({
   const manualReady = Boolean(productForm.name.trim() && productForm.url.trim());
   const itemsToInsert: ArticleProductFields[] =
     selectedProducts.length > 0 ? selectedProducts.map(catalogFields) : manualReady ? [productForm] : [];
+  const productMacros = Array.from(value.matchAll(/\[\[produto\|[^\]]+\]\]/g), (match) => match[0]);
+  const cleanContent = value.replace(/\n?\[\[produto\|[^\]]+\]\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
+  const composeContent = (text: string, macros = productMacros) =>
+    `${text.trimEnd()}${macros.length ? `\n\n${macros.join('\n')}` : ''}`.trim();
 
   const togglePick = (id: string) =>
     setSelectedIds((prev) => {
@@ -159,7 +163,7 @@ export function BlogContentEditor({
       ].map((f) => f.replace(/[|[\]\n]/g, ' ').trim());
       return `[[produto|${fields.join('|')}]]`;
     });
-    insertAtCursor(`\n${lines.join('\n')}\n`);
+    onChange(composeContent(cleanContent, [...productMacros, ...lines]));
     setShowProductModal(false);
     setProductForm(emptyProduct);
     setSelectedIds([]);
@@ -170,7 +174,7 @@ export function BlogContentEditor({
     const textarea = textareaRef.current;
     if (textarea) {
       selectionRef.current = { start: textarea.selectionStart, end: textarea.selectionEnd };
-      const selected = textarea.value.substring(textarea.selectionStart, textarea.selectionEnd);
+      const selected = cleanContent.substring(textarea.selectionStart, textarea.selectionEnd);
       if (selected.trim()) {
         setLinkText(selected.trim());
       } else {
@@ -206,13 +210,13 @@ export function BlogContentEditor({
       return;
     }
 
-    const start = Math.max(0, Math.min(range.start, value.length));
-    const end = Math.max(start, Math.min(range.end, value.length));
-    const textBefore = value.substring(0, start);
-    const textAfter = value.substring(end);
+    const start = Math.max(0, Math.min(range.start, cleanContent.length));
+    const end = Math.max(start, Math.min(range.end, cleanContent.length));
+    const textBefore = cleanContent.substring(0, start);
+    const textAfter = cleanContent.substring(end);
 
     const newValue = textBefore + textToInsert + textAfter;
-    onChange(newValue);
+    onChange(composeContent(newValue));
     const newCursorPos = start + textToInsert.length;
 
     setTimeout(() => {
@@ -385,16 +389,26 @@ export function BlogContentEditor({
         )}
       </div>
 
+      <textarea
+        ref={textareaRef}
+        rows={rows}
+        required
+        value={cleanContent}
+        onChange={(e) => onChange(composeContent(e.target.value))}
+        placeholder="Escreva aqui o contexto do produto, sua experiência, dicas, comparações e recomendações..."
+        className="w-full min-h-56 px-3.5 py-3 text-sm bg-white border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 transition-all text-stone-900 leading-relaxed font-sans"
+        aria-label="Texto limpo do artigo"
+      />
+
       <details className="rounded-xl border border-stone-200 bg-stone-50">
         <summary className="cursor-pointer px-3.5 py-2.5 text-xs font-semibold text-stone-700">
-          Editar texto técnico do artigo (opcional)
+          Mostrar código técnico dos produtos (avançado)
         </summary>
         <div className="p-3 pt-0">
           <p className="mb-2 text-[11px] text-stone-500">
-            O formato interno fica oculto normalmente. Edite aqui apenas textos, links ou produtos que já foram inseridos.
+            Normalmente você não precisa editar esta área. Use o editor limpo acima para escrever o artigo.
           </p>
           <textarea
-            ref={textareaRef}
             rows={rows}
             required
             value={value}
