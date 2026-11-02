@@ -25,6 +25,10 @@ export function TaxonomySidebar({ activePlatform, activeCategory, onSelectCatego
   // The tree comes from the database (editable in Categorias & Setores); the code tree is the fallback
   // On phones the sector list starts closed so the products show first
   const [sectionsOpen, setSectionsOpen] = useState(false);
+  // Picking a category from the preview opens the list on phones, so the selection is visible
+  useEffect(() => {
+    if (activeCategory !== ALL) setSectionsOpen(true);
+  }, [activeCategory]);
   const [tree, setTree] = useState<TaxMacro[]>([]);
   useEffect(() => subscribeTaxonomy((t) => setTree(t)), []);
   const macros = tree.length

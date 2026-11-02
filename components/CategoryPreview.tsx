@@ -16,8 +16,8 @@ interface CategoryPreviewProps {
   onSelect: (category: string) => void;
 }
 
-// Shown on the Achadinhos page before a category is picked: each macro with a strip of its products,
-// its micro categories and how many products each one has. Picking one filters the catalog.
+// Shown on the Achadinhos page before a category is picked: each macro with a few of its products,
+// its micro categories and how many products each one has. "Ver mais" opens the macro in the catalog.
 export function CategoryPreview({ macros, products, onSelect }: CategoryPreviewProps) {
   const departmentOf = (p: Product) => p.department || LEGACY_MAP[p.category]?.[0];
   const subcategoryOf = (p: Product) => p.subcategory || LEGACY_MAP[p.category]?.[1];
@@ -62,6 +62,15 @@ export function CategoryPreview({ macros, products, onSelect }: CategoryPreviewP
                 </button>
               ))}
             </div>
+
+            <button
+              type="button"
+              onClick={() => onSelect(macro.name)}
+              className="mt-auto self-start inline-flex items-center gap-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 px-3.5 py-2 text-xs font-bold text-white"
+            >
+              <span>Ver mais {macro.name}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         );
       })}
