@@ -250,7 +250,7 @@ export default function AchadinhosPage() {
                 <CategoryPreview
                   macros={previewMacros}
                   products={products.filter((p) => activePlatform === 'all' || p.platform === activePlatform)}
-                  onSelect={setActiveCategory}
+                  onSelect={setActiveCategory} onOpenDetails={setSelectedProduct}
                 />
               ) : isLoadingProducts ? (
                 <div className="text-center py-16 px-4 bg-white rounded-3xl border border-stone-200 max-w-md mx-auto space-y-3">
