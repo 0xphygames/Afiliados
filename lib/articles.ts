@@ -56,6 +56,8 @@ export function articleLinkMeta(article: Article, products: Product[]): ArticleL
       departments.add(articleMapped[0]);
       departments.add(articleMapped[1]);
     }
+    // Articles with no sector at all stay visible under Outros
+    if (departments.size === 0) departments.add('Outros');
   }
 
   // The store chosen in the editor counts too, even before any card is added

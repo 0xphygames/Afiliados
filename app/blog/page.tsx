@@ -42,9 +42,9 @@ export default function BlogPage() {
   // Macro and micro categories shown as the one-page preview until a category is picked
   const [taxTree, setTaxTree] = useState<TaxMacro[]>([]);
   useEffect(() => subscribeTaxonomy((t) => setTaxTree(t)), []);
-  const previewMacros = taxTree.length
+  const previewMacros = [...(taxTree.length
     ? taxTree.map((m) => ({ name: m.node.name, subcategories: m.micros.map((x) => x.name) }))
-    : TAXONOMY.map((m) => ({ name: m.name, subcategories: m.subcategories.map((s) => s.name) }));
+    : TAXONOMY.map((m) => ({ name: m.name, subcategories: m.subcategories.map((s) => s.name) }))), { name: 'Outros', subcategories: [] }];
   const showPreview = activeCategory === 'Todos os Setores' && !searchQuery.trim();
 
   useEffect(() => {
