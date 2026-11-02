@@ -399,7 +399,7 @@ export function BlogContentEditor({
         value={cleanContent}
         onChange={(e) => onChange(composeContent(e.target.value))}
         placeholder="Escreva aqui o contexto do produto, sua experiência, dicas, comparações e recomendações..."
-        className="w-full min-h-56 px-3.5 py-3 text-sm bg-white border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 transition-all text-stone-900 leading-relaxed font-sans"
+        className="block w-full min-w-0 min-h-56 px-3.5 py-3 text-sm bg-white border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 transition-all text-stone-900 leading-relaxed font-sans resize-y [writing-mode:horizontal-tb] [direction:ltr] [white-space:pre-wrap] [word-break:normal] [overflow-wrap:break-word]"
         aria-label="Texto limpo do artigo"
       />
 
@@ -428,7 +428,7 @@ export function BlogContentEditor({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            className="w-full px-3.5 py-2.5 text-xs bg-white border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 transition-all text-stone-900 leading-relaxed font-sans"
+            className="block w-full min-w-0 px-3.5 py-2.5 text-xs bg-white border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 transition-all text-stone-900 leading-relaxed font-sans resize-y [writing-mode:horizontal-tb] [direction:ltr] [white-space:pre-wrap] [word-break:normal] [overflow-wrap:break-word]"
           />
         </div>
       </details>
