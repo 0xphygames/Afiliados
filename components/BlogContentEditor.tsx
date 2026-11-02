@@ -69,7 +69,6 @@ const repairCharacterWrappedText = (text: string) => {
   }
   return text;
 };
-
 export function BlogContentEditor({
   value,
   onChange,
