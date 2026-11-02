@@ -4,10 +4,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { Article, PlatformId, SiteSettings } from '@/lib/types';
+import { Article, PlatformId, Product, SiteSettings } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
+import { LEGACY_MAP } from '@/lib/taxonomy';
 import {
   subscribeFirestoreArticles,
+  subscribeFirestoreProducts,
   subscribeFirestoreSettings,
   INITIAL_ARTICLES,
   INITIAL_SETTINGS,
@@ -36,18 +38,21 @@ export function ArticleView({ initialArticle }: { initialArticle?: Article | nul
   const [copied, setCopied] = useState(false);
   const [activePlatform, setActivePlatform] = useState<PlatformId | 'all'>('all');
   const [activeCategory, setActiveCategory] = useState('Todos os Departamentos');
+  const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     const unsubArt = subscribeFirestoreArticles((list) => {
       setArticles(list ?? []);
       setArticlesLoaded(true);
     });
+    const unsubProd = subscribeFirestoreProducts((list) => setProducts(list ?? []));
     const unsubSet = subscribeFirestoreSettings((cfg) => {
       if (cfg) setSettings(cfg);
     });
     return () => {
       unsubArt();
       unsubSet();
+      unsubProd();
     };
   }, []);
 
@@ -69,29 +74,35 @@ export function ArticleView({ initialArticle }: { initialArticle?: Article | nul
       })
     : '';
 
-  // Lines without a 'Categoria:' note belong to the article's own sector, not to 'Outros'
-  const fallbackCategory = article?.subcategory || article?.department || 'Outros';
-  const productLines = article?.content.split('\n').filter((line) => line.trim().startsWith('[[produto|') && line.trim().endsWith(']]')) ?? [];
-  const articleProducts = productLines.map((line) => {
+  // Each product line is classified by the macro and micro of the catalog product it links to
+  const productByUrl = new Map(products.map((p) => [p.affiliateUrl, p]));
+  const classifyLine = (line: string) => {
     const fields = line.trim().slice(10, -2).split('|').map((field) => field.trim());
     const url = fields[4] || '';
-    const highlights = fields[9] || '';
-    return {
-      platform: (url.includes('amazon') || url.includes('amzn') ? 'amazon' : url.includes('shein') ? 'shein' : url.includes('mercadolivre') || url.includes('mercadolibre') || url.includes('meli.la') ? 'mercadolivre' : 'shopee') as PlatformId,
-      category: highlights.match(/(?:^|;\s*)Categoria:\s*([^;]+)/i)?.[1]?.trim() || fallbackCategory,
-    };
-  });
-  const articleCategories = Array.from(new Set(articleProducts.map((product) => product.category))).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    const product = productByUrl.get(url);
+    const mapped = product ? LEGACY_MAP[product.category] : undefined;
+    const macro = product?.department || mapped?.[0] || article?.department || 'Outros';
+    const micro = product?.subcategory || mapped?.[1] || article?.subcategory || macro;
+    const platform = (url.includes('amazon') || url.includes('amzn') ? 'amazon' : url.includes('shein') ? 'shein' : url.includes('mercadolivre') || url.includes('mercadolibre') || url.includes('meli.la') ? 'mercadolivre' : 'shopee') as PlatformId;
+    return { platform, macro, micro };
+  };
+  const isProductLine = (line: string) => line.trim().startsWith('[[produto|') && line.trim().endsWith(']]');
+  const productLines = article?.content.split('\n').filter(isProductLine) ?? [];
+  const articleProducts = productLines.map(classifyLine);
+  const inStore = articleProducts.filter((p) => activePlatform === 'all' || p.platform === activePlatform);
+  const sortPt = (a: string, b: string) => a.localeCompare(b, 'pt-BR');
+  const countMacro = (name: string) => inStore.filter((p) => p.macro === name).length;
+  const countMicro = (name: string) => inStore.filter((p) => p.micro === name).length;
+  const macroNames = Array.from(new Set(articleProducts.map((p) => p.macro))).sort(sortPt).filter((m) => countMacro(m) > 0);
+  const microNamesOf = (macro: string) =>
+    Array.from(new Set(articleProducts.filter((p) => p.macro === macro && p.micro !== macro).map((p) => p.micro)))
+      .sort(sortPt)
+      .filter((m) => countMicro(m) > 0);
   const filteredContent = article
     ? article.content.split('\n').filter((line) => {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith('[[produto|') || !trimmed.endsWith(']]')) return true;
-        const fields = trimmed.slice(10, -2).split('|').map((field) => field.trim());
-        const url = fields[4] || '';
-        const highlights = fields[9] || '';
-        const platform = url.includes('amazon') || url.includes('amzn') ? 'amazon' : url.includes('shein') ? 'shein' : url.includes('mercadolivre') || url.includes('mercadolibre') || url.includes('meli.la') ? 'mercadolivre' : 'shopee';
-        const category = highlights.match(/(?:^|;\s*)Categoria:\s*([^;]+)/i)?.[1]?.trim() || fallbackCategory;
-        return (activePlatform === 'all' || platform === activePlatform) && (activeCategory === 'Todos os Departamentos' || category === activeCategory);
+        if (!isProductLine(line)) return true;
+        const { platform, macro, micro } = classifyLine(line);
+        return (activePlatform === 'all' || platform === activePlatform) && (activeCategory === 'Todos os Departamentos' || macro === activeCategory || micro === activeCategory);
       }).join('\n')
     : '';
 
@@ -183,13 +194,25 @@ export function ArticleView({ initialArticle }: { initialArticle?: Article | nul
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
                   <aside className="h-fit rounded-2xl border border-stone-200 bg-white p-4 lg:sticky lg:top-4">
                     <p className="mb-3 text-xs font-bold uppercase tracking-wide text-stone-700">Setores & Categorias</p>
-                    <button onClick={() => setActiveCategory('Todos os Departamentos')} className={`mb-2 flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold ${activeCategory === 'Todos os Departamentos' ? 'bg-stone-900 text-white' : 'bg-stone-50 text-stone-700'}`}>
-                      <span>Todos os Departamentos</span><span>{articleProducts.length}</span>
+                    <button onClick={() => setActiveCategory('Todos os Departamentos')} className={`mb-3 flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold ${activeCategory === 'Todos os Departamentos' ? 'bg-stone-900 text-white' : 'bg-stone-50 text-stone-700'}`}>
+                      <span>Todos os Departamentos</span><span>{inStore.length}</span>
                     </button>
-                    {articleCategories.map((category) => {
-                      const count = articleProducts.filter((product) => product.category === category && (activePlatform === 'all' || product.platform === activePlatform)).length;
-                      return <button key={category} onClick={() => setActiveCategory(category)} className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs ${activeCategory === category ? 'bg-stone-100 font-bold text-stone-900' : 'text-stone-600'}`}><span>{category}</span><span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-800">{count}</span></button>;
-                    })}
+                    {macroNames.map((macro) => (
+                      <div key={macro} className="mb-3 space-y-1">
+                        <button onClick={() => setActiveCategory(macro)} className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-bold ${activeCategory === macro ? 'bg-stone-900 text-white' : 'bg-stone-50 text-stone-800'}`}>
+                          <span>{macro}</span><span>{countMacro(macro)}</span>
+                        </button>
+                        {microNamesOf(macro).length > 0 && (
+                          <div className="ml-3 space-y-0.5 border-l border-stone-200 pl-2">
+                            {microNamesOf(macro).map((micro) => (
+                              <button key={micro} onClick={() => setActiveCategory(micro)} className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs ${activeCategory === micro ? 'bg-amber-100 font-bold text-amber-900' : 'text-stone-600 hover:bg-stone-100'}`}>
+                                <span>{micro}</span><span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-800">{countMicro(micro)}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </aside>
                   <BlogContentRenderer content={filteredContent} className="text-[15px] sm:text-base leading-relaxed space-y-4" />
                 </div>
