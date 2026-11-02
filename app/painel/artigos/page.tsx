@@ -18,8 +18,7 @@ import {
   Image as ImageIcon,
   Check,
 } from 'lucide-react';
-import { optimizeImageFile } from '@/lib/image-compress';
-import { supabase, SUPABASE_STORAGE_BUCKET } from '@/lib/supabase';
+import { uploadImageFile } from '@/lib/image-storage';
 import { BlogContentEditor } from '@/components/BlogContentEditor';
 
 const PRESET_ARTICLE_COVERS = [
@@ -66,15 +65,7 @@ export default function PainelArtigosPage() {
     if (!file) return;
 
     try {
-      const optimized = await optimizeImageFile(file, 800, 0.72);
-      const blob = await (await fetch(optimized)).blob();
-      const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const path = `articles/${Date.now()}-${safeName.replace(/\.[^.]+$/, '')}.jpg`;
-      const { error } = await supabase.storage
-        .from(SUPABASE_STORAGE_BUCKET)
-        .upload(path, blob, { contentType: 'image/jpeg', upsert: false, cacheControl: '31536000' });
-      if (error) throw error;
-      setCoverImageUrl(supabase.storage.from(SUPABASE_STORAGE_BUCKET).getPublicUrl(path).data.publicUrl);
+      setCoverImageUrl(await uploadImageFile(file, 'articles', 800, 0.72));
     } catch (err) {
       console.error('Erro ao otimizar imagem do artigo:', err);
       const reason = (err as { message?: string })?.message;
@@ -223,7 +214,7 @@ export default function PainelArtigosPage() {
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-stone-900">Classificação</label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <select value={department} onChange={(e) => { setDepartment(e.target.value); setSubcategory(''); }} className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900">
                   <option value="">Escolha a macro</option>
                   {tree.map((m) => (
@@ -378,7 +369,7 @@ export default function PainelArtigosPage() {
             />
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-2">
+          <div className="sticky bottom-0 -mx-6 sm:-mx-8 -mb-6 sm:-mb-8 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 border-t border-stone-100 bg-white/95 backdrop-blur-sm px-6 sm:px-8 py-3">
             <button
               type="button"
               onClick={() => setIsEditing(false)}
@@ -389,7 +380,7 @@ export default function PainelArtigosPage() {
             <button
               type="submit"
               disabled={saving}
-              className="py-2.5 px-6 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="py-2.5 px-6 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Save className="w-4 h-4 text-amber-300" />
               <span>{saving ? 'Publicando...' : 'Publicar Artigo'}</span>

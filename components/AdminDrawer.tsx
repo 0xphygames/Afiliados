@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Product, PlatformId } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
 import { exportProductsJson } from '@/lib/storage';
+import { uploadImageFile } from '@/lib/image-storage';
 import type { User } from '@/lib/firestore-products';
 import {
   X,
@@ -100,14 +101,14 @@ function ProductForm({ initialProduct, onSave, onCancel }: FormProps) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        setImageUrl(await uploadImageFile(file, 'products', 1200, 0.85));
+      } catch (error) {
+        alert(error instanceof Error ? error.message : 'Não foi possível enviar a imagem.');
+      }
     }
   };
 

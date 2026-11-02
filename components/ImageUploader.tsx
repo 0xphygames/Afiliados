@@ -2,8 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import Image from 'next/image';
-import { supabase, SUPABASE_STORAGE_BUCKET } from '@/lib/supabase';
-import { optimizeImageFile } from '@/lib/image-compress';
+import { uploadImageFile } from '@/lib/image-storage';
 
 interface ImageUploaderProps {
   /**
@@ -28,42 +27,24 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, initialU
     setUploading(true);
 
     try {
-      // 1. Optimize image in browser first to prevent oversized uploads
-      const optimizedDataUrl = await optimizeImageFile(file, 1200, 0.85);
-
-      // 2. Upload to Supabase Storage, fallback to the optimized data URL if unavailable
       try {
-        const safeName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
-        const path = `products/${Date.now()}_${safeName}`;
-        const { error } = await supabase.storage
-          .from(SUPABASE_STORAGE_BUCKET)
-          .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type });
-        if (error) throw error;
-
-        const { data } = supabase.storage.from(SUPABASE_STORAGE_BUCKET).getPublicUrl(path);
-        setPreview(data.publicUrl);
+        const publicUrl = await uploadImageFile(file, 'products', 1200, 0.85);
+        setPreview(publicUrl);
         setUploading(false);
-        onUpload(data.publicUrl);
+        onUpload(publicUrl);
       } catch (storageError) {
-        // Base64 inside the database makes every catalog request megabytes large, so do not save it silently
         console.error('Falha ao enviar imagem para o Storage:', storageError);
         setUploading(false);
         alert(
           'Não foi possível enviar a imagem para o armazenamento. Verifique a conexão e as permissões do bucket de imagens. ' +
             ((storageError as { message?: string })?.message ?? ''),
         );
-        void optimizedDataUrl;
+        return;
       }
     } catch (compressErr) {
       console.error('Erro ao processar imagem:', compressErr);
-      const r = new FileReader();
-      r.onloadend = () => {
-        const result = r.result as string;
-        setPreview(result);
-        setUploading(false);
-        onUpload(result);
-      };
-      r.readAsDataURL(file);
+      setUploading(false);
+      alert('Não foi possível processar a imagem. Tente outro arquivo.');
     }
   };
 

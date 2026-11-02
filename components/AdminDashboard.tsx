@@ -21,7 +21,7 @@ import {
   loginWithGoogle,
   logoutUser,
 } from '@/lib/firestore-products';
-import { optimizeImageFile } from '@/lib/image-compress';
+import { uploadImageFile } from '@/lib/image-storage';
 import { ImageUploader } from './ImageUploader';
 import {
   X,
@@ -1180,12 +1180,9 @@ export function AdminDashboard({
                                 const file = e.target.files?.[0];
                                 if (file) {
                                   try {
-                                    const optimized = await optimizeImageFile(file, 1200, 0.85);
-                                    setProdImageUrl(optimized);
+                                    setProdImageUrl(await uploadImageFile(file, 'products', 1200, 0.85));
                                   } catch (err) {
-                                    const r = new FileReader();
-                                    r.onloadend = () => setProdImageUrl(r.result as string);
-                                    r.readAsDataURL(file);
+                                    alert(err instanceof Error ? err.message : 'Não foi possível enviar a imagem.');
                                   }
                                 }
                               }}
@@ -1767,12 +1764,9 @@ export function AdminDashboard({
                                 const file = e.target.files?.[0];
                                 if (file) {
                                   try {
-                                    const opt = await optimizeImageFile(file, 1400, 0.85);
-                                    setPageBannerUrl(opt);
+                                    setPageBannerUrl(await uploadImageFile(file, 'campaigns', 1400, 0.85));
                                   } catch (err) {
-                                    const r = new FileReader();
-                                    r.onloadend = () => setPageBannerUrl(r.result as string);
-                                    r.readAsDataURL(file);
+                                    alert(err instanceof Error ? err.message : 'Não foi possível enviar o banner.');
                                   }
                                 }
                               }}

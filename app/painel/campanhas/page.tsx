@@ -22,7 +22,7 @@ import {
   ImageIcon,
   Eye,
 } from 'lucide-react';
-import { optimizeImageFile } from '@/lib/image-compress';
+import { uploadImageFile } from '@/lib/image-storage';
 
 const BANNER_PRESETS = [
   {
@@ -86,18 +86,10 @@ export default function PainelCampanhasPage() {
     if (!file) return;
 
     try {
-      const optimized = await optimizeImageFile(file, 900, 0.72);
-      setBannerImageUrl(optimized);
+      setBannerImageUrl(await uploadImageFile(file, 'campaigns', 900, 0.72));
     } catch (err) {
       console.error('Erro ao otimizar banner da campanha:', err);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        if (result) {
-          setBannerImageUrl(result);
-        }
-      };
-      reader.readAsDataURL(file);
+      alert(err instanceof Error ? err.message : 'Não foi possível enviar o banner para o Storage.');
     }
   };
 

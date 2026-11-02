@@ -26,7 +26,7 @@ import {
   Layers,
   Loader2,
 } from 'lucide-react';
-import { optimizeImageFile, optimizeDataUrl } from '@/lib/image-compress';
+import { uploadImageFile, rejectDataImageUrl } from '@/lib/image-storage';
 
 
 const PRESET_IMAGES = [
@@ -72,15 +72,7 @@ export default function NovoAchadinhoPage() {
     const rawUrl = (urlToAdd || newImageUrl).trim();
     if (!rawUrl) return;
 
-    // Optimize if it is a large base64 data URL
-    let url = rawUrl;
-    if (rawUrl.startsWith('data:image/')) {
-      try {
-        url = await optimizeDataUrl(rawUrl, 800, 0.72);
-      } catch (err) {
-        console.warn('Falha ao recompactar data URL:', err);
-      }
-    }
+    const url = rejectDataImageUrl(rawUrl);
 
     if (!images.includes(url)) {
       setImages((prev) => [...prev, url]);
@@ -119,7 +111,7 @@ export default function NovoAchadinhoPage() {
     try {
       const fileList = Array.from(files);
       const optimizedUrls = await Promise.all(
-        fileList.map((file) => optimizeImageFile(file, 800, 0.72))
+        fileList.map((file) => uploadImageFile(file, `products/${Date.now()}`, 800, 0.72))
       );
 
       setImages((prev) => {
@@ -170,10 +162,7 @@ export default function NovoAchadinhoPage() {
     try {
       const validImages = images.filter((img) => img.trim().length > 0);
       
-      // Re-compress any raw data URLs in the list to make sure total payload is lightweight
-      const optimizedImages = await Promise.all(
-        validImages.map((img) => (img.startsWith('data:image/') ? optimizeDataUrl(img, 800, 0.72) : Promise.resolve(img)))
-      );
+      const optimizedImages = validImages.map(rejectDataImageUrl);
 
       const primaryImg = optimizedImages[0] || '/images/hero_achadinhos_looks_1791404026649.jpg';
 
