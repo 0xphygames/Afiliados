@@ -86,7 +86,7 @@ export function TaxonomySidebar({ activePlatform, activeCategory, onSelectCatego
           {badge(categoryCounts?.total ?? inStore.length, activeCategory === ALL)}
         </button>
 
-        {macros.map((dep) => {
+        {macros.filter((dep) => countDepartment(dep.name) > 0).map((dep) => {
           const depActive = activeCategory === dep.name;
           const open = depActive || dep.subcategories.some((s) => s.name === activeCategory);
           const total = countDepartment(dep.name);
@@ -102,7 +102,7 @@ export function TaxonomySidebar({ activePlatform, activeCategory, onSelectCatego
 
               {open && (
                 <div className="ml-5 pl-3 border-l border-stone-200 space-y-0.5">
-                  {dep.subcategories.map((sub) => {
+                  {dep.subcategories.filter((sub) => countSubcategory(sub.name) > 0).map((sub) => {
                     const n = countSubcategory(sub.name);
                     const active = activeCategory === sub.name;
                     return (
