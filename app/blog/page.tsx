@@ -208,7 +208,7 @@ export default function BlogPage() {
         )}
 
         {/* Featured Article Hero (When no search active) */}
-        {!searchQuery && activeCategory === 'Todos os Setores' && featuredArticle && (
+        {!showPreview && featuredArticle && (
           <section className="pt-0">
             <Link
               href={`/artigo/${featuredArticle.id}`}

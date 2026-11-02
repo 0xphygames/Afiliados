@@ -41,8 +41,9 @@ export function TaxonomySidebar({ activePlatform, activeCategory, onSelectCatego
     const mapped = LEGACY_MAP[p.category];
     return { department: p.department || mapped?.[0], subcategory: p.subcategory || mapped?.[1] };
   };
-  const countDepartment = (name: string) => categoryCounts?.departments[name] ?? inStore.filter((p) => classify(p).department === name).length;
-  const countSubcategory = (name: string) => categoryCounts?.subcategories[name] ?? inStore.filter((p) => classify(p).subcategory === name).length;
+  // With article counts, a category with no articles counts 0 instead of falling back to product counts
+  const countDepartment = (name: string) => (categoryCounts ? categoryCounts.departments[name] ?? 0 : inStore.filter((p) => classify(p).department === name).length);
+  const countSubcategory = (name: string) => (categoryCounts ? categoryCounts.subcategories[name] ?? 0 : inStore.filter((p) => classify(p).subcategory === name).length);
 
   const storeLabel = activePlatform === 'all' ? 'TODAS AS LOJAS' : PLATFORMS[activePlatform].name.toUpperCase();
 
