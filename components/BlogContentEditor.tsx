@@ -51,6 +51,12 @@ const emptyProduct = {
   highlights: '',
 };
 
+// Product cards are stored as technical tokens. Their fields can contain long
+// URLs or legacy image payloads, so the editor must remove the whole token
+// before rendering the clean writing area. `[^\]]+` was too strict for older
+// records containing brackets or line breaks inside a product payload.
+const PRODUCT_TOKEN_PATTERN = /\[\[produto\|[\s\S]*?\]\]/g;
+
 export function BlogContentEditor({
   value,
   onChange,
@@ -111,11 +117,11 @@ export function BlogContentEditor({
   const manualReady = Boolean(productForm.name.trim() && productForm.url.trim());
   const itemsToInsert: ArticleProductFields[] =
     selectedProducts.length > 0 ? selectedProducts.map(catalogFields) : manualReady ? [productForm] : [];
-  const productMacros = Array.from(value.matchAll(/\[\[produto\|[^\]]+\]\]/g), (match) => match[0]);
+  const productMacros = value.match(PRODUCT_TOKEN_PATTERN) ?? [];
   // Never trim the editor value while the user is typing: trimEnd() here used
   // to erase the space/newline just entered at the end of the textarea.
-  const cleanContent = value.replace(/\n?\[\[produto\|[^\]]+\]\]/g, '').replace(/\n{3,}/g, '\n\n');
-  const composeContent = (text: string, macros = productMacros) =>
+  const cleanContent = value.replace(PRODUCT_TOKEN_PATTERN, '').replace(/\n{3,}/g, '\n\n');
+  const composeContent = (text: string, macros: string[] = productMacros) =>
     macros.length
       ? `${text}${text && !text.endsWith('\n') ? '\n\n' : ''}${macros.join('\n')}`
       : text;
