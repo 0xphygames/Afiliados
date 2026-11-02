@@ -170,10 +170,17 @@ export function BlogContentEditor({
   };
 
   // Open link modal and capture current selected text
+  const captureSelection = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return selectionRef.current;
+    selectionRef.current = { start: textarea.selectionStart, end: textarea.selectionEnd };
+    return selectionRef.current;
+  };
+
   const handleOpenLinkModal = () => {
     const textarea = textareaRef.current;
     if (textarea) {
-      selectionRef.current = { start: textarea.selectionStart, end: textarea.selectionEnd };
+      captureSelection();
       const selected = cleanContent.substring(textarea.selectionStart, textarea.selectionEnd);
       if (selected.trim()) {
         setLinkText(selected.trim());
@@ -203,15 +210,17 @@ export function BlogContentEditor({
     setLinkUrl('');
   };
 
-  const insertAtCursor = (textToInsert: string, range = selectionRef.current) => {
+  const insertAtCursor = (textToInsert: string, range?: { start: number; end: number }) => {
     const textarea = textareaRef.current;
     if (!textarea) {
-      onChange(value + (value ? '\n' : '') + textToInsert);
+      onChange(composeContent(`${cleanContent}${cleanContent ? '\n' : ''}${textToInsert}`));
       return;
     }
 
-    const start = Math.max(0, Math.min(range.start, cleanContent.length));
-    const end = Math.max(start, Math.min(range.end, cleanContent.length));
+    const currentRange = range ?? captureSelection();
+
+    const start = Math.max(0, Math.min(currentRange.start, cleanContent.length));
+    const end = Math.max(start, Math.min(currentRange.end, cleanContent.length));
     const textBefore = cleanContent.substring(0, start);
     const textAfter = cleanContent.substring(end);
 
@@ -229,26 +238,27 @@ export function BlogContentEditor({
   // Quick insertion helpers
   const handleInsertBold = () => {
     const textarea = textareaRef.current;
+    const range = captureSelection();
     const selected = textarea
       ? textarea.value.substring(textarea.selectionStart, textarea.selectionEnd)
       : '';
-    insertAtCursor(`**${selected || 'texto em destaque'}**`);
+    insertAtCursor(`**${selected || 'texto em destaque'}**`, range);
   };
 
   const handleInsertH2 = () => {
-    insertAtCursor('\n## Título da Seção\n');
+    insertAtCursor('\n## Título da Seção\n', captureSelection());
   };
 
   const handleInsertH3 = () => {
-    insertAtCursor('\n### Subtítulo\n');
+    insertAtCursor('\n### Subtítulo\n', captureSelection());
   };
 
   const handleInsertList = () => {
-    insertAtCursor('\n- Item da lista\n- Segundo item\n');
+    insertAtCursor('\n- Item da lista\n- Segundo item\n', captureSelection());
   };
 
   const handleInsertTip = () => {
-    insertAtCursor('\n> 💡 Dica da Curadora: Verifique o tamanho na tabela antes de comprar!\n');
+    insertAtCursor('\n> 💡 Dica da Curadora: Verifique o tamanho na tabela antes de comprar!\n', captureSelection());
   };
 
   return (
@@ -279,7 +289,7 @@ export function BlogContentEditor({
 
           <button
             type="button"
-            onClick={() => insertAtCursor('\n[[aviso]]\n')}
+            onClick={() => insertAtCursor('\n[[aviso]]\n', captureSelection())}
             title="Inserir aviso de links de afiliado"
             className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-stone-200 bg-white hover:bg-stone-50 text-stone-700"
           >
@@ -378,17 +388,6 @@ export function BlogContentEditor({
         </div>
       </div>
 
-      {/* Visual editor: product macros are rendered as the same cards used on the site. */}
-      <div className="p-3 sm:p-4 bg-white border border-stone-200 rounded-xl min-h-[220px] max-h-[55vh] sm:max-h-[520px] overflow-y-auto overscroll-contain">
-        {value.trim() ? (
-          <BlogContentRenderer content={value} />
-        ) : (
-          <div className="text-center py-12 text-xs text-stone-400">
-            A prévia do artigo aparecerá aqui. Use &quot;Produto&quot; para adicionar um card visual.
-          </div>
-        )}
-      </div>
-
       <textarea
         ref={textareaRef}
         rows={rows}
@@ -399,6 +398,17 @@ export function BlogContentEditor({
         className="w-full min-h-56 px-3.5 py-3 text-sm bg-white border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 transition-all text-stone-900 leading-relaxed font-sans"
         aria-label="Texto limpo do artigo"
       />
+
+      {/* Visual editor: product macros are rendered as the same cards used on the site. */}
+      <div className="p-3 sm:p-4 bg-white border border-stone-200 rounded-xl min-h-[180px] max-h-[45vh] sm:max-h-[420px] overflow-y-auto overscroll-contain">
+        {value.trim() ? (
+          <BlogContentRenderer content={value} />
+        ) : (
+          <div className="text-center py-10 text-xs text-stone-400">
+            A prévia aparecerá aqui enquanto você escreve e adiciona produtos.
+          </div>
+        )}
+      </div>
 
       <details className="rounded-xl border border-stone-200 bg-stone-50">
         <summary className="cursor-pointer px-3.5 py-2.5 text-xs font-semibold text-stone-700">
