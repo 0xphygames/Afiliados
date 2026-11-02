@@ -7,6 +7,9 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { ArticleDetailModal } from '@/components/ArticleDetailModal';
 import { TaxonomySidebar } from '@/components/TaxonomySidebar';
+import { ArticlePreview } from '@/components/ArticlePreview';
+import { TAXONOMY } from '@/lib/taxonomy';
+import { TaxMacro, subscribeTaxonomy } from '@/lib/taxonomy-db';
 import { Article, CustomCategory, PlatformId, Product } from '@/lib/types';
 import { PLATFORMS } from '@/lib/constants';
 import { subscribeFirestoreArticles, subscribeFirestoreCategories, subscribeFirestoreProducts } from '@/lib/firestore-products';
@@ -35,6 +38,14 @@ export default function BlogPage() {
   useEffect(() => subscribeFirestoreProducts((list) => setProducts(list)), []);
 
   useEffect(() => subscribeFirestoreCategories((list) => setCustomCats(list)), []);
+
+  // Macro and micro categories shown as the one-page preview until a category is picked
+  const [taxTree, setTaxTree] = useState<TaxMacro[]>([]);
+  useEffect(() => subscribeTaxonomy((t) => setTaxTree(t)), []);
+  const previewMacros = taxTree.length
+    ? taxTree.map((m) => ({ name: m.node.name, subcategories: m.micros.map((x) => x.name) }))
+    : TAXONOMY.map((m) => ({ name: m.name, subcategories: m.subcategories.map((s) => s.name) }));
+  const showPreview = activeCategory === 'Todos os Setores' && !searchQuery.trim();
 
   useEffect(() => {
     // Wait for Supabase before rendering, so the bundled placeholder article never flashes
@@ -186,6 +197,16 @@ export default function BlogPage() {
             />
 
             <div className="flex-1 min-w-0 w-full">
+        {showPreview && (
+          <ArticlePreview
+            macros={previewMacros}
+            articles={articles}
+            meta={meta}
+            activePlatform={activePlatform}
+            onSelect={setActiveCategory}
+          />
+        )}
+
         {/* Featured Article Hero (When no search active) */}
         {!searchQuery && activeCategory === 'Todos os Setores' && featuredArticle && (
           <section className="pt-0">
@@ -257,6 +278,7 @@ export default function BlogPage() {
         )}
 
         {/* All Articles Grid */}
+        {!showPreview && (
         <section className="pt-0">
           <div className="flex items-center justify-between pb-4 mb-6 border-b border-stone-200">
             <h3 className="font-serif text-xl font-bold text-stone-900">
@@ -347,6 +369,7 @@ export default function BlogPage() {
             </div>
           )}
         </section>
+        )}
             </div>
           </div>
         </section>
