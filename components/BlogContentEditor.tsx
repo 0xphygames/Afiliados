@@ -58,7 +58,7 @@ export function BlogContentEditor({
   placeholder = 'Escreva seu artigo completo aqui com dicas, tamanhos, conselhos sinceros e links...',
   products = [],
 }: BlogContentEditorProps) {
-  const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
+  const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('preview');
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [linkText, setLinkText] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
@@ -374,28 +374,36 @@ export function BlogContentEditor({
         </div>
       </div>
 
-      {/* Editor Body */}
-      {activeTab === 'edit' ? (
-        <textarea
-          ref={textareaRef}
-          rows={rows}
-          required
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className="w-full px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:bg-white transition-all text-stone-900 leading-relaxed font-sans"
-        />
-      ) : (
-        <div className="p-4 bg-white border border-stone-200 rounded-xl min-h-[160px] max-h-[400px] overflow-y-auto">
-          {value.trim() ? (
-            <BlogContentRenderer content={value} />
-          ) : (
-            <div className="text-center py-8 text-xs text-stone-400">
-              Nenhum conteúdo digitado ainda. Volte para &quot;Editar&quot; para escrever e adicionar hiperlinks.
-            </div>
-          )}
+      {/* Visual editor: product macros are rendered as the same cards used on the site. */}
+      <div className="p-4 bg-white border border-stone-200 rounded-xl min-h-[220px] max-h-[520px] overflow-y-auto">
+        {value.trim() ? (
+          <BlogContentRenderer content={value} />
+        ) : (
+          <div className="text-center py-12 text-xs text-stone-400">
+            A prévia do artigo aparecerá aqui. Use &quot;Produto&quot; para adicionar um card visual.
+          </div>
+        )}
+      </div>
+
+      <details className="rounded-xl border border-stone-200 bg-stone-50">
+        <summary className="cursor-pointer px-3.5 py-2.5 text-xs font-semibold text-stone-700">
+          Editar texto técnico do artigo (opcional)
+        </summary>
+        <div className="p-3 pt-0">
+          <p className="mb-2 text-[11px] text-stone-500">
+            O formato interno fica oculto normalmente. Edite aqui apenas textos, links ou produtos que já foram inseridos.
+          </p>
+          <textarea
+            ref={textareaRef}
+            rows={rows}
+            required
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            className="w-full px-3.5 py-2.5 text-xs bg-white border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 transition-all text-stone-900 leading-relaxed font-sans"
+          />
         </div>
-      )}
+      </details>
 
       {/* Hyperlink Inserter Modal / Dialog */}
       {showProductModal && createPortal(
