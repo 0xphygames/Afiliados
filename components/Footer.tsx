@@ -133,6 +133,9 @@ export function Footer({
                   Busca Geral no Site
                 </Link>
               </li>
+              <li><Link href="/sobre" className="hover:text-stone-950 transition-colors block">Sobre nós</Link></li>
+              <li><Link href="/contato" className="hover:text-stone-950 transition-colors block">Contato</Link></li>
+              <li><Link href="/termos" className="hover:text-stone-950 transition-colors block">Termos e transparência</Link></li>
 
               {/* Discreet login & management area */}
               <li className="pt-2 border-t border-stone-100">

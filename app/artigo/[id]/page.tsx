@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { Article } from '@/lib/types';
 import { SITE_URL, SITE_NAME } from '@/lib/seo';
@@ -56,29 +57,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PublicArticlePage({ params }: Props) {
   const { id } = await params;
   const article = await getArticle(id);
+  if (!article) notFound();
+  const publishedArticle = article!;
 
   // Structured data so Google can show the article with its author and date
-  const jsonLd = article
-    ? {
+  const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'Article',
-        headline: article.title,
-        description: article.summary.slice(0, 160),
-        image: article.coverImageUrl ? [article.coverImageUrl] : undefined,
-        datePublished: article.createdAt,
-        dateModified: article.createdAt,
-        author: { '@type': 'Person', name: article.author },
+        headline: publishedArticle.title,
+        description: publishedArticle.summary.slice(0, 160),
+        image: publishedArticle.coverImageUrl ? [publishedArticle.coverImageUrl] : undefined,
+        datePublished: publishedArticle.createdAt,
+        dateModified: publishedArticle.createdAt,
+        author: { '@type': 'Person', name: publishedArticle.author },
         publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
-        mainEntityOfPage: `${SITE_URL}/artigo/${article.id}`,
-      }
-    : null;
+        mainEntityOfPage: `${SITE_URL}/artigo/${publishedArticle.id}`,
+      };
 
   return (
     <>
-      {jsonLd && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      )}
-      <ArticleView initialArticle={article} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <ArticleView initialArticle={publishedArticle} />
     </>
   );
 }
