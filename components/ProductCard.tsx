@@ -86,6 +86,30 @@ export function ProductCard({ product, onEditProduct, onOpenDetails, showTip = t
       onClick={() => onOpenDetails?.(product)}
       className="group cursor-pointer bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md hover:border-stone-300 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between"
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: product.title,
+            image: product.imageUrl ? [product.imageUrl] : undefined,
+            description: product.tamiresTip || product.title,
+            offers: {
+              '@type': 'Offer',
+              url: product.affiliateUrl,
+              priceCurrency: 'BRL',
+              price: product.price,
+              availability: 'https://schema.org/InStock',
+            },
+            aggregateRating: product.rating > 0 ? {
+              '@type': 'AggregateRating',
+              ratingValue: product.rating,
+              reviewCount: product.reviewCount || 1,
+            } : undefined,
+          }),
+        }}
+      />
       {/* Top Media Container: Balanced height container matching catalog proportions */}
       <div className="relative h-52 sm:h-56 lg:h-60 w-full bg-white overflow-hidden border-b border-stone-100 flex items-center justify-center p-3">
         {!imgError && currentImage ? (
